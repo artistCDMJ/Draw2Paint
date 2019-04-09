@@ -59,15 +59,15 @@ class PAINT_OT_CameraviewPaint(bpy.types.Operator):
         bpy.context.object.data.type = 'ORTHO'
         #move cam up in Z by 1 unit
         bpy.ops.transform.translate(value=(0, 0, 1),
-            orient_type='GLOBAL',
-            orient_matrix=((1,0,0),(0,1,0),0,0,1)),
-            orient_matrix_type='GLOBAL',
-            constraint_axis=(False, False, True),
-            constraint_orientation='GLOBAL',
-            mirror=False,
-            proportional='DISABLED',
-            proportional_edit_falloff='SMOOTH',
-            proportional_size=1)
+                orient_type='GLOBAL',
+                orient_matrix=((1,0,0),(0,1,0),0,0,1)),
+                orient_matrix_type='GLOBAL',
+                constraint_axis=(False, False, True),
+                constraint_orientation='GLOBAL',
+                mirror=False,
+                proportional='DISABLED',
+                proportional_edit_falloff='SMOOTH',
+                proportional_size=1)
 
 
         #found on net Atom wrote this simple script
