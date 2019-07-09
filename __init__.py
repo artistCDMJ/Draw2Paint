@@ -364,7 +364,6 @@ class PAINT_OT_CanvasResetrot(bpy.types.Operator):
 
         return {'FINISHED'} 
 
-
 #-----------------------------cameraview paint
 
 class PAINT_OT_CameraviewPaint(bpy.types.Operator):
@@ -470,6 +469,8 @@ class PAINT_OT_CameraviewPaint(bpy.types.Operator):
         #try to constrain cam to canvas here
         bpy.ops.object.constraint_add(type='COPY_ROTATION')
         bpy.context.object.constraints["Copy Rotation"].target = bpy.data.objects["canvas"]
+        
+        bpy.context.object.data.show_name = True
         #hide camera itself
         bpy.ops.object.hide_view_set(unselected=False)
 
@@ -488,7 +489,8 @@ class PAINT_OT_CameraviewPaint(bpy.types.Operator):
         bpy.ops.object.select_all(action='DESELECT')
         ob = bpy.data.objects["canvas"]
         bpy.context.view_layer.objects.active = ob
-        #bpy.context.scene.objects.active = ob
+        
+
         
 
         #selection to texpaint toggle
