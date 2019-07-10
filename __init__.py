@@ -86,7 +86,14 @@ class PAINT_OT_CanvasHoriz(bpy.types.Operator):
     bl_idname = "image.canvas_horizontal" 
     bl_label = "Canvas Horizontal"
     bl_options = { 'REGISTER', 'UNDO' }
-
+    
+    @classmethod
+    def poll(self, context):
+        obj =  context.active_object
+        A = obj is not None
+        if A:
+            B = obj.type == 'MESH'
+            return B
 
     def execute(self, context):
 
@@ -151,6 +158,13 @@ class PAINT_OT_CanvasVertical(bpy.types.Operator):
     bl_label = "Canvas Vertical"
     bl_options = { 'REGISTER', 'UNDO' }
 
+    @classmethod
+    def poll(self, context):
+        obj =  context.active_object
+        A = obj is not None
+        if A:
+            B = obj.type == 'MESH'
+            return B
 
     def execute(self, context):
 
@@ -215,7 +229,14 @@ class PAINT_OT_RotateCanvasCCW15(bpy.types.Operator):
     bl_idname = "image.rotate_ccw_15"
     bl_label = "Canvas Rotate CounterClockwise 15"
     bl_options = { 'REGISTER', 'UNDO' }
-
+    
+    @classmethod
+    def poll(self, context):
+        obj =  context.active_object
+        A = obj is not None
+        if A:
+            B = obj.type == 'MESH'
+            return B
 
     def execute(self, context):
 
@@ -252,7 +273,14 @@ class PAINT_OT_RotateCanvasCW15(bpy.types.Operator):
     bl_idname = "image.rotate_cw_15" 
     bl_label = "Canvas Rotate Clockwise 15"
     bl_options = { 'REGISTER', 'UNDO' }
-
+    
+    @classmethod
+    def poll(self, context):
+        obj =  context.active_object
+        A = obj is not None
+        if A:
+            B = obj.type == 'MESH'
+            return B
 
     def execute(self, context):
 
@@ -290,7 +318,14 @@ class PAINT_OT_RotateCanvasCCW(bpy.types.Operator):
     bl_idname = "image.rotate_ccw_90" 
     bl_label = "Canvas Rotate CounterClockwise 90"
     bl_options = { 'REGISTER', 'UNDO' }
-
+    
+    @classmethod
+    def poll(self, context):
+        obj =  context.active_object
+        A = obj is not None
+        if A:
+            B = obj.type == 'MESH'
+            return B
 
     def execute(self, context):
 
@@ -329,7 +364,14 @@ class PAINT_OT_RotateCanvasCW(bpy.types.Operator):
     bl_idname = "image.rotate_cw_90" 
     bl_label = "Canvas Rotate Clockwise 90"
     bl_options = { 'REGISTER', 'UNDO' }
-
+    
+    @classmethod
+    def poll(self, context):
+        obj =  context.active_object
+        A = obj is not None
+        if A:
+            B = obj.type == 'MESH'
+            return B
 
     def execute(self, context):
 
@@ -368,7 +410,14 @@ class PAINT_OT_ImageReload(bpy.types.Operator):
     bl_idname = "image.reload_saved_state"
     bl_label = "Reload Image Save Point"
     bl_options = { 'REGISTER', 'UNDO' }
-
+    
+    @classmethod
+    def poll(self, context):
+        obj =  context.active_object
+        A = obj is not None
+        if A:
+            B = obj.type == 'MESH'
+            return B
 
     def execute(self, context):
 
@@ -395,7 +444,14 @@ class PAINT_OT_CanvasResetrot(bpy.types.Operator):
     bl_idname = "image.canvas_resetrot" 
     bl_label = "Canvas Reset Rotation"
     bl_options = { 'REGISTER', 'UNDO' }
-
+    
+    @classmethod
+    def poll(self, context):
+        obj =  context.active_object
+        A = obj is not None
+        if A:
+            B = obj.type == 'MESH'
+            return B
 
     def execute(self, context):
 
@@ -420,7 +476,14 @@ class PAINT_OT_CameraviewPaint(bpy.types.Operator):
     bl_label = "Cameraview Paint"
     bl_options = { 'REGISTER', 'UNDO' }
 
-
+    
+    @classmethod
+    def poll(self, context):
+        obj =  context.active_object
+        A = obj is not None
+        if A:
+            B = obj.type == 'MESH'
+            return B
 
     def execute(self, context):
 
@@ -558,7 +621,14 @@ class PAINT_OT_SaveImage(bpy.types.Operator):
     bl_idname = "image.save_current"
     bl_label = "Save Image Current"
     bl_options = { 'REGISTER', 'UNDO' }
-
+    
+    @classmethod
+    def poll(self, context):
+        obj =  context.active_object
+        A = obj is not None
+        if A:
+            B = obj.type == 'MESH'
+            return B
 
     def execute(self, context):
 
@@ -574,14 +644,78 @@ class PAINT_OT_SaveImage(bpy.types.Operator):
         bpy.context.area.type = original_type
 
 
+        return {'FINISHED'}
+
+#-----------------------------image save
+
+class PAINT_OT_ResetOrigin(bpy.types.Operator):
+    """Reset Origin"""
+    bl_idname = "image.reset_origin"
+    bl_label = "Reset Origin"
+    bl_options = { 'REGISTER', 'UNDO' }
+
+    
+    @classmethod
+    def poll(self, context):
+        obj =  context.active_object
+        A = obj is not None
+        if A:
+            B = obj.type == 'MESH'
+            return B
+        
+    def execute(self, context):
+
+        scene = context.scene
+        layer = bpy.context.view_layer
+        layer.update()
+        
+        bpy.ops.paint.texture_paint_toggle()
+
+        bpy.ops.object.origin_set(type='ORIGIN_CENTER_OF_MASS',
+         center='MEDIAN')
+
+        bpy.ops.paint.texture_paint_toggle()
 
 
 
+        return {'FINISHED'}
+    
+class PAINT_OT_MoveOrigin(bpy.types.Operator):
+    """Move Origin"""
+    bl_idname = "image.move_origin"
+    bl_label = "Move Origin"
+    bl_options = { 'REGISTER', 'UNDO' }
+    
+    @classmethod
+    def poll(self, context):
+        obj =  context.active_object
+        A = obj is not None
+        if A:
+            B = obj.type == 'MESH'
+            return B
+
+    def execute(self, context):
+
+        scene = context.scene
+        layer = bpy.context.view_layer
+        layer.update()
+        
+        bpy.ops.paint.texture_paint_toggle()###to object mode
+        
+        #bpy.ops.view3d.snap_cursor_to_selected()
+
+        #to set the origin to the cursor
+        bpy.ops.object.origin_set(type='ORIGIN_CURSOR', center='MEDIAN')
 
 
-        return {'FINISHED'} 
+        bpy.ops.paint.texture_paint_toggle()###back to texpaint
 
 
+
+        return {'FINISHED'}
+
+
+#### bpy.context.scene.tool_settings.image_paint.use_symmetry_x = True
 
 
 ########################################
@@ -595,6 +729,9 @@ class PAINT_PT_ArtistPanel(bpy.types.Panel):
     bl_region_type = 'UI'
     bl_category = "Artist Macros"
 
+    
+
+        
     def draw(self, context):
         layout = self.layout
 
