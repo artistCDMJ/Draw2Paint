@@ -715,7 +715,46 @@ class PAINT_OT_MoveOrigin(bpy.types.Operator):
         return {'FINISHED'}
 
 
-#### bpy.context.scene.tool_settings.image_paint.use_symmetry_x = True
+#-----------------------------------reload image
+
+
+class PAINT_OT_EmptyGuides(bpy.types.Operator):
+    """experimental"""
+    bl_idname = "image.empty_guides"
+    bl_label = "Empty Guides Constrained"
+    bl_options = { 'REGISTER', 'UNDO' }
+    
+    @classmethod
+    def poll(self, context):
+        obj =  context.active_object
+        A = obj is not None
+        if A:
+            B = obj.type == 'MESH'
+            return B
+
+    def execute(self, context):
+
+        bpy.ops.object.empty_add(type='PLAIN_AXES', location=(0, 0, 0))#add empty for reference and movement of origin
+        #rename cursor to Symmetry Guide
+        bpy.context.object.name = "Symmetry Guide"
+
+        bpy.ops.transform.resize(value=(10, 10, 10)) #scale up past the normal range of image plane
+        #add constraint to follow canvas rotation
+        bpy.ops.object.constraint_add(type='COPY_ROTATION')
+        bpy.context.object.constraints["Copy Rotation"].target = bpy.data.objects["canvas"]
+        #snap cursor to empty
+        bpy.ops.view3d.snap_cursor_to_selected()
+        
+
+
+        
+
+
+
+
+
+
+        return {'FINISHED'} 
 
 
 ########################################
