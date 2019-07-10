@@ -96,27 +96,48 @@ class PAINT_OT_CanvasHoriz(bpy.types.Operator):
 
         #toggle texture mode / object mode
         bpy.ops.paint.texture_paint_toggle()
+        
+        scene = bpy.context.scene
+
+        original_area = bpy.context.area.type
 
 
-        #flip canvas horizontal
-        bpy.ops.transform.resize(value=(1, -1, 1),
-        orient_type='GLOBAL',
-        orient_matrix=((1, 0, 0), (0, 1, 0), (0, 0, 1)),
-        orient_matrix_type='GLOBAL',
-        constraint_axis=(False, True, False),
-        mirror=True,
-        use_proportional_edit=False,
-        proportional_edit_falloff='SMOOTH',
-        proportional_size=1,
-        use_proportional_connected=False,
-        use_proportional_projected=False)
+        #toggle edit mode
+        bpy.ops.object.editmode_toggle()
+        
+        #####select all mesh
+        bpy.ops.mesh.reveal()
+        bpy.ops.mesh.select_all(action='SELECT')
+        
+        ####change editor to UV Editor
+        bpy.context.area.ui_type = 'UV'
+        
+        
+        #+ select the uvs
+        bpy.ops.uv.select_all(action='SELECT')
+        bpy.ops.uv.select_all(action='SELECT')
 
 
-        #toggle object to texture
+        ######scale -1 on axis
+        bpy.ops.transform.resize(value=(-1, 1, 1),
+            orient_type='GLOBAL',
+            orient_matrix=((1, 0, 0), (0, 1, 0), (0, 0, 1)),
+            orient_matrix_type='GLOBAL',
+            constraint_axis=(True, False, False),
+            mirror=True, use_proportional_edit=False, 
+            proportional_edit_falloff='SMOOTH',
+            proportional_size=1,
+            use_proportional_connected=False,
+            use_proportional_projected=False)
+        
+        #back to Object mode
+        bpy.ops.object.editmode_toggle()
+
+
+        #####return to original window editor
+        bpy.context.area.type = original_area
+
         bpy.ops.paint.texture_paint_toggle()
-
-
-
 
 
         return {'FINISHED'}
@@ -139,21 +160,47 @@ class PAINT_OT_CanvasVertical(bpy.types.Operator):
 
         #toggle texture mode / object mode
         bpy.ops.paint.texture_paint_toggle()
+        
+        scene = bpy.context.scene
 
-        #flip canvas horizontal
-        bpy.ops.transform.resize(value=(-1, 1, 1),
-        orient_type='GLOBAL',
-        orient_matrix=((1, 0, 0), (0, 1, 0), (0, 0, 1)),
-        orient_matrix_type='GLOBAL',
-        constraint_axis=(True, False, False),
-        mirror=True, use_proportional_edit=False,
-        proportional_edit_falloff='SMOOTH',
-        proportional_size=1,
-        use_proportional_connected=False,
-        use_proportional_projected=False)
+        original_area = bpy.context.area.type
 
 
-        #toggle texture mode / object mode
+        #toggle edit mode
+        bpy.ops.object.editmode_toggle()
+        
+        #####select all mesh
+        bpy.ops.mesh.reveal()
+        bpy.ops.mesh.select_all(action='SELECT')
+        
+        ####change editor to UV Editor
+        bpy.context.area.ui_type = 'UV'
+        
+        
+        #+ select the uvs
+        bpy.ops.uv.select_all(action='SELECT')
+        bpy.ops.uv.select_all(action='SELECT')
+
+
+        ######scale -1 on axis
+        bpy.ops.transform.resize(value=(1, -1, 1),
+            orient_type='GLOBAL',
+            orient_matrix=((1, 0, 0), (0, 1, 0), (0, 0, 1)),
+            orient_matrix_type='GLOBAL',
+            constraint_axis=(True, False, False),
+            mirror=True, use_proportional_edit=False, 
+            proportional_edit_falloff='SMOOTH',
+            proportional_size=1,
+            use_proportional_connected=False,
+            use_proportional_projected=False)
+        
+        #back to Object mode
+        bpy.ops.object.editmode_toggle()
+
+
+        #####return to original window editor
+        bpy.context.area.type = original_area
+
         bpy.ops.paint.texture_paint_toggle()
 
 
@@ -364,6 +411,7 @@ class PAINT_OT_CanvasResetrot(bpy.types.Operator):
 
         return {'FINISHED'} 
 
+
 #-----------------------------cameraview paint
 
 class PAINT_OT_CameraviewPaint(bpy.types.Operator):
@@ -540,7 +588,7 @@ class PAINT_OT_SaveImage(bpy.types.Operator):
 ## panel
 
 
-class PAINT_OT_ArtistPanel(bpy.types.Panel):
+class PAINT_PT_ArtistPanel(bpy.types.Panel):
     """A custom panel in the viewport toolbar"""
     bl_label = "2D Painter"
     bl_space_type = 'VIEW_3D'
@@ -615,7 +663,7 @@ class PAINT_OT_ArtistPanel(bpy.types.Panel):
         row.operator("image.canvas_resetrot", text = "Reset Rotation", icon = 'RECOVER_LAST')
 
 classes = (
-            PAINT_OT_ArtistPanel,
+            PAINT_PT_ArtistPanel,
             PAINT_OT_MacroCreateBrush,
             PAINT_OT_CanvasHoriz,
             PAINT_OT_CanvasVertical,
