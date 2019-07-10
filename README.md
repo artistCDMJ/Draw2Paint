@@ -6,7 +6,7 @@ The Camera View Paint operator will create a camera that is constrained to the r
 
 Brushmaker scene is for working separately to create alpha brushes inside Blender - this is a personal choice, others might not need this.
 
-Working in Camera View, the Flip Vertical will not appear to work correctly because of the camera constraint. This is a new trial feature, so I need to research the best way to handle this maybe with a toggle button that switches constraint influence or something like that.
+Fixed, reworked to use UV scaling on -1 axis to enable the Camera View to use the Flip horizontal and Flip vertical now. :D [Working in Camera View, the Flip Vertical will not appear to work correctly because of the camera constraint. This is a new trial feature, so I need to research the best way to handle this maybe with a toggle button that switches constraint influence or something like that.]
 
 Once I can really isolate the important needed features for this, then I can give better input into streamlinging Spirou4D's EZDraw add-on for the 2.8 series. So much has improved in 2.8 as far as UI is ocncerned, so some of that add-on might not be as needed for most users.
 
