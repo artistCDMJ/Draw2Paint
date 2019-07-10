@@ -733,27 +733,34 @@ class PAINT_OT_EmptyGuides(bpy.types.Operator):
             return B
 
     def execute(self, context):
-
-        bpy.ops.object.empty_add(type='PLAIN_AXES', location=(0, 0, 0))#add empty for reference and movement of origin
-        #rename cursor to Symmetry Guide
-        bpy.context.object.name = "Symmetry Guide"
-
-        bpy.ops.transform.resize(value=(10, 10, 10)) #scale up past the normal range of image plane
-        #add constraint to follow canvas rotation
-        bpy.ops.object.constraint_add(type='COPY_ROTATION')
-        bpy.context.object.constraints["Copy Rotation"].target = bpy.data.objects["canvas"]
-        #snap cursor to empty
-        bpy.ops.view3d.snap_cursor_to_selected()
         
+        for ob in bpy.context.object.name:
+            if ob == 'Symmetry Guide':
+                #snap cursor to empty
+                bpy.context.view_layer.objects.active = ['Symmetry Guide']
+                bpy.ops.view3d.snap_cursor_to_selected()
+                return {'FINISHED'}
+            else:
+                scene = context.scene
+                layer = bpy.context.view_layer
+                layer.update()
+                bpy.ops.paint.texture_paint_toggle()
+                
+                
 
+                bpy.ops.object.empty_add(type='PLAIN_AXES', location=(0, 0, 0))#add empty for reference and movement of origin
+                #rename cursor to Symmetry Guide
+                bpy.context.object.name = "Symmetry Guide"
 
+                bpy.ops.transform.resize(value=(10, 10, 10)) #scale up past the normal range of image plane
+                #add constraint to follow canvas rotation
+                bpy.ops.object.constraint_add(type='COPY_ROTATION')
+                bpy.context.object.constraints["Copy Rotation"].target = bpy.data.objects["canvas"]
+                #snap cursor to empty
+                bpy.ops.view3d.snap_cursor_to_selected()
+                #set active object to canvas
+                bpy.context.view_layer.objects.active = bpy.data.objects['canvas']
         
-
-
-
-
-
-
         return {'FINISHED'} 
 
 
@@ -806,8 +813,8 @@ class PAINT_PT_ArtistPanel(bpy.types.Panel):
 
 
 
-        '''row = layout.row()
-        row.operator("image.canvas_shadeless", text = "Shadeless Canvas", icon = 'EMPTY_SINGLE_ARROW')'''
+        row = layout.row()
+        row.operator("image.empty_guides", text = "Guide/Recenter", icon = 'EMPTY_SINGLE_ARROW')
 
         row = layout.row()
         row.operator("image.cameraview_paint", text = "Camera View Paint", icon = 'OUTLINER_OB_CAMERA')
@@ -851,6 +858,7 @@ classes = (
             PAINT_OT_CanvasResetrot,
             PAINT_OT_SaveImage,
             PAINT_OT_CameraviewPaint,
+            PAINT_OT_EmptyGuides,
 )
 
 register, unregister = bpy.utils.register_classes_factory(classes)
