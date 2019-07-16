@@ -890,7 +890,7 @@ class PAINT_PT_SpecialMacros(bpy.types.Panel):
         row.label(text="Camera Specials")
 
         row = layout.row()
-        row.operator("image.empty_guides", text = "Guide", icon = 'EMPTY_SINGLE_ARROW')
+        row.operator("image.empty_guides", text = "Guide", icon = 'ORIENTATION_CURSOR')
         
         tool_settings = context.tool_settings
         ipaint = tool_settings.image_paint
@@ -909,10 +909,10 @@ class PAINT_PT_SpecialMacros(bpy.types.Panel):
         row.prop(ipaint, "use_symmetry_z", text="Z", toggle=True)  
 
         row = layout.row()
-        row.operator("image.cameraview_paint", text = "Camera View Paint", icon = 'OUTLINER_OB_CAMERA')
+        row.operator("image.cameraview_paint", text = "Camera View Paint", icon = 'CAMERA_STEREO')
 
         row = layout.row()
-        row.operator("image.create_brush", text = "Brush Maker Scene", icon = 'GPBRUSH_INK')
+        row.operator("image.create_brush", text = "Brush Maker Scene", icon = 'BRUSH_DATA')
 
         
 classes = (
