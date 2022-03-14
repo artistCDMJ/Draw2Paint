@@ -900,9 +900,9 @@ class PAINT_PT_SpecialMacros(bpy.types.Panel):
         col = split.column()
 
         row = col.row(align=True)
-        row.prop(ipaint, "use_symmetry_x", text="X", toggle=True)
-        row.prop(ipaint, "use_symmetry_y", text="Y", toggle=True)
-        row.prop(ipaint, "use_symmetry_z", text="Z", toggle=True)  
+        row.prop(context.object, "use_mesh_mirror_x", text="X", toggle=True)
+        row.prop(context.object, "use_mesh_mirror_y", text="Y", toggle=True)
+        row.prop(context.object, "use_mesh_mirror_z", text="Z", toggle=True)  
 
         row = layout.row()
         row.operator("image.cameraview_paint", text = "Camera View Paint", icon = 'CAMERA_STEREO')
