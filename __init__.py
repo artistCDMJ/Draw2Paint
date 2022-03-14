@@ -420,20 +420,16 @@ class PAINT_OT_ImageReload(bpy.types.Operator):
             return B
 
     def execute(self, context):
-
-        layer = bpy.context.view_layer
-        layer.update()
-        original_type = bpy.context.area.type
-        bpy.context.area.type = 'IMAGE_EDITOR'
-
-        #return image to last saved state
-        bpy.ops.image.reload()
-
-        bpy.context.area.type = original_type
-
-
-
-        return {'FINISHED'} 
+        original_type = context.area.ui_type
+        context.area.ui_type = 'IMAGE_EDITOR'
+       
+        obdat =  context.active_object.data
+        ima = obdat.materials[0].texture_paint_images[0]
+        context.space_data.image = ima
+        bpy.ops.image.reload()                 #return image to last saved state
+        
+        context.area.ui_type = original_type
+        return {'FINISHED'}
 
 
 
