@@ -1001,13 +1001,15 @@ class DRAW2PAINT_OT_ReprojectMask(bpy.types.Operator):
 
         # toggle ina nd out of edit mode to project from view UV
         bpy.ops.object.editmode_toggle()
+        bpy.ops.object.convert(target='MESH')
+        bpy.ops.object.editmode_toggle()
         bpy.ops.uv.project_from_view(camera_bounds=True,
                                      correct_aspect=False,
                                      scale_to_bounds=False)
         bpy.ops.object.editmode_toggle()
 
         # in obj mode, convert to mesh for correction on Artist Panel Vector Masks/Gpencil Masks
-        bpy.ops.object.convert(target='MESH')
+        
         bpy.ops.paint.texture_paint_toggle()  # toggle texpaint
 
         return {'FINISHED'}
