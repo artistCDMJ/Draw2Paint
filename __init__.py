@@ -989,6 +989,27 @@ class DRAW2PAINT_OT_SculptLiquid(bpy.types.Operator):
 
         return {'FINISHED'}
 
+class DRAW2PAINT_OT_CanvasMaterial(bpy.types.Operator):
+    """Adopt Canvas Material"""
+    bl_idname = "draw2paint.canvas_material"
+    bl_label = "Set the Material to the same as Main Canvas"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        scene = context.scene
+        
+        
+        obj = context.active_object
+        canvas = bpy.data.objects['canvas'].material_slots[0].material
+        obj.data.materials.append(canvas)
+            
+        
+
+        return {'FINISHED'}
+
+
+
+
 
 class DRAW2PAINT_OT_ReprojectMask(bpy.types.Operator):
     """Reproject Mask"""
@@ -999,20 +1020,53 @@ class DRAW2PAINT_OT_ReprojectMask(bpy.types.Operator):
     def execute(self, context):
         scene = context.scene
 
-        # toggle ina nd out of edit mode to project from view UV
-        bpy.ops.object.editmode_toggle()
-        bpy.ops.object.convert(target='MESH')
-        bpy.ops.object.editmode_toggle()
-        bpy.ops.uv.project_from_view(camera_bounds=True,
-                                     correct_aspect=False,
-                                     scale_to_bounds=False)
-        bpy.ops.object.editmode_toggle()
-
-        # in obj mode, convert to mesh for correction on Artist Panel Vector Masks/Gpencil Masks
+        obj = context.active_object
         
-        bpy.ops.paint.texture_paint_toggle()  # toggle texpaint
+        if obj.type == 'CURVE' and obj.mode == 'EDIT':
+            
+            bpy.ops.object.editmode_toggle()
+            bpy.ops.object.convert(target='MESH')
+            bpy.ops.object.editmode_toggle()
+            bpy.ops.mesh.select_all(action='TOGGLE')
+            bpy.ops.uv.project_from_view(camera_bounds=True,
+                                         correct_aspect=False,
+                                         scale_to_bounds=False)
+            bpy.ops.object.editmode_toggle()
+            bpy.ops.paint.texture_paint_toggle()  # toggle texpaint
+        
+        elif obj.type == 'CURVE' and obj.mode == 'OBJECT':
+            bpy.ops.object.convert(target='MESH')
+            bpy.ops.object.editmode_toggle()
+            bpy.ops.mesh.select_all(action='TOGGLE')
+            bpy.ops.uv.project_from_view(camera_bounds=True,
+                                         correct_aspect=False,
+                                         scale_to_bounds=False)
+            bpy.ops.object.editmode_toggle()
+            bpy.ops.paint.texture_paint_toggle()  # toggle texpaint
+                
+        elif obj.type == 'MESH' and obj.mode == 'OBJECT':
+                
+            bpy.ops.object.editmode_toggle()
+            bpy.ops.mesh.select_all(action='TOGGLE')
+            bpy.ops.uv.project_from_view(camera_bounds=True,
+                                         correct_aspect=False,
+                                         scale_to_bounds=False)
+            bpy.ops.object.editmode_toggle()
+            bpy.ops.paint.texture_paint_toggle()  # toggle texpaint
+            
+        elif obj.type == 'MESH' and obj.mode == 'TEXTURE_PAINT':
 
+            bpy.ops.object.editmode_toggle()
+            bpy.ops.mesh.select_all(action='TOGGLE')
+            bpy.ops.uv.project_from_view(camera_bounds=True,
+                                         correct_aspect=False,
+                                         scale_to_bounds=False)
+                                         
+            bpy.ops.object.editmode_toggle()
+            bpy.ops.paint.texture_paint_toggle()  # toggle texpaint
+ 
         return {'FINISHED'}
+
 
 
 class DRAW2PAINT_OT_SolidifyDifference(bpy.types.Operator):
@@ -1635,7 +1689,7 @@ class DRAW2PAINT_PT_AlignMask(bpy.types.Panel):
         row2 = row.split(align=True)
         row2.scale_x = 0.50
         row2.scale_y = 1.25
-        row2.operator("draw2paint.solidify_union", text='TBD', icon='OUTLINER_OB_IMAGE')
+        row2.operator("draw2paint.canvas_material", text='Canvas Mat', icon='OUTLINER_OB_IMAGE')
 
 ############# liquid sculpt
 class DRAW2PAINT_PT_Sculpt2D(bpy.types.Panel):
@@ -1730,6 +1784,7 @@ classes = (
     DRAW2PAINT_OT_SculptDuplicate,
     DRAW2PAINT_OT_SculptLiquid,
     DRAW2PAINT_OT_ReprojectMask,
+    DRAW2PAINT_OT_CanvasMaterial,
     DRAW2PAINT_OT_SolidifyDifference,
     DRAW2PAINT_OT_SolidifyUnion,
     DRAW2PAINT_OT_RemoveMods,
