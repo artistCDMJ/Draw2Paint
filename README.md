@@ -67,4 +67,5 @@ Extras for 3D Paint
 
 
 
-![screen_draw2paint](https://user-images.githubusercontent.com/16747273/160320534-4752048d-a6ae-48d5-afb5-ce8dfd75d769.png)
+
+![screen_draw2paint](https://user-images.githubusercontent.com/16747273/160320704-4344c744-669c-4c28-bb2d-043217dcfc75.png)
