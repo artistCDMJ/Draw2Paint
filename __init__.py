@@ -558,6 +558,11 @@ class DRAW2PAINT_OT_CameraviewPaint(bpy.types.Operator):
         bpy.ops.paint.texture_paint_toggle()
         # set to Flat Shading Solid and Textured
         bpy.context.space_data.shading.type = 'MATERIAL'
+        
+        #set to standard color
+        bpy.context.scene.view_settings.view_transform = 'Standard'
+        bpy.context.scene.render.film_transparent = True
+
 
         return {'FINISHED'}
 
@@ -1066,6 +1071,72 @@ class DRAW2PAINT_OT_ReprojectMask(bpy.types.Operator):
             bpy.ops.paint.texture_paint_toggle()  # toggle texpaint
  
         return {'FINISHED'}
+
+###########new curve primitives for drawing masks
+
+
+class DRAW2PAINT_OT_SquareCurve(bpy.types.Operator):
+    """Square Curve primitive for Mask"""
+    bl_idname = "draw2paint.square_curve"
+    bl_label = "Add Square Curve Primitive for Masking"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        scene = context.scene
+        
+        #square curve primitive
+        bpy.ops.curve.primitive_bezier_circle_add(radius=0.25, enter_editmode=False, align='WORLD', location=(0, 0, 0), scale=(1, 1, 1))
+        bpy.context.object.data.dimensions = '2D'
+        bpy.context.object.data.fill_mode = 'BOTH'
+        bpy.ops.object.editmode_toggle()
+        bpy.ops.curve.handle_type_set(type='VECTOR')
+        bpy.ops.transform.rotate(value=0.785398, orient_axis='Z')
+                
+        return {'FINISHED'}
+        
+class DRAW2PAINT_OT_CircleCurve(bpy.types.Operator):
+    """Circle Curve primitive for Mask"""
+    bl_idname = "draw2paint.circle_curve"
+    bl_label = "Add Circle Curve Primitive for Masking"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        scene = context.scene
+        
+        #square curve primitive
+        bpy.ops.curve.primitive_bezier_circle_add(radius=0.25, enter_editmode=False, align='WORLD', location=(0, 0, 0), scale=(1, 1, 1))
+        bpy.context.object.data.dimensions = '2D'
+        bpy.context.object.data.fill_mode = 'BOTH'
+        bpy.ops.object.editmode_toggle()
+                
+        return {'FINISHED'}
+
+
+
+class DRAW2PAINT_OT_VectorCurve(bpy.types.Operator):
+    """Vector Curve primitive for Mask"""
+    bl_idname = "draw2paint.vector_curve"
+    bl_label = "Add Vector Curve Primitive for Precise Masking"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        scene = context.scene
+        
+        bpy.ops.curve.primitive_bezier_curve_add(enter_editmode=True, align='WORLD', location=(0, 0, 0.0125), scale=(1, 1, 1))
+
+        bpy.ops.curve.handle_type_set(type='VECTOR')
+        bpy.context.object.data.dimensions = '2D'
+        bpy.context.object.data.fill_mode = 'BOTH'
+
+        bpy.ops.transform.resize(value=(0.1, 0.1, 0.1))
+        
+                
+        return {'FINISHED'}
+
+                
+        
+    
+
 
 
 
@@ -1607,7 +1678,7 @@ class DRAW2PAINT_PT_GuideControls(bpy.types.Panel):
         row = col.row(align=True)
         row.prop(context.object, "use_mesh_mirror_x", text="X", toggle=True)
         row.prop(context.object, "use_mesh_mirror_y", text="Y", toggle=True)
-        row.prop(context.object, "use_mesh_mirror_z", text="Z", toggle=True)
+        #row.prop(context.object, "use_mesh_mirror_z", text="Z", toggle=True)
 
 
 
@@ -1633,22 +1704,27 @@ class DRAW2PAINT_PT_AlignMask(bpy.types.Panel):
         row1.scale_x = 0.50
         row1.scale_y = 1.25
         row1.operator("draw2paint.align_left", text='', icon='ANCHOR_LEFT')
+        
         row2 = row.split(align=True)
         row2.scale_x = 0.50
         row2.scale_y = 1.25
         row2.operator("draw2paint.align_top", text='', icon='ANCHOR_TOP')
+        
         row2 = row.split(align=True)
         row2.scale_x = 0.50
         row2.scale_y = 1.25
         row2.operator("draw2paint.align_hcenter", text='', icon='ANCHOR_CENTER')
+        
         row2 = row.split(align=True)
         row2.scale_x = 0.50
         row2.scale_y = 1.25
         row2.operator("draw2paint.align_center", text='', icon='ALIGN_CENTER')
+        
         row2 = row.split(align=True)
         row2.scale_x = 0.50
         row2.scale_y = 1.25
         row2.operator("draw2paint.align_bottom", text='', icon='ANCHOR_BOTTOM')
+        
         row2 = row.split(align=True)
         row2.scale_x = 0.50
         row2.scale_y = 1.25
@@ -1664,32 +1740,56 @@ class DRAW2PAINT_PT_AlignMask(bpy.types.Panel):
         row1.scale_x = 0.50
         row1.scale_y = 1.25
         row1.operator("draw2paint.reproject_mask", text='(Re)Project', icon='FULLSCREEN_EXIT')
+        
         row2 = row.split(align=True)
         row2.scale_x = 0.50
         row2.scale_y = 1.25
         row2.operator("draw2paint.solidify_difference", text='Subtract Masks', icon='SELECT_SUBTRACT')
-        row2 = row.split(align=True)
-        row2.scale_x = 0.50
-        row2.scale_y = 1.25
-        row2.operator("draw2paint.solidify_union", text='Join Masks', icon='SELECT_EXTEND')
+        row3 = row.split(align=True)
+        row3.scale_x = 0.50
+        row3.scale_y = 1.25
+        row3.operator("draw2paint.solidify_union", text='Join Masks', icon='SELECT_EXTEND')
+        
+        
         layout = self.layout
         box = layout.box()
         col = box.column(align=True)
-        col.label(text="Modify and Project Mask Objects")
+        col.label(text="Draw and Set Material for Masks")
         row = col.row(align=True)
+
 
         row1 = row.split(align=True)
         row1.scale_x = 0.50
         row1.scale_y = 1.25
         row1.operator("draw2paint.draw_curve", text='(Draw Curve', icon='CURVE_BEZCURVE')
+
+        row2 = row.split(align=True)
+        row2.scale_x = 0.50
+        row2.scale_y = 1.25   
+        #row2.operator
+        row2.operator("draw2paint.vector_curve", text = 'Draw Vector', icon='HANDLE_VECTOR')
+        
+        row = col.row(align=True)
+        row3 = row.split(align=True)
+        row3.scale_x = 0.50
+        row3.scale_y = 1.25
+        row3.operator("draw2paint.square_curve", text='Draw Square', icon='MOD_MESHDEFORM')
+                
+        row3 = row.split(align=True)
+        row3.scale_x = 0.50
+        row3.scale_y = 1.25
+        row3.operator("draw2paint.circle_curve", text='Draw Circle', icon='MESH_CIRCLE')
+
+        row = col.row(align=True)
+        row1 = row.split(align=True)
+        row1.scale_x = 0.50
+        row1.scale_y = 1.25
+        row1.operator("draw2paint.canvas_material", text='Copy Canvas', icon='OUTLINER_OB_IMAGE')
+
         row2 = row.split(align=True)
         row2.scale_x = 0.50
         row2.scale_y = 1.25
-        row2.operator("draw2paint.add_holdout", text='Holdout Mat', icon='GHOST_ENABLED')
-        row2 = row.split(align=True)
-        row2.scale_x = 0.50
-        row2.scale_y = 1.25
-        row2.operator("draw2paint.canvas_material", text='Canvas Mat', icon='OUTLINER_OB_IMAGE')
+        row2.operator("draw2paint.add_holdout", text='Holdout', icon='GHOST_ENABLED')
 
 ############# liquid sculpt
 class DRAW2PAINT_PT_Sculpt2D(bpy.types.Panel):
@@ -1713,6 +1813,7 @@ class DRAW2PAINT_PT_Sculpt2D(bpy.types.Panel):
         row1.scale_x = 0.50
         row1.scale_y = 1.25
         row1.operator("draw2paint.sculpt_duplicate", text='Copy and Erase', icon='NODE_TEXTURE')
+        
         row2 = row.split(align=True)
         row2.scale_x = 0.50
         row2.scale_y = 1.25
@@ -1741,14 +1842,17 @@ class DRAW2PAINT_PT_SceneExtras(bpy.types.Panel):
         row1.scale_x = 0.50
         row1.scale_y = 1.25
         row1.operator("draw2paint.create_brush", text='Create Brush/Mask', icon='BRUSHES_ALL')
+        
         row2 = row.split(align=True)
         row2.scale_x = 0.50
         row2.scale_y = 1.25
         row2.operator("draw2paint.create_reference_scene", text='Sculpt Ref', icon='SCULPTMODE_HLT')
+        
         row3 = row.split(align=True)
         row3.scale_x = 0.50
         row3.scale_y = 1.25
         row3.operator("draw2paint.sculpt_camera", text='Sculpt Camera', icon='VIEW_CAMERA')
+        
         row4 = row.split(align=True)
         row4.scale_x = 0.50
         row4.scale_y = 1.25
@@ -1762,6 +1866,7 @@ class DRAW2PAINT_PT_SceneExtras(bpy.types.Panel):
         row1.scale_x = 0.50
         row1.scale_y = 1.25
         row1.operator("draw2paint.frontof_paint", text='Align to Face', icon='TRACKER')
+        
         row2 = row.split(align=True)
         row2.scale_x = 0.50
         row2.scale_y = 1.25
@@ -1791,6 +1896,9 @@ classes = (
     DRAW2PAINT_OT_BorderCropToggle,
     DRAW2PAINT_OT_FrontOfPaint,
     DRAW2PAINT_OT_DrawCurveloop,
+    DRAW2PAINT_OT_VectorCurve,
+    DRAW2PAINT_OT_SquareCurve,
+    DRAW2PAINT_OT_CircleCurve,
     DRAW2PAINT_OT_holdout_shader,
     DRAW2PAINT_PT_ImageState,
     DRAW2PAINT_PT_FlipRotate,
