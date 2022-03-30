@@ -91,11 +91,12 @@ class DRAW2PAINT_OT_CanvasHoriz(bpy.types.Operator):
 
     @classmethod
     def poll(self, context):
-        obj = context.active_object
-        A = obj is not None
-        if A:
-            B = obj.type == 'MESH'
-            return B
+        obj =  context.active_object
+        if obj is not None:
+            A = obj.type == 'MESH'
+            B = context.mode == 'PAINT_TEXTURE'
+            return A and B
+
 
     def execute(self, context):
         scene = context.scene
@@ -156,11 +157,11 @@ class DRAW2PAINT_OT_CanvasVertical(bpy.types.Operator):
 
     @classmethod
     def poll(self, context):
-        obj = context.active_object
-        A = obj is not None
-        if A:
-            B = obj.type == 'MESH'
-            return B
+        obj =  context.active_object
+        if obj is not None:
+            A = obj.type == 'MESH'
+            B = context.mode == 'PAINT_TEXTURE'
+            return A and B
 
     def execute(self, context):
         scene = context.scene
@@ -221,11 +222,11 @@ class DRAW2PAINT_OT_RotateCanvasCCW15(bpy.types.Operator):
 
     @classmethod
     def poll(self, context):
-        obj = context.active_object
-        A = obj is not None
-        if A:
-            B = obj.type == 'MESH'
-            return B
+        obj =  context.active_object
+        if obj is not None:
+            A = obj.type == 'MESH'
+            B = context.mode == 'PAINT_TEXTURE'
+            return A and B
 
     def execute(self, context):
         scene = context.scene
@@ -262,11 +263,11 @@ class DRAW2PAINT_OT_RotateCanvasCW15(bpy.types.Operator):
 
     @classmethod
     def poll(self, context):
-        obj = context.active_object
-        A = obj is not None
-        if A:
-            B = obj.type == 'MESH'
-            return B
+        obj =  context.active_object
+        if obj is not None:
+            A = obj.type == 'MESH'
+            B = context.mode == 'PAINT_TEXTURE'
+            return A and B
 
     def execute(self, context):
         scene = context.scene
@@ -303,11 +304,11 @@ class DRAW2PAINT_OT_RotateCanvasCCW(bpy.types.Operator):
 
     @classmethod
     def poll(self, context):
-        obj = context.active_object
-        A = obj is not None
-        if A:
-            B = obj.type == 'MESH'
-            return B
+        obj =  context.active_object
+        if obj is not None:
+            A = obj.type == 'MESH'
+            B = context.mode == 'PAINT_TEXTURE'
+            return A and B
 
     def execute(self, context):
         scene = context.scene
@@ -344,11 +345,11 @@ class DRAW2PAINT_OT_RotateCanvasCW(bpy.types.Operator):
 
     @classmethod
     def poll(self, context):
-        obj = context.active_object
-        A = obj is not None
-        if A:
-            B = obj.type == 'MESH'
-            return B
+        obj =  context.active_object
+        if obj is not None:
+            A = obj.type == 'MESH'
+            B = context.mode == 'PAINT_TEXTURE'
+            return A and B
 
     def execute(self, context):
         scene = context.scene
@@ -385,11 +386,11 @@ class DRAW2PAINT_OT_ImageReload(bpy.types.Operator):
 
     @classmethod
     def poll(self, context):
-        obj = context.active_object
-        A = obj is not None
-        if A:
-            B = obj.type == 'MESH'
-            return B
+        obj =  context.active_object
+        if obj is not None:
+            A = obj.type == 'MESH'
+            B = context.mode == 'PAINT_TEXTURE'
+            return A and B
 
     def execute(self, context):
         original_type = context.area.ui_type
@@ -414,11 +415,11 @@ class DRAW2PAINT_OT_CanvasResetrot(bpy.types.Operator):
 
     @classmethod
     def poll(self, context):
-        obj = context.active_object
-        A = obj is not None
-        if A:
-            B = obj.type == 'MESH'
-            return B
+        obj =  context.active_object
+        if obj is not None:
+            A = obj.type == 'MESH'
+            B = context.mode == 'PAINT_TEXTURE'
+            return A and B
 
     def execute(self, context):
         scene = context.scene
@@ -443,11 +444,11 @@ class DRAW2PAINT_OT_CameraviewPaint(bpy.types.Operator):
 
     @classmethod
     def poll(self, context):
-        obj = context.active_object
-        A = obj is not None
-        if A:
-            B = obj.type == 'MESH'
-            return B
+        obj =  context.active_object
+        if obj is not None:
+            A = obj.type == 'MESH'
+            B = context.mode == 'OBJECT'
+            return A and B
 
     def execute(self, context):
 
@@ -577,11 +578,11 @@ class DRAW2PAINT_OT_SaveImage(bpy.types.Operator):
 
     @classmethod
     def poll(self, context):
-        obj = context.active_object
-        A = obj is not None
-        if A:
-            B = obj.type == 'MESH'
-            return B
+        obj =  context.active_object
+        if obj is not None:
+            A = obj.type == 'MESH'
+            B = context.mode == 'PAINT_TEXTURE'
+            return A and B
 
     def execute(self, context):
         scene = context.scene
@@ -722,11 +723,11 @@ class DRAW2PAINT_OT_SaveIncrem(bpy.types.Operator):
 
     @classmethod
     def poll(self, context):
-        obj = context.active_object
-        A = obj is not None
-        if A:
-            B = obj.type == 'MESH'
-            return B
+        obj =  context.active_object
+        if obj is not None:
+            A = obj.type == 'MESH'
+            B = context.mode == 'PAINT_TEXTURE'
+            return A and B
 
     def execute(self, context):
         scene = context.scene
