@@ -598,43 +598,7 @@ class DRAW2PAINT_OT_SaveImage(bpy.types.Operator):
         return {'FINISHED'}
 
 
-# -----------------------------image save
-####################
 
-
-'''class DRAW2PAINT_OT_MoveOrigin(bpy.types.Operator):
-    """Move Canvas Origin"""
-    bl_idname = "draw2paint.move_origin"
-    bl_label = "Move Origin"
-    bl_options = { 'REGISTER', 'UNDO' }
-
-    @classmethod
-    def poll(self, context):
-        obj =  context.active_object
-        A = obj is not None
-        if A:
-            B = obj.type == 'MESH'
-            return B
-
-    def execute(self, context):
-
-        scene = context.scene
-        layer = bpy.context.view_layer
-        layer.update()
-
-        bpy.ops.paint.texture_paint_toggle()###to object mode
-
-        #bpy.ops.view3d.snap_cursor_to_selected()
-
-        #to set the origin to the cursor
-        bpy.ops.object.origin_set(type='ORIGIN_CURSOR', center='MEDIAN')
-
-
-        bpy.ops.paint.texture_paint_toggle()###back to texpaint
-
-
-
-        return {'FINISHED'}'''
 
 
 # -----------------------------------reload image
