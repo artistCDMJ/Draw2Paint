@@ -1000,10 +1000,14 @@ class DRAW2PAINT_OT_CanvasMaterial(bpy.types.Operator):
     bl_label = "Set the Material to the same as Main Canvas"
     bl_options = {'REGISTER', 'UNDO'}
 
+
+
+        
+
     def execute(self, context):
         scene = context.scene
-        
-        
+                
+            
         obj = context.active_object
         canvas = bpy.data.objects['canvas'].material_slots[0].material
         obj.data.materials.append(canvas)
@@ -1148,43 +1152,34 @@ class DRAW2PAINT_OT_SolidifyDifference(bpy.types.Operator):
 
     def execute(self, context):
         scene = context.scene
-        # init
-        sel = context.selected_objects
-        act = context.scene.objects.active
+        context = bpy.context
 
-        for obj in sel:
-            scene.objects.active = obj  # set active to selected
-
-            bpy.ops.object.editmode_toggle()
-            # to get a clean single face for paint projection
-            bpy.ops.mesh.dissolve_faces()
-            bpy.ops.object.editmode_toggle()
-
-            bpy.ops.object.modifier_add(type='SOLIDIFY')  # set soldifiy for bool
-            # thicker than active
-            context.object.modifiers["Solidify"].thickness = 0.3
-            # attempt to only move bool brush up in Z
-            bpy.ops.transform.translate(value=(0, 0, 0.01), \
-                                        constraint_axis=(False, False, True), \
-                                        constraint_orientation='GLOBAL', \
-                                        mirror=False, proportional='DISABLED', \
-                                        proportional_edit_falloff='SMOOTH', \
-                                        proportional_size=1, \
-                                        release_confirm=True)
-
-            context.scene.objects.active = act  # reset active
-            bpy.ops.object.editmode_toggle()
-            bpy.ops.mesh.dissolve_faces()
-            bpy.ops.object.editmode_toggle()
-            bpy.ops.object.modifier_add(type='SOLIDIFY')  # soldify for boolean
-            # to move active 0 in Z
-            bpy.ops.transform.translate(value=(0, 0, 0), \
-                                        constraint_axis=(False, False, True), \
-                                        constraint_orientation='GLOBAL', mirror=False, \
-                                        proportional='DISABLED', \
-                                        proportional_edit_falloff='SMOOTH', \
-                                        proportional_size=1, release_confirm=True)
-            bpy.ops.btool.boolean_diff()  # call booltool
+        obj = context.active_object
+        
+        mod = obj.modifiers.new("Solidify", 'SOLIDIFY')# add a solidify modifier on active object
+        
+        mod.thickness = 0.01# set modifier properties
+        obj.location.z = 0 
+    
+        for o in context.selected_objects:
+            if o == obj:
+                continue
+            # see if there is already a modifier named "SelectedSolidify" and use it
+            mod = o.modifiers.get("SelectedSolidify")
+            if mod is None:
+                # otherwise add a modifier to selected object
+                mod = o.modifiers.new("SelectedSolidify", 'SOLIDIFY')
+                mod.thickness = 0.3
+                o.location.z += 0.1
+            # add a boolean mod
+            #obj = context.active_object
+            o.display_type = 'WIRE'
+            
+            boolmod = obj.modifiers.new("Bool", 'BOOLEAN')
+            boolmod.object = o
+            boolmod.solver = 'FAST'
+            boolmod.operation = 'DIFFERENCE'
+          
 
             return {'FINISHED'}
 
@@ -1197,30 +1192,34 @@ class DRAW2PAINT_OT_SolidifyUnion(bpy.types.Operator):
 
     def execute(self, context):
         scene = context.scene
-        # init
-        sel = context.selected_objects
-        act = context.scene.objects.active
+        context = bpy.context
 
-        for obj in sel:
-            scene.objects.active = obj  # set active to selected
-
-            bpy.ops.object.editmode_toggle()
-            bpy.ops.mesh.dissolve_faces()  # to get a single face for paint projection
-            bpy.ops.object.editmode_toggle()
-
-            bpy.ops.object.modifier_add(type='SOLIDIFY')  # set soldifiy for bool
-            context.object.modifiers["Solidify"].thickness = 0.3  # thicker than active
-
-            scene.objects.active = act  # reset active
-
-            bpy.ops.object.editmode_toggle()
-            bpy.ops.mesh.dissolve_faces()
-            bpy.ops.object.editmode_toggle()
-
-            bpy.ops.object.modifier_add(type='SOLIDIFY')  # basic soldify for boolean
-            context.object.modifiers["Solidify"].thickness = 0.3  # thicker than active
-
-            bpy.ops.btool.boolean_union()  # call booltool
+        obj = context.active_object
+        
+        mod = obj.modifiers.new("Solidify", 'SOLIDIFY')# add a solidify modifier on active object
+        
+        mod.thickness = 0.01# set modifier properties
+        obj.location.z = 0 
+    
+        for o in context.selected_objects:
+            if o == obj:
+                continue
+            # see if there is already a modifier named "SelectedSolidify" and use it
+            mod = o.modifiers.get("SelectedSolidify")
+            if mod is None:
+                # otherwise add a modifier to selected object
+                mod = o.modifiers.new("SelectedSolidify", 'SOLIDIFY')
+                mod.thickness = 0.01
+                o.location.z = 0
+            # add a boolean mod
+            #obj = context.active_object
+            #o.display_type = 'WIRE'
+            
+            boolmod = obj.modifiers.new("Bool", 'BOOLEAN')
+            boolmod.object = o
+            boolmod.solver = 'FAST'
+            boolmod.operation = 'UNION'
+          
 
             return {'FINISHED'}
 
@@ -1235,14 +1234,17 @@ class DRAW2PAINT_OT_RemoveMods(bpy.types.Operator):
         scene = context.scene
         # init
         obj = context.object
-        old_mesh = obj.data  # get a reference to the current obj.data
+        
+        bpy.ops.object.convert(target='MESH')
+
+        '''old_mesh = obj.data  # get a reference to the current obj.data
 
         apply_modifiers = False  # settings for to_mesh
-        new_mesh = obj.to_mesh(scene, apply_modifiers, 'PREVIEW')
+        new_mesh = obj.to_mesh(preserve_all_data_layers=True, depsgraph=None)
         obj.modifiers.clear()  # object will still have modifiers, remove them
         obj.data = new_mesh  # assign the new mesh to obj.data
         bpy.data.meshes.remove(old_mesh)  # remove the old mesh from the .blend
-        context.object.draw_type = 'TEXTURED'
+        context.object.draw_type = 'TEXTURED'''
 
         return {'FINISHED'}
 
@@ -1495,6 +1497,9 @@ class DRAW2PAINT_OT_DrawCurveloop(bpy.types.Operator):
 
         bpy.context.object.data.dimensions = '2D'
         bpy.context.object.data.fill_mode = 'BOTH'
+        
+
+
         bpy.ops.wm.tool_set_by_id(name="builtin.draw")
 
         return {'FINISHED'}
@@ -1630,17 +1635,11 @@ class DRAW2PAINT_PT_FlipRotate(bpy.types.Panel):
         row.scale_x = 0.50
         row.scale_y = 1.25
         row2 = row.split(align=True)
+        row2.operator("draw2paint.rotate_ccw_90", text="90 CCW", icon='TRIA_LEFT_BAR')
         row2.operator("draw2paint.rotate_ccw_15", text="15 CCW", icon='TRIA_LEFT')
         row2.operator("draw2paint.rotate_cw_15", text="15 CW", icon='TRIA_RIGHT')
-
-        row = layout.row()
-        row = col.row(align=True)
-        row.scale_x = 0.50
-        row.scale_y = 1.25
-        row3 = row.split(align=True)
-        row3.operator("draw2paint.rotate_ccw_90", text="90 CCW", icon='TRIA_LEFT_BAR')
-        row3.operator("draw2paint.rotate_cw_90", text="90 CW", icon='TRIA_RIGHT_BAR')
-
+        row2.operator("draw2paint.rotate_cw_90", text="90 CW", icon='TRIA_RIGHT_BAR')
+        
         row = layout.row()
         row.operator("draw2paint.canvas_resetrot", text="Reset Rotation", icon='RECOVER_LAST')
 
@@ -1733,7 +1732,7 @@ class DRAW2PAINT_PT_AlignMask(bpy.types.Panel):
         layout = self.layout
         box = layout.box()
         col = box.column(align=True)
-        col.label(text="Modify and Project Mask Objects")
+        col.label(text="Map and Apply Material to Mask")
         row = col.row(align=True)
 
         row1 = row.split(align=True)
@@ -1744,24 +1743,26 @@ class DRAW2PAINT_PT_AlignMask(bpy.types.Panel):
         row2 = row.split(align=True)
         row2.scale_x = 0.50
         row2.scale_y = 1.25
-        row2.operator("draw2paint.solidify_difference", text='Subtract Masks', icon='SELECT_SUBTRACT')
+        row1.operator("draw2paint.canvas_material", text='Copy Canvas', icon='OUTLINER_OB_IMAGE')
+        #row2.operator("draw2paint.solidify_difference", text='Subtract Masks', icon='SELECT_SUBTRACT')
         row3 = row.split(align=True)
         row3.scale_x = 0.50
         row3.scale_y = 1.25
-        row3.operator("draw2paint.solidify_union", text='Join Masks', icon='SELECT_EXTEND')
+        row2.operator("draw2paint.add_holdout", text='Holdout', icon='GHOST_ENABLED')
+        #row3.operator("draw2paint.solidify_union", text='Join Masks', icon='SELECT_EXTEND')
         
         
         layout = self.layout
         box = layout.box()
         col = box.column(align=True)
-        col.label(text="Draw and Set Material for Masks")
+        col.label(text="Draw and Modify Masks")
         row = col.row(align=True)
 
 
         row1 = row.split(align=True)
         row1.scale_x = 0.50
         row1.scale_y = 1.25
-        row1.operator("draw2paint.draw_curve", text='(Draw Curve', icon='CURVE_BEZCURVE')
+        row1.operator("draw2paint.draw_curve", text='Draw Curve', icon='CURVE_BEZCURVE')
 
         row2 = row.split(align=True)
         row2.scale_x = 0.50
@@ -1784,12 +1785,19 @@ class DRAW2PAINT_PT_AlignMask(bpy.types.Panel):
         row1 = row.split(align=True)
         row1.scale_x = 0.50
         row1.scale_y = 1.25
-        row1.operator("draw2paint.canvas_material", text='Copy Canvas', icon='OUTLINER_OB_IMAGE')
+        row1.operator("draw2paint.solidify_difference", text='Subtract Masks', icon='SELECT_SUBTRACT')
 
         row2 = row.split(align=True)
         row2.scale_x = 0.50
         row2.scale_y = 1.25
-        row2.operator("draw2paint.add_holdout", text='Holdout', icon='GHOST_ENABLED')
+        row2.operator("draw2paint.solidify_union", text='Join Masks', icon='SELECT_EXTEND')
+        #("draw2paint.remove_modifiers", text='Remove Mods', icon='UNLINKED')
+        row = col.row(align=True)
+        row = row.split(align=True)
+        row.scale_x = 0.50
+        row.scale_y = 1.25
+        row.operator("draw2paint.remove_modifiers", text='Remove Mods', icon='UNLINKED')
+        
 
 ############# liquid sculpt
 class DRAW2PAINT_PT_Sculpt2D(bpy.types.Panel):
@@ -1867,10 +1875,10 @@ class DRAW2PAINT_PT_SceneExtras(bpy.types.Panel):
         row1.scale_y = 1.25
         row1.operator("draw2paint.frontof_paint", text='Align to Face', icon='TRACKER')
         
-        row2 = row.split(align=True)
-        row2.scale_x = 0.50
-        row2.scale_y = 1.25
-        row2.operator("draw2paint.remove_modifiers", text='Remove Mods', icon='UNLINKED')
+        #row2 = row.split(align=True)
+        #row2.scale_x = 0.50
+        #row2.scale_y = 1.25
+        #row2.operator("draw2paint.remove_modifiers", text='Remove Mods', icon='UNLINKED')
 
 classes = (
     DRAW2PAINT_OT_MacroCreateBrush,
