@@ -2,9 +2,12 @@
 This is an add-on for 3.1 series Blender to enable manipulation of images using the Images as Planes add-on.
 The panel can be found in the N panel once installed, and the plane must be in Texture Paint mode to begin work.
 **Image State Tools**
+
 **Load Canvas** - this will call the IMport IMages as Planes addon and allow you to go find your initial image to paint on - I suggest keeping a few different sizes for painting on.
 
 **Camera View Paint** - this is the creation of the main camera and the rename of the initial image to 'canvas', as well as set up in the background of the main scene settings to improve the experience.
+
+**Slot** - borrowed an operator from EZPaint for a pop-up window loading the current active paint slot in a 2d Editor
 
 **Reload Image** - does just that, the button swaps to the image editor in the background and reloads the current image, abandoning the changes made.
 
