@@ -776,6 +776,39 @@ class DRAW2PAINT_OT_SaveIncrem(bpy.types.Operator):
 ############################################################
 # -------------------LEGACY FOR ADDITION TO PANEL OPERATORS
 ############################################################
+
+##################################
+# ------------------pop up section
+##################################
+
+class DRAW2PAINT_OT_DisplayActivePaintSlot(bpy.types.Operator):
+   '''Display selected paint slot in new window'''
+   bl_label = "Display active Slot"
+   bl_idname = "draw2paint.display_active_slot"
+   bl_options = {'REGISTER', 'UNDO'}
+   
+   
+   @classmethod
+   def poll(self, context):
+       return context.object.active_material.texture_paint_images
+
+   def execute(self, context):
+       if context.object.active_material.texture_paint_images:
+                # Get the Image
+            mat = bpy.context.object.active_material
+            image = mat.texture_paint_images[mat.paint_active_slot]
+                # Call user prefs window
+            bpy.ops.screen.userpref_show('INVOKE_DEFAULT')
+                # Change area type
+            area = context.window_manager.windows[-1].screen.areas[0]
+            area.type = 'IMAGE_EDITOR'
+                # Assign the Image
+            context.area.spaces.active.image = image
+            context.space_data.mode = 'PAINT'
+       else:
+            self.report({'INFO'}, "No active Slot")
+       return {'FINISHED'}
+
 # -----------------------------------------------------------------FRONT OF PAINT
 class DRAW2PAINT_OT_FrontOfPaint(bpy.types.Operator):
     """fast front of face view paint"""
@@ -1545,14 +1578,12 @@ class DRAW2PAINT_PT_ImageState(bpy.types.Panel):
         row2.scale_x = 0.50
         row2.scale_y = 1.25
         row2.operator("draw2paint.cameraview_paint", text="Camera View Paint", icon='CAMERA_STEREO')
-        # row3 = row.split(align=True)
-        # row3.scale_x=0.50
-        # row3.scale_y=1.25
-        # row3.operator("draw2paint.lock_screen", icon = 'DECORATE_LOCKED')
-        # row3.prop(view.region_3d, "lock_rotation", text="Lock Rotation")
-
-        # draw2paint.lock_screen
-
+        #draw2paint.display_active_slot
+        row3 = row.split(align=True)
+        row3.scale_x = 0.50
+        row3.scale_y = 1.25
+        row3.operator("draw2paint.display_active_slot",text = '2D', icon='OUTLINER_OB_LATTICE')
+        
         row = layout.row()
         row = col.row(align=True)
         row.scale_x = 0.50
@@ -1857,6 +1888,7 @@ classes = (
     DRAW2PAINT_OT_CanvasResetrot,
     DRAW2PAINT_OT_SaveImage,
     DRAW2PAINT_OT_CameraviewPaint,
+    DRAW2PAINT_OT_DisplayActivePaintSlot,
     DRAW2PAINT_OT_EmptyGuides,
     # DRAW2PAINT_OT_CamGuides,
     DRAW2PAINT_OT_SculptDuplicate,
