@@ -41,6 +41,8 @@ Modify and Project Mask Objects
 
 **Join Masks** - a Boolean Union of two selected mask planes/objects
 
+**Remove Mods** - this removes the modifiers left over from boolean ops
+
 Draw and St Material for Masks
 
 **Draw Curve** - automates going into curve drawing mode by adding a curve and setting the draw tool, draw a shape and it 'should' close itself, and you can press (Re)Project and Copy Canvas to set as a Mask, or Holdout to create transparent areas
@@ -86,7 +88,6 @@ Extras for 3D Paint
 
 **Align to Face** - selecting a face on a 3d model in Texpaint, this 'should' align the view to the selection
 
-**Remove Mods** - this removes the modifiers left over from boolean ops
 
 
 
