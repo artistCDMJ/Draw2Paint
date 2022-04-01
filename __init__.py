@@ -19,8 +19,8 @@
 bl_info = {
     "name": "Draw2Paint",
     "author": "CDMJ",
-    "version": (3, 3, 0),
-    "blender": (3, 0, 0),
+    "version": (3, 4, 0),
+    "blender": (3, 1, 0),
     "location": "UI > Draw2Paint",
     "description": "2D Paint in 3D View.",
     "warning": "",
@@ -28,6 +28,7 @@ bl_info = {
 }
 
 import bpy
+import bmesh
 
 
 class DRAW2PAINT_OT_MacroCreateBrush(bpy.types.Operator):
@@ -776,39 +777,6 @@ class DRAW2PAINT_OT_SaveIncrem(bpy.types.Operator):
 ############################################################
 # -------------------LEGACY FOR ADDITION TO PANEL OPERATORS
 ############################################################
-
-##################################
-# ------------------pop up section
-##################################
-
-class DRAW2PAINT_OT_DisplayActivePaintSlot(bpy.types.Operator):
-   '''Display selected paint slot in new window'''
-   bl_label = "Display active Slot"
-   bl_idname = "draw2paint.display_active_slot"
-   bl_options = {'REGISTER', 'UNDO'}
-   
-   
-   @classmethod
-   def poll(self, context):
-       return context.object.active_material.texture_paint_images
-
-   def execute(self, context):
-       if context.object.active_material.texture_paint_images:
-                # Get the Image
-            mat = bpy.context.object.active_material
-            image = mat.texture_paint_images[mat.paint_active_slot]
-                # Call user prefs window
-            bpy.ops.screen.userpref_show('INVOKE_DEFAULT')
-                # Change area type
-            area = context.window_manager.windows[-1].screen.areas[0]
-            area.type = 'IMAGE_EDITOR'
-                # Assign the Image
-            context.area.spaces.active.image = image
-            context.space_data.mode = 'PAINT'
-       else:
-            self.report({'INFO'}, "No active Slot")
-       return {'FINISHED'}
-
 # -----------------------------------------------------------------FRONT OF PAINT
 class DRAW2PAINT_OT_FrontOfPaint(bpy.types.Operator):
     """fast front of face view paint"""
@@ -1369,6 +1337,142 @@ class DRAW2PAINT_OT_AlignBottom(bpy.types.Operator):
         return {'FINISHED'}'''
 
 
+########################-------------------------vgroup force ops
+
+class DRAW2PAINT_OT_SelectVertgroup(bpy.types.Operator):
+    """Select Vertgroup"""
+    bl_idname = "draw2paint.select_vgroup"
+
+    bl_label = "Select VGroup"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        bpy.ops.object.editmode_toggle()  # toggle editmode
+        bpy.ops.object.vertex_group_select()  # select current active vgroup
+        bpy.ops.object.editmode_toggle()  # toggle editmode
+        bpy.ops.paint.texture_paint_toggle()  # Texpaint
+        bpy.context.object.data.use_paint_mask = True  # set face select masking on in case we forgot
+
+        return {'FINISHED'}
+
+
+class DRAW2PAINT_OT_DeselectVertgroup(bpy.types.Operator):
+    """Deselect Vertgroup"""
+    bl_idname = "draw2paint.deselect_vgroup"
+
+    bl_label = "Deselect VGroup"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        bpy.ops.object.editmode_toggle()  # toggle editmode
+        bpy.ops.object.vertex_group_deselect()  # select current active vgroup
+        bpy.ops.object.editmode_toggle()  # toggle editmode
+        bpy.ops.paint.texture_paint_toggle()  # Texpaint
+        bpy.context.object.data.use_paint_mask = True  # set face select masking on in case we forgot
+
+        return {'FINISHED'}
+
+
+class DRAW2PAINT_OT_AssignVertgroup(bpy.types.Operator):
+    """Deselect Vertgroup"""
+    bl_idname = "draw2paint.assign_vgroup"
+
+    bl_label = "Deselect VGroup"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        bpy.ops.object.editmode_toggle()  # toggle editmode
+        bpy.ops.object.vertex_group_assign()  # select current active vgroup
+        bpy.ops.object.editmode_toggle()  # toggle editmode
+        bpy.ops.paint.texture_paint_toggle()  # Texpaint
+        bpy.context.object.data.use_paint_mask = True  # set face select masking on in case we forgot
+
+        return {'FINISHED'}
+
+
+class DRAW2PAINT_OT_UnassignVertgroup(bpy.types.Operator):
+    """Deselect Vertgroup"""
+    bl_idname = "draw2paint.unassign_vgroup"
+
+    bl_label = "Deselect VGroup"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        bpy.ops.object.editmode_toggle()  # toggle editmode
+        bpy.ops.object.vertex_group_remove_from()  # select current active vgroup
+        bpy.ops.object.editmode_toggle()  # toggle editmode
+        bpy.ops.paint.texture_paint_toggle()  # Texpaint
+        bpy.context.object.data.use_paint_mask = True  # set face select masking on in case we forgot
+
+        return {'FINISHED'}
+
+        # sub.operator("object.vertex_group_assign", text="Assign")
+        # sub.operator("object.vertex_group_remove_from", text="Remove")
+
+
+##################################---------------end block vgroup force ops
+
+
+#############################  -------FMG
+
+class DRAW2PAINT_OT_getFaceMaskGroups(bpy.types.Operator):
+    """Test your addon operator here first"""
+    bl_idname = "draw2paint.getfacemaskgroups"
+    bl_label = "Generic Operator Shell"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    ####answer from batFINGER
+    @classmethod
+    def poll(self, context):
+        obj = context.active_object
+        # fmg = obj.vertex_group
+
+        if obj is not None:
+            A = obj.type == 'MESH'
+            B = context.mode == 'PAINT_TEXTURE' or 'OBJECT_MODE'
+            return A and B
+
+    def execute(self, context):
+        scene = context.scene
+        context = bpy.context
+
+        def island_verts(mesh):
+            #   import bmesh
+            bpy.ops.object.mode_set(mode='EDIT')
+            bpy.ops.mesh.select_mode(type='VERT')
+            bpy.ops.mesh.select_all(action='DESELECT')
+
+            bm = bmesh.from_edit_mesh(mesh)
+            bm.verts.ensure_lookup_table()
+            verts = [v.index for v in bm.verts]
+
+            vgs = []
+            while len(verts):
+                bm.verts[verts[0]].select = True
+                # bpy.ops.mesh.select_linked(delimit={'SEAM'})
+                bpy.ops.mesh.select_linked()
+                sv = [v.index for v in bm.verts if v.select]
+                vgs.append(sv)
+                for v in sv:
+                    bm.verts[v].select = False
+                    verts.remove(v)
+            bm.free()  # prob not nec.
+            bpy.ops.object.mode_set(mode='OBJECT')
+            return vgs
+
+            # test run
+
+        obj = bpy.context.object
+        mesh = obj.data
+        vgs = island_verts(mesh)
+
+        for vg in vgs:
+            group = obj.vertex_groups.new()
+            group.name = "FMG by Island"
+            group.add(vg, 1.0, 'ADD')
+
+        return {'FINISHED'}
+
 class DRAW2PAINT_OT_CustomFps(bpy.types.Operator):
     """Slow Play FPS"""
     bl_idname = "draw2paint.slow_play"
@@ -1578,12 +1682,14 @@ class DRAW2PAINT_PT_ImageState(bpy.types.Panel):
         row2.scale_x = 0.50
         row2.scale_y = 1.25
         row2.operator("draw2paint.cameraview_paint", text="Camera View Paint", icon='CAMERA_STEREO')
-        #draw2paint.display_active_slot
-        row3 = row.split(align=True)
-        row3.scale_x = 0.50
-        row3.scale_y = 1.25
-        row3.operator("draw2paint.display_active_slot",text = '2D', icon='OUTLINER_OB_LATTICE')
-        
+        # row3 = row.split(align=True)
+        # row3.scale_x=0.50
+        # row3.scale_y=1.25
+        # row3.operator("draw2paint.lock_screen", icon = 'DECORATE_LOCKED')
+        # row3.prop(view.region_3d, "lock_rotation", text="Lock Rotation")
+
+        # draw2paint.lock_screen
+
         row = layout.row()
         row = col.row(align=True)
         row.scale_x = 0.50
@@ -1746,8 +1852,6 @@ class DRAW2PAINT_PT_AlignMask(bpy.types.Panel):
         row3.scale_y = 1.25
         row2.operator("draw2paint.add_holdout", text='Holdout', icon='GHOST_ENABLED')
         #row3.operator("draw2paint.solidify_union", text='Join Masks', icon='SELECT_EXTEND')
-        
-        
         layout = self.layout
         box = layout.box()
         col = box.column(align=True)
@@ -1793,6 +1897,73 @@ class DRAW2PAINT_PT_AlignMask(bpy.types.Panel):
         row.scale_x = 0.50
         row.scale_y = 1.25
         row.operator("draw2paint.remove_modifiers", text='Remove Mods', icon='UNLINKED')
+        
+        
+        
+
+
+############# FMG Face Mask Groups Panel
+class DRAW2PAINT_PT_FMG(bpy.types.Panel):
+    """Use Face MAsk Groups In Texture Paint Mode"""
+    bl_label = "Face Mask Groups"
+    bl_idname = "DRAW2PAINT_PT_FMG"
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "UI"
+    bl_category = "Draw2Paint"
+    bl_options = {'DEFAULT_CLOSED'}
+    
+    def draw(self, context):
+        
+
+        layout = self.layout
+
+        row = layout.row()
+
+        row.label(text="Face Mask Groups")
+        box = layout.box()  # HORIZONTAL ALIGN
+        col = box.column(align=True)
+        row = col.row(align=True)
+        row1 = row.split(align=True)
+        # row = layout.row()
+        row1.label(text="Generate FMG from Islands")
+        row1.operator("draw2paint.getfacemaskgroups", text="FMG+", icon='SHADERFX')
+
+        # def draw(self, context):
+        layout = self.layout
+
+        ob = context.object
+        group = ob.vertex_groups.active
+
+        rows = 2
+        if group:
+            rows = 4
+
+        row = layout.row()
+        row.template_list("MESH_UL_vgroups", "", ob, "vertex_groups", ob.vertex_groups, "active_index", rows=rows)
+
+        col = row.column(align=True)
+        col.operator("object.vertex_group_add", icon='ADD', text="")
+        col.operator("object.vertex_group_remove", icon='REMOVE', text="").all = False
+        col.menu("MESH_MT_vertex_group_context_menu", icon='DOWNARROW_HLT', text="")
+        if group:
+            col.separator()
+            col.operator("object.vertex_group_move", icon='TRIA_UP', text="").direction = 'UP'
+            col.operator("object.vertex_group_move", icon='TRIA_DOWN', text="").direction = 'DOWN'
+
+        box = layout.box()
+        col = box.column(align=True)
+        row = col.row(align=True)
+        row1 = row.split(align=True)
+        # row = layout.row()
+        row1.operator("draw2paint.select_vgroup", text="Sel", icon='RADIOBUT_ON')
+        # row1 = layout.row()
+        row1.operator("draw2paint.deselect_vgroup", text="Desel", icon='RADIOBUT_OFF')
+        # row = layout.row()
+        row1.operator("draw2paint.assign_vgroup", text="Set", icon='ADD')
+        # row = layout.row()
+        row1.operator("draw2paint.unassign_vgroup", text="Unset", icon='REMOVE')
+
+    
         
 
 ############# liquid sculpt
@@ -1888,7 +2059,6 @@ classes = (
     DRAW2PAINT_OT_CanvasResetrot,
     DRAW2PAINT_OT_SaveImage,
     DRAW2PAINT_OT_CameraviewPaint,
-    DRAW2PAINT_OT_DisplayActivePaintSlot,
     DRAW2PAINT_OT_EmptyGuides,
     # DRAW2PAINT_OT_CamGuides,
     DRAW2PAINT_OT_SculptDuplicate,
@@ -1904,11 +2074,17 @@ classes = (
     DRAW2PAINT_OT_VectorCurve,
     DRAW2PAINT_OT_SquareCurve,
     DRAW2PAINT_OT_CircleCurve,
+    DRAW2PAINT_OT_getFaceMaskGroups,
+    DRAW2PAINT_OT_UnassignVertgroup,
+    DRAW2PAINT_OT_AssignVertgroup,
+    DRAW2PAINT_OT_DeselectVertgroup,
+    DRAW2PAINT_OT_SelectVertgroup,
     DRAW2PAINT_OT_holdout_shader,
     DRAW2PAINT_PT_ImageState,
     DRAW2PAINT_PT_FlipRotate,
     DRAW2PAINT_PT_GuideControls,
     DRAW2PAINT_PT_AlignMask,
+    DRAW2PAINT_PT_FMG,
     DRAW2PAINT_PT_Sculpt2D,
     DRAW2PAINT_PT_SceneExtras,
     DRAW2PAINT_OT_SaveIncrem,
