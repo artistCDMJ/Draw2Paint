@@ -33,7 +33,7 @@ The panel can be found in the N panel once installed, and the plane must be in T
 **Mask Controls**
 Align Selected Mask Objects - icons indicate the relation the selected masks should reflect once pressed
 
-Modify and Project Mask Objects
+Map and Apply Material to Mask
 
 **(Re)Project** - with a mask object (closed)selected, you can use this to apply an UV Project from View through the camera view - NOTE: Press 2X if the image doesn't appear to have changed
 
@@ -43,7 +43,7 @@ Modify and Project Mask Objects
 
 **Remove Mods** - this removes the modifiers left over from boolean ops
 
-Draw and St Material for Masks
+Draw and Modify Masks
 
 **Draw Curve** - automates going into curve drawing mode by adding a curve and setting the draw tool, draw a shape and it 'should' close itself, and you can press (Re)Project and Copy Canvas to set as a Mask, or Holdout to create transparent areas
 
