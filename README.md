@@ -55,6 +55,13 @@ Draw and St Material for Masks
 
 **Holdout** - sets a Holdout Shader to whatever is selected so areas appear to be transparent for prep before camera render
 
+**Face Mask Groups**
+
+**FMG+** -generate face mask groups from islands (based on vertex groups, just renamed for context in painting)
+
+Select, Deselect, Set(assign) and Unset(unassign) Face Mask groups based on selections in Texture Paint while using Face Select Masking
+Workflow is apparent when using 3d projection paint on complex mesh object and wanting to Fill tool areas quickly for blockout - Generate the new groups and then you can toggle through to mask them while painting with Face Select Masking on.
+
 **Sculpt 2D Controls**
 
 Copy, Erase and Liquid Sculpt
@@ -84,5 +91,5 @@ Extras for 3D Paint
 
 
 
+![screen_3 4 0_draw2paint](https://user-images.githubusercontent.com/16747273/161315004-19e0567e-5e09-47b5-9f08-d355775f421f.png)
 
-![screen_draw2paint](https://user-images.githubusercontent.com/16747273/160320704-4344c744-669c-4c28-bb2d-043217dcfc75.png)
