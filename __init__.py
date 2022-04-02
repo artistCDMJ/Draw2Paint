@@ -31,6 +31,22 @@ import bpy
 import bmesh
 
 ##### main operators grouped
+########### props
+class MyProperties(bpy.types.PropertyGroup):
+    
+    my_string : bpy.props.StringProperty(name= "Enter Text")
+    
+    #my_float_vector : bpy.props.FloatVectorProperty(name= "Scale", soft_min= 0, soft_max= 1000, default= (1,1,1))
+    
+    my_enum : bpy.props.EnumProperty(
+        name= "",
+        description= "Choose Curve To Draw",
+        items= [('OP1',"Draw Curve", ""),
+                ('OP2', "Draw Vector", ""),
+                ('OP3', "Draw Square", ""),
+                ('OP4', "Draw Circle", "")
+        ]
+    )
 
 
 ####brush scenes and sculpt scenes
@@ -1236,8 +1252,81 @@ class DRAW2PAINT_OT_AlignBottom(bpy.types.Operator):
 
 ###########new curve primitives for drawing masks
 
+class DRAW2PAINT_OT_my_enum_shapes(bpy.types.Operator):
+    bl_label = "Add Mask Object"
+    bl_idname = "draw2paint.my_enum_shapes"
+    
+    
+    
+    def execute(self, context):
+        scene = context.scene
+        mytool = scene.my_tool
+        
+        if mytool.my_enum == 'OP1':
+            #operators guts from draw curve
+            #def execute(self, context):
+            scene = context.scene
+            ######### add a new curve at 0.15 Z
+            bpy.ops.curve.primitive_bezier_curve_add(radius=1, enter_editmode=False, align='WORLD', location=(0, 0, 0.15),
+                                                     scale=(1, 1, 1))
+            bpy.ops.object.editmode_toggle()
+            bpy.ops.curve.delete(type='VERT')
+            ########### need to add a material to the object and make it a holdout shader
+            bpy.ops.material.new()
 
-class DRAW2PAINT_OT_SquareCurve(bpy.types.Operator):
+            bpy.ops.curve.cyclic_toggle()
+
+            bpy.context.object.data.dimensions = '2D'
+            bpy.context.object.data.fill_mode = 'BOTH'
+
+            bpy.ops.wm.tool_set_by_id(name="builtin.draw")
+
+
+            
+            
+        if mytool.my_enum == 'OP2':
+            #operators guts from draw vector
+            bpy.ops.curve.primitive_bezier_curve_add(enter_editmode=True, align='WORLD', location=(0, 0, 0.0125),
+                                                 scale=(1, 1, 1))
+
+            bpy.ops.curve.handle_type_set(type='VECTOR')
+            bpy.context.object.data.dimensions = '2D'
+            bpy.context.object.data.fill_mode = 'BOTH'
+
+            bpy.ops.transform.resize(value=(0.1, 0.1, 0.1))
+            
+        
+        
+        
+        if mytool.my_enum == 'OP3':
+            #operators guts from draw square
+            bpy.ops.curve.primitive_bezier_circle_add(radius=0.25, enter_editmode=False, align='WORLD', location=(0, 0, 0),
+                                                      scale=(1, 1, 1))
+            bpy.context.object.data.dimensions = '2D'
+            bpy.context.object.data.fill_mode = 'BOTH'
+            bpy.ops.object.editmode_toggle()
+            bpy.ops.curve.handle_type_set(type='VECTOR')
+            bpy.ops.transform.rotate(value=0.785398, orient_axis='Z')
+        
+        
+        if mytool.my_enum == 'OP4':
+            #operators guts from draw circle
+            bpy.ops.curve.primitive_bezier_circle_add(radius=0.25, enter_editmode=False, align='WORLD', location=(0, 0, 0),
+                                                      scale=(1, 1, 1))
+            bpy.context.object.data.dimensions = '2D'
+            bpy.context.object.data.fill_mode = 'BOTH'
+            bpy.ops.object.editmode_toggle()            
+        
+        
+            
+        
+        
+        return {'FINISHED'}
+
+
+
+
+'''class DRAW2PAINT_OT_SquareCurve(bpy.types.Operator):
     """Square Curve primitive for Mask"""
     bl_idname = "draw2paint.square_curve"
     bl_label = "Add Square Curve Primitive for Masking"
@@ -1322,7 +1411,7 @@ class DRAW2PAINT_OT_DrawCurveloop(bpy.types.Operator):
 
         bpy.ops.wm.tool_set_by_id(name="builtin.draw")
 
-        return {'FINISHED'}
+        return {'FINISHED'}'''
 
 ####################### boolean masks work
 class DRAW2PAINT_OT_RemoveMods(bpy.types.Operator):
@@ -1687,7 +1776,7 @@ class DRAW2PAINT_PT_GuideControls(bpy.types.Panel):
 
 
 ############### align
-class DRAW2PAINT_PT_AlignMask(bpy.types.Panel):
+class DRAW2PAINT_PT_MaskControl(bpy.types.Panel):
     """Align selected Objects in Camera View"""
     bl_label = "Mask Controls"
     bl_idname = "DRAW2PAINT_PT_AlignMask"
@@ -1698,6 +1787,8 @@ class DRAW2PAINT_PT_AlignMask(bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
+        scene = context.scene
+        mytool = scene.my_tool
 
         box = layout.box()
         col = box.column(align=True)
@@ -1765,24 +1856,10 @@ class DRAW2PAINT_PT_AlignMask(bpy.types.Panel):
         row1 = row.split(align=True)
         row1.scale_x = 0.50
         row1.scale_y = 1.25
-        row1.operator("draw2paint.draw_curve", text='Draw Curve', icon='CURVE_BEZCURVE')
-
-        row2 = row.split(align=True)
-        row2.scale_x = 0.50
-        row2.scale_y = 1.25
-        # row2.operator
-        row2.operator("draw2paint.vector_curve", text='Draw Vector', icon='HANDLE_VECTOR')
-
-        row = col.row(align=True)
-        row3 = row.split(align=True)
-        row3.scale_x = 0.50
-        row3.scale_y = 1.25
-        row3.operator("draw2paint.square_curve", text='Draw Square', icon='MOD_MESHDEFORM')
-
-        row3 = row.split(align=True)
-        row3.scale_x = 0.50
-        row3.scale_y = 1.25
-        row3.operator("draw2paint.circle_curve", text='Draw Circle', icon='MESH_CIRCLE')
+        #row1.operator("draw2paint.draw_curve", text='Draw Curve', icon='CURVE_BEZCURVE')
+        row1.prop(mytool, "my_enum")
+        row1.operator("draw2paint.my_enum_shapes")
+        
 
         row = col.row(align=True)
         row1 = row.split(align=True)
@@ -1927,6 +2004,8 @@ class DRAW2PAINT_PT_SceneExtras(bpy.types.Panel):
         row1.operator("draw2paint.frontof_paint", text='Align to Face', icon='TRACKER')
 
 classes = (
+    
+    MyProperties,
     DRAW2PAINT_OT_MacroCreateBrush,
     DRAW2PAINT_OT_CanvasHoriz,
     DRAW2PAINT_OT_CanvasVertical,
@@ -1949,10 +2028,10 @@ classes = (
     DRAW2PAINT_OT_RemoveMods,
     DRAW2PAINT_OT_BorderCropToggle,
     DRAW2PAINT_OT_FrontOfPaint,
-    DRAW2PAINT_OT_DrawCurveloop,
-    DRAW2PAINT_OT_VectorCurve,
-    DRAW2PAINT_OT_SquareCurve,
-    DRAW2PAINT_OT_CircleCurve,
+    #DRAW2PAINT_OT_DrawCurveloop,
+    #DRAW2PAINT_OT_VectorCurve,
+    #DRAW2PAINT_OT_SquareCurve,
+    #DRAW2PAINT_OT_CircleCurve,
     DRAW2PAINT_OT_getFaceMaskGroups,
     DRAW2PAINT_OT_UnassignVertgroup,
     DRAW2PAINT_OT_AssignVertgroup,
@@ -1962,7 +2041,7 @@ classes = (
     DRAW2PAINT_PT_ImageState,
     DRAW2PAINT_PT_FlipRotate,
     DRAW2PAINT_PT_GuideControls,
-    DRAW2PAINT_PT_AlignMask,
+    DRAW2PAINT_PT_MaskControl,
     DRAW2PAINT_PT_Sculpt2D,
     DRAW2PAINT_PT_SceneExtras,
     DRAW2PAINT_OT_SaveIncrem,
@@ -1977,12 +2056,38 @@ classes = (
     # DRAW2PAINT_OT_ToggleLock,
     DRAW2PAINT_OT_CustomFps,
     DRAW2PAINT_OT_RefMakerScene,
-    DRAW2PAINT_OT_SculptView
+    DRAW2PAINT_OT_SculptView,
+    DRAW2PAINT_OT_my_enum_shapes
 
 )
 
-register, unregister = bpy.utils.register_classes_factory(classes)
+#register, unregister = bpy.utils.register_classes_factory(classes)
 
+
+def register():
+    #init_temp_props()
+    from bpy.utils import register_class
+    for cls in classes:
+        register_class(cls)
+
+    bpy.types.Scene.my_tool = bpy.props.PointerProperty(type=MyProperties)
+
+def unregister():
+    remove_temp_props()
+    from bpy.utils import unregister_class
+    for cls in reversed(classes):
+        unregister_class(cls)
+        
+    del bpy.types.Scene.my_tool
+
+    
+
+    # Remove module
+
+
+
+
+    
 if __name__ == '__main__':
     register()
 
