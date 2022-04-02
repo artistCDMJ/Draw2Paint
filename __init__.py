@@ -19,10 +19,10 @@
 bl_info = {
     "name": "Draw2Paint",
     "author": "CDMJ",
-    "version": (3, 4, 0),
-    "blender": (3, 1, 0),
+    "version": (3, 5, 0),
+    "blender": (3, 0, 0),
     "location": "UI > Draw2Paint",
-    "description": "2D Paint in 3D View.",
+    "description": "2D Paint in 3D View, Mask Manipulation",
     "warning": "",
     "category": "Paint",
 }
@@ -30,6 +30,10 @@ bl_info = {
 import bpy
 import bmesh
 
+##### main operators grouped
+
+
+####brush scenes and sculpt scenes
 
 class DRAW2PAINT_OT_MacroCreateBrush(bpy.types.Operator):
     """Image Brush Scene Setup Macro"""
@@ -46,15 +50,15 @@ class DRAW2PAINT_OT_MacroCreateBrush(bpy.types.Operator):
 
         bpy.context.scene.render.engine = 'CYCLES'
         bpy.data.worlds[0]
-        
+
         # add lamp and move up 4 units in z
-       # bpy.ops.object.light_add(  # you can sort elements like this if the code
-       #     # is gettings long
-       #     type='POINT',
-       #     radius=1,
-       #     align='VIEW',
-       #     location=(0, 0, 4)
-       # )
+        # bpy.ops.object.light_add(  # you can sort elements like this if the code
+        #     # is gettings long
+        #     type='POINT',
+        #     radius=1,
+        #     align='VIEW',
+        #     location=(0, 0, 4)
+        # )
         # add camera to center and move up 4 units in Z
         bpy.ops.object.camera_add(
             align='VIEW',
@@ -81,8 +85,262 @@ class DRAW2PAINT_OT_MacroCreateBrush(bpy.types.Operator):
                 break  # this will break the loop after it is first ran
 
         return {'FINISHED'}
+class DRAW2PAINT_OT_CustomFps(bpy.types.Operator):
+    """Slow Play FPS"""
+    bl_idname = "draw2paint.slow_play"
+    bl_label = "Slow Play FPS Toggle"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        scene = context.scene
+        F = scene.render.fps
+
+        if F == 1:
+            scene.render.fps = 30
+            scene.render.fps_base = 1
+        else:
+            scene.render.fps = 1
+            scene.render.fps_base = 12
+
+        return {'FINISHED'}
+class DRAW2PAINT_OT_RefMakerScene(bpy.types.Operator):
+    """Create Reference Scene"""
+    bl_description = "Create Scene for Composing Reference Slides"
+    bl_idname = "draw2paint.create_reference_scene"
+    bl_label = "Create Scene for Image Reference"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    @classmethod
+    def poll(self, context):
+        for sc in bpy.data.scenes:
+            if sc.name == "Refmaker":
+                return False
+        return context.area.type == 'VIEW_3D'
+
+    def execute(self, context):
+        _name = "Refmaker"
+        for sc in bpy.data.scenes:
+            if sc.name == _name:
+                return {'FINISHED'}
+
+        bpy.ops.scene.new(type='NEW')
+        context.scene.name = _name
+        # add camera to center and move up 4 units in Z
+        bpy.ops.object.camera_add(view_align=False,
+                                  enter_editmode=False,
+                                  location=(0, 0, 4),
+                                  rotation=(0, 0, 0)
+                                  )
+
+        context.object.name = _name + " Camera"  # rename selected camera
+
+        # change scene size to HD
+        _RenderScene = context.scene.render
+        _RenderScene.resolution_x = 1920
+        _RenderScene.resolution_y = 1080
+        _RenderScene.resolution_percentage = 100
+
+        # save scene size as preset
+        bpy.ops.render.preset_add(name=_name)
+
+        # change to camera view
+        for area in bpy.context.screen.areas:
+            if area.type == 'VIEW_3D':
+                override = bpy.context.copy()
+                override['area'] = area
+                bpy.ops.view3d.viewnumpad(override, type='CAMERA')
+                break
+
+        return {'FINISHED'}
 
 
+# sculpt the new duplicated canvas
+class DRAW2PAINT_OT_SculptView(bpy.types.Operator):
+    """Sculpt View Reference Camera"""
+    bl_idname = "draw2paint.sculpt_camera"
+    bl_label = "Sculpt Camera"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        scene = context.scene
+
+        bpy.ops.object.camera_add(view_align=False,
+                                  enter_editmode=False,
+                                  location=(0, -4, 0),
+                                  rotation=(1.5708, 0, 0)
+                                  )
+        context.object.name = "Reference Cam"  # add camera to front view
+        context.object.data.show_passepartout = False
+        context.object.data.lens = 80
+
+        # change to camera view
+        for area in context.screen.areas:
+            if area.type == 'VIEW_3D':
+                override = bpy.context.copy()
+                override['area'] = area
+                bpy.ops.view3d.viewnumpad(override, type='CAMERA')
+                break
+        scene.render.resolution_x = 1920
+        scene.render.resolution_y = 1080
+
+        return {'FINISHED'}
+
+
+#################### shader applications
+###############test material holdout generator
+class DRAW2PAINT_OT_holdout_shader(bpy.types.Operator):
+    bl_label = "Mask Holdout Shader"
+    bl_idname = "draw2paint.add_holdout"
+
+    @classmethod
+    def poll(self, context):
+        obj = context.active_object
+        A = obj is not None
+        if A:
+            B = obj.type == 'CURVE' or 'MESH'
+            return B
+
+    def execute(self, context):
+        mask = bpy.data.materials.new(name="Holdout Mask")
+        mask.use_nodes = True
+
+        bpy.context.object.active_material = mask
+
+        mask = bpy.data.materials.new(name="Holdout Mask")
+
+        mask.use_nodes = True
+
+        bpy.context.object.active_material = mask
+
+        ###output node new
+        # output = mask.node_tree.nodes.get('ShaderNodeOutputMaterial')
+        material_output = bpy.context.active_object.active_material.node_tree.nodes.get('Material Output')
+
+        # Principled Main Shader in Tree
+        principled_node = mask.node_tree.nodes.get('Principled BSDF')
+        mask.node_tree.nodes.remove(principled_node)
+
+        ###Tex Coordinate Node
+        hold = mask.node_tree.nodes.new('ShaderNodeHoldout')
+        hold.location = (-100, 0)
+        hold.label = ("Holdout Mask")
+
+        # output = mask.node_tree.nodes.new('ShaderNodeOutputMaterial')
+        # newout = mask.node_tree.nodes.new('ShaderNodeOutputMaterial')
+
+        #####LINKING
+        link = mask.node_tree.links.new
+
+        link(hold.outputs[0], material_output.inputs[0])
+
+        return {'FINISHED'}
+
+
+class DRAW2PAINT_OT_CanvasMaterial(bpy.types.Operator):
+    """Adopt Canvas Material"""
+    bl_idname = "draw2paint.canvas_material"
+    bl_label = "Set the Material to the same as Main Canvas"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        scene = context.scene
+
+        obj = context.active_object
+        canvas = bpy.data.objects['canvas'].material_slots[0].material
+        obj.data.materials.append(canvas)
+
+        return {'FINISHED'}
+
+######################## sculpt to liquid
+class DRAW2PAINT_OT_SculptDuplicate(bpy.types.Operator):
+    """Duplicate Selected Image Plane, Single User for Eraser Paint"""
+    bl_idname = "draw2paint.sculpt_duplicate"
+    bl_label = "Sculpt Liquid Duplicate"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        scene = context.scene
+
+        bpy.ops.paint.texture_paint_toggle()
+        bpy.ops.object.duplicate_move(OBJECT_OT_duplicate={"linked": False, "mode": 'TRANSLATION'},
+                                      TRANSFORM_OT_translate={"value": (0, 0, 0), "orient_axis_ortho": 'X',
+                                                              "orient_type": 'GLOBAL',
+                                                              "orient_matrix": ((0, 0, 0), (0, 0, 0), (0, 0, 0)),
+                                                              "orient_matrix_type": 'GLOBAL',
+                                                              "constraint_axis": (False, False, False), "mirror": False,
+                                                              "use_proportional_edit": False,
+                                                              "proportional_edit_falloff": 'SMOOTH',
+                                                              "proportional_size": 1,
+                                                              "use_proportional_connected": False,
+                                                              "use_proportional_projected": False, "snap": False,
+                                                              "snap_target": 'CLOSEST', "snap_point": (0, 0, 0),
+                                                              "snap_align": False, "snap_normal": (0, 0, 0),
+                                                              "gpencil_strokes": False, "cursor_transform": False,
+                                                              "texture_space": False, "remove_on_cancel": False,
+                                                              "view2d_edge_pan": False, "release_confirm": False,
+                                                              "use_accurate": False, "use_automerge_and_split": False})
+        bpy.ops.transform.translate(value=(0, 0, 0.1))
+        # context.object.active_material.use_shadeless = True
+        # context.object.active_material.use_transparency = True
+        # context.object.active_material.transparency_method = 'Z_TRANSPARENCY'
+        bpy.ops.view3d.localview()
+        bpy.ops.paint.texture_paint_toggle()
+
+        # make ERASER brush or use exisitng
+        try:
+            context.tool_settings.image_paint.brush = bpy.data.brushes["Eraser"]
+            pass
+        except:
+            context.tool_settings.image_paint.brush = bpy.data.brushes["TexDraw"]
+            bpy.ops.brush.add()
+            bpy.data.brushes["TexDraw.001"].name = "Eraser"
+            # context.scene.tool_settings.unified_paint_settings.use_pressure_size = False
+            bpy.data.brushes["Eraser"].use_pressure_strength = False
+            bpy.data.brushes["Eraser"].blend = 'ERASE_ALPHA'
+
+        # make individual of material AND of image reference inside
+        sel = bpy.context.active_object
+        mat = sel.material_slots[0].material
+        sel.material_slots[0].material = mat.copy()
+
+        material = sel.material_slots[0].material
+        node = material.node_tree.nodes['Image Texture']
+        new_image = node.image.copy()
+        node.image = new_image
+
+        return {'FINISHED'}
+
+
+class DRAW2PAINT_OT_SculptLiquid(bpy.types.Operator):
+    """Convert to Subdivided Plane & Sculpt Liquid"""
+    bl_idname = "draw2paint.sculpt_liquid"
+    bl_label = "Sculpt like Liquid"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    @classmethod
+    def poll(self, context):
+        obj = context.active_object
+        # main_canvas = obj.name
+
+        if obj is not None:
+            A = context.active_object.type == 'MESH'
+            # B = context.active_object.name == obj.name[0]+ '.001'
+            return A  # and B
+
+    def execute(self, context):
+        scene = context.scene
+
+        bpy.ops.paint.texture_paint_toggle()
+        bpy.ops.object.editmode_toggle()
+        bpy.ops.mesh.subdivide(number_cuts=100, smoothness=0)
+        bpy.ops.mesh.subdivide(number_cuts=2, smoothness=0)
+        bpy.ops.sculpt.sculptmode_toggle()
+        bpy.ops.paint.brush_select(sculpt_tool='GRAB', create_missing=False)
+        scene.tool_settings.sculpt.use_symmetry_x = False
+        bpy.ops.view3d.localview()
+
+        return {'FINISHED'}
+############### canvas rotations
 # flip horizontal macro
 class DRAW2PAINT_OT_CanvasHoriz(bpy.types.Operator):
     """Flip the Canvas Left/Right"""
@@ -375,37 +633,6 @@ class DRAW2PAINT_OT_RotateCanvasCW(bpy.types.Operator):
         bpy.ops.paint.texture_paint_toggle()
 
         return {'FINISHED'}
-
-
-# -----------------------------------reload image
-
-class DRAW2PAINT_OT_ImageReload(bpy.types.Operator):
-    """Reload Image Last Saved State"""
-    bl_idname = "draw2paint.reload_saved_state"
-    bl_label = "Reload Image Save Point"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    @classmethod
-    def poll(self, context):
-        obj =  context.active_object
-        if obj is not None:
-            A = obj.type == 'MESH'
-            B = context.mode == 'PAINT_TEXTURE'
-            return A and B
-
-    def execute(self, context):
-        original_type = context.area.ui_type
-        context.area.ui_type = 'IMAGE_EDITOR'
-
-        obdat = context.active_object.data
-        ima = obdat.materials[0].texture_paint_images[0]
-        context.space_data.image = ima
-        bpy.ops.image.reload()  # return image to last saved state
-
-        context.area.ui_type = original_type
-        return {'FINISHED'}
-
-
 # --------------------------------image rotation reset
 
 class DRAW2PAINT_OT_CanvasResetrot(bpy.types.Operator):
@@ -433,7 +660,7 @@ class DRAW2PAINT_OT_CanvasResetrot(bpy.types.Operator):
                                   center='MEDIAN')
 
         return {'FINISHED'}
-
+######################### image ops to camera
 
 # -----------------------------cameraview paint
 
@@ -445,7 +672,7 @@ class DRAW2PAINT_OT_CameraviewPaint(bpy.types.Operator):
 
     @classmethod
     def poll(self, context):
-        obj =  context.active_object
+        obj = context.active_object
         if obj is not None:
             A = obj.type == 'MESH'
             B = context.mode == 'OBJECT'
@@ -560,15 +787,12 @@ class DRAW2PAINT_OT_CameraviewPaint(bpy.types.Operator):
         bpy.ops.paint.texture_paint_toggle()
         # set to Flat Shading Solid and Textured
         bpy.context.space_data.shading.type = 'MATERIAL'
-        
-        #set to standard color
+
+        # set to standard color
         bpy.context.scene.view_settings.view_transform = 'Standard'
         bpy.context.scene.render.film_transparent = True
 
-
         return {'FINISHED'}
-
-
 # -----------------------------image save
 
 class DRAW2PAINT_OT_SaveImage(bpy.types.Operator):
@@ -598,13 +822,92 @@ class DRAW2PAINT_OT_SaveImage(bpy.types.Operator):
         bpy.context.area.type = original_type
 
         return {'FINISHED'}
+####experiment fix - doesn't work yet
+class DRAW2PAINT_OT_SaveIncrem(bpy.types.Operator):
+    """Save Incremential Images - MUST SAVE SESSION FILE FIRST"""
+    bl_description = ""
+    bl_idname = "draw2paint.save_increm"
+    bl_label = "Save incremential Image Current"
+    bl_options = {'REGISTER', 'UNDO'}
 
+    @classmethod
+    def poll(self, context):
+        obj =  context.active_object
+        if obj is not None:
+            A = obj.type == 'MESH'
+            B = context.mode == 'PAINT_TEXTURE'
+            return A and B
 
+    def execute(self, context):
+        scene = context.scene
+        main_canvas = main_canvas_data(self, context)
 
+        if main_canvas[0] != '':  # if main canvas isn't erased
+            for obj in scene.objects:
+                if obj.name == main_canvas[0]:  # if mainCanvas Mat exist
+                    scene.objects.active = obj
+                    break
+        else:
+            return {'FINISHED'}
 
+        # init
+        obj = context.active_object
+        original_type = context.area.ui_type
+        context.area.ui_type = 'IMAGE_EDITOR'
 
+        # verify the brushname
+        _tempName = [main_canvas[0] + '_001' + main_canvas[1]]
+        _Dir = os.path.realpath(main_canvas[2])
+        l = os.listdir(_Dir)
+        brushesName = [f for f in l if os.path.isfile(os.path.join(_Dir, f))]
+        brushesName = sorted(brushesName)
+
+        i = 1
+        for x in _tempName:
+            for ob in brushesName:
+                if ob == _tempName[-1]:
+                    i += 1
+                    _tempName = _tempName + [main_canvas[0] + '_' + \
+                                             '{:03d}'.format(i) + main_canvas[1]]
+
+        # return image to last saved state
+        filepath = os.path.join(_Dir, _tempName[-1])
+        ima = obj.data.materials[0].texture_slots[0].texture.image
+        context.space_data.image = ima
+        bpy.ops.image.save_as(filepath=filepath,
+                              check_existing=False,
+                              relative_path=True)
+
+        context.area.ui_type = original_type
+        return {'FINISHED'}
 # -----------------------------------reload image
 
+class DRAW2PAINT_OT_ImageReload(bpy.types.Operator):
+    """Reload Image Last Saved State"""
+    bl_idname = "draw2paint.reload_saved_state"
+    bl_label = "Reload Image Save Point"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    @classmethod
+    def poll(self, context):
+        obj =  context.active_object
+        if obj is not None:
+            A = obj.type == 'MESH'
+            B = context.mode == 'PAINT_TEXTURE'
+            return A and B
+
+    def execute(self, context):
+        original_type = context.area.ui_type
+        context.area.ui_type = 'IMAGE_EDITOR'
+
+        obdat = context.active_object.data
+        ima = obdat.materials[0].texture_paint_images[0]
+        context.space_data.image = ima
+        bpy.ops.image.reload()  # return image to last saved state
+
+        context.area.ui_type = original_type
+        return {'FINISHED'}
+########### pivot works
 class DRAW2PAINT_OT_EmptyGuides(bpy.types.Operator):
     """experimental- create new empty guide or selected guide relocates origin"""
     bl_idname = "draw2paint.empty_guides"
@@ -692,8 +995,6 @@ class DRAW2PAINT_OT_EmptyGuides(bpy.types.Operator):
             return {'FINISHED'}
 
         return {'FINISHED'}
-
-
 class DRAW2PAINT_OT_center_object(bpy.types.Operator):
     """Snaps cursor and Selected Object to World Center"""
     bl_idname = "draw2paint.center_object"
@@ -712,67 +1013,7 @@ class DRAW2PAINT_OT_center_object(bpy.types.Operator):
         bpy.ops.view3d.snap_selected_to_cursor(use_offset=False)
 
         return {'FINISHED'}
-
-
-####experiment fix - doesn't work yet
-class DRAW2PAINT_OT_SaveIncrem(bpy.types.Operator):
-    """Save Incremential Images - MUST SAVE SESSION FILE FIRST"""
-    bl_description = ""
-    bl_idname = "draw2paint.save_increm"
-    bl_label = "Save incremential Image Current"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    @classmethod
-    def poll(self, context):
-        obj =  context.active_object
-        if obj is not None:
-            A = obj.type == 'MESH'
-            B = context.mode == 'PAINT_TEXTURE'
-            return A and B
-
-    def execute(self, context):
-        scene = context.scene
-        main_canvas = main_canvas_data(self, context)
-
-        if main_canvas[0] != '':  # if main canvas isn't erased
-            for obj in scene.objects:
-                if obj.name == main_canvas[0]:  # if mainCanvas Mat exist
-                    scene.objects.active = obj
-                    break
-        else:
-            return {'FINISHED'}
-
-        # init
-        obj = context.active_object
-        original_type = context.area.ui_type
-        context.area.ui_type = 'IMAGE_EDITOR'
-
-        # verify the brushname
-        _tempName = [main_canvas[0] + '_001' + main_canvas[1]]
-        _Dir = os.path.realpath(main_canvas[2])
-        l = os.listdir(_Dir)
-        brushesName = [f for f in l if os.path.isfile(os.path.join(_Dir, f))]
-        brushesName = sorted(brushesName)
-
-        i = 1
-        for x in _tempName:
-            for ob in brushesName:
-                if ob == _tempName[-1]:
-                    i += 1
-                    _tempName = _tempName + [main_canvas[0] + '_' + \
-                                             '{:03d}'.format(i) + main_canvas[1]]
-
-        # return image to last saved state
-        filepath = os.path.join(_Dir, _tempName[-1])
-        ima = obj.data.materials[0].texture_slots[0].texture.image
-        context.space_data.image = ima
-        bpy.ops.image.save_as(filepath=filepath,
-                              check_existing=False,
-                              relative_path=True)
-
-        context.area.ui_type = original_type
-        return {'FINISHED'}
-
+################ legacy
 
 ############################################################
 # -------------------LEGACY FOR ADDITION TO PANEL OPERATORS
@@ -834,157 +1075,7 @@ class DRAW2PAINT_OT_BorderCropToggle(bpy.types.Operator):
                 scene.bordercrop_is_activated = True
         return {'FINISHED'}
 
-
-# ------------------------------------------------------------------CAMERA GUIDES-UNNEEDED NOW
-'''class DRAW2PAINT_OT_CamGuides(bpy.types.Operator):
-    """Turn on Camera Guides"""
-    bl_description = "Camera Guides On/Off Toggle"
-    bl_idname = "draw2paint.guides_toggle"
-    bl_label = ""
-    bl_options = {'REGISTER','UNDO'}
-
-    #@classmethod
-    #def poll(self, context):
-        #return poll_apt(self, context)
-
-    def execute(self, context):
-        scene = context.scene
-        _bool03 = scene.prefs_are_locked
-        main_canvas = main_canvas_data(self, context)
-
-        if main_canvas[0] != '':                    #if main canvas isn't erased
-            _camName = "Camera_" + main_canvas[0]
-        else:
-            return {'FINISHED'}
-
-        for cam in bpy.data.objects :
-            if cam.name == _camName:
-                if not(_bool03):
-                    if not(scene.guides_are_activated):      #True= if no guides
-                        cam.data.show_guide = {'CENTER', 'THIRDS', 'CENTER_DIAGONAL'}
-                        scene.guides_are_activated = True
-                    else:
-                        cam.data.show_guide = set()           #False=> if guides
-                        scene.guides_are_activated = False
-
-        return {'FINISHED'}'''
-
-
-######################################################## EXPERIMENTAL OPERATIONs
-class DRAW2PAINT_OT_SculptDuplicate(bpy.types.Operator):
-    """Duplicate Selected Image Plane, Single User for Eraser Paint"""
-    bl_idname = "draw2paint.sculpt_duplicate"
-    bl_label = "Sculpt Liquid Duplicate"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    def execute(self, context):
-        scene = context.scene
-
-        bpy.ops.paint.texture_paint_toggle()
-        bpy.ops.object.duplicate_move(OBJECT_OT_duplicate={"linked": False, "mode": 'TRANSLATION'},
-                                      TRANSFORM_OT_translate={"value": (0, 0, 0), "orient_axis_ortho": 'X',
-                                                              "orient_type": 'GLOBAL',
-                                                              "orient_matrix": ((0, 0, 0), (0, 0, 0), (0, 0, 0)),
-                                                              "orient_matrix_type": 'GLOBAL',
-                                                              "constraint_axis": (False, False, False), "mirror": False,
-                                                              "use_proportional_edit": False,
-                                                              "proportional_edit_falloff": 'SMOOTH',
-                                                              "proportional_size": 1,
-                                                              "use_proportional_connected": False,
-                                                              "use_proportional_projected": False, "snap": False,
-                                                              "snap_target": 'CLOSEST', "snap_point": (0, 0, 0),
-                                                              "snap_align": False, "snap_normal": (0, 0, 0),
-                                                              "gpencil_strokes": False, "cursor_transform": False,
-                                                              "texture_space": False, "remove_on_cancel": False,
-                                                              "view2d_edge_pan": False, "release_confirm": False,
-                                                              "use_accurate": False, "use_automerge_and_split": False})
-        bpy.ops.transform.translate(value=(0, 0, 0.1))
-        # context.object.active_material.use_shadeless = True
-        # context.object.active_material.use_transparency = True
-        # context.object.active_material.transparency_method = 'Z_TRANSPARENCY'
-        bpy.ops.view3d.localview()
-        bpy.ops.paint.texture_paint_toggle()
-
-        # make ERASER brush or use exisitng
-        try:
-            context.tool_settings.image_paint.brush = bpy.data.brushes["Eraser"]
-            pass
-        except:
-            context.tool_settings.image_paint.brush = bpy.data.brushes["TexDraw"]
-            bpy.ops.brush.add()
-            bpy.data.brushes["TexDraw.001"].name = "Eraser"
-            # context.scene.tool_settings.unified_paint_settings.use_pressure_size = False
-            bpy.data.brushes["Eraser"].use_pressure_strength = False
-            bpy.data.brushes["Eraser"].blend = 'ERASE_ALPHA'
-
-        # make individual of material AND of image reference inside
-        sel = bpy.context.active_object
-        mat = sel.material_slots[0].material
-        sel.material_slots[0].material = mat.copy()
-
-        material = sel.material_slots[0].material
-        node = material.node_tree.nodes['Image Texture']
-        new_image = node.image.copy()
-        node.image = new_image
-
-        return {'FINISHED'}
-
-
-class DRAW2PAINT_OT_SculptLiquid(bpy.types.Operator):
-    """Convert to Subdivided Plane & Sculpt Liquid"""
-    bl_idname = "draw2paint.sculpt_liquid"
-    bl_label = "Sculpt like Liquid"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    @classmethod
-    def poll(self, context):
-        obj = context.active_object
-        # main_canvas = obj.name
-
-        if obj is not None:
-            A = context.active_object.type == 'MESH'
-            # B = context.active_object.name == obj.name[0]+ '.001'
-            return A  # and B
-
-    def execute(self, context):
-        scene = context.scene
-
-        bpy.ops.paint.texture_paint_toggle()
-        bpy.ops.object.editmode_toggle()
-        bpy.ops.mesh.subdivide(number_cuts=100, smoothness=0)
-        bpy.ops.mesh.subdivide(number_cuts=2, smoothness=0)
-        bpy.ops.sculpt.sculptmode_toggle()
-        bpy.ops.paint.brush_select(sculpt_tool='GRAB', create_missing=False)
-        scene.tool_settings.sculpt.use_symmetry_x = False
-        bpy.ops.view3d.localview()
-
-        return {'FINISHED'}
-
-class DRAW2PAINT_OT_CanvasMaterial(bpy.types.Operator):
-    """Adopt Canvas Material"""
-    bl_idname = "draw2paint.canvas_material"
-    bl_label = "Set the Material to the same as Main Canvas"
-    bl_options = {'REGISTER', 'UNDO'}
-
-
-
-        
-
-    def execute(self, context):
-        scene = context.scene
-                
-            
-        obj = context.active_object
-        canvas = bpy.data.objects['canvas'].material_slots[0].material
-        obj.data.materials.append(canvas)
-            
-        
-
-        return {'FINISHED'}
-
-
-
-
+#################### mask specials
 
 class DRAW2PAINT_OT_ReprojectMask(bpy.types.Operator):
     """Reproject Mask"""
@@ -996,9 +1087,9 @@ class DRAW2PAINT_OT_ReprojectMask(bpy.types.Operator):
         scene = context.scene
 
         obj = context.active_object
-        
+
         if obj.type == 'CURVE' and obj.mode == 'EDIT':
-            
+
             bpy.ops.object.editmode_toggle()
             bpy.ops.object.convert(target='MESH')
             bpy.ops.object.editmode_toggle()
@@ -1008,7 +1099,7 @@ class DRAW2PAINT_OT_ReprojectMask(bpy.types.Operator):
                                          scale_to_bounds=False)
             bpy.ops.object.editmode_toggle()
             bpy.ops.paint.texture_paint_toggle()  # toggle texpaint
-        
+
         elif obj.type == 'CURVE' and obj.mode == 'OBJECT':
             bpy.ops.object.convert(target='MESH')
             bpy.ops.object.editmode_toggle()
@@ -1018,9 +1109,9 @@ class DRAW2PAINT_OT_ReprojectMask(bpy.types.Operator):
                                          scale_to_bounds=False)
             bpy.ops.object.editmode_toggle()
             bpy.ops.paint.texture_paint_toggle()  # toggle texpaint
-                
+
         elif obj.type == 'MESH' and obj.mode == 'OBJECT':
-                
+
             bpy.ops.object.editmode_toggle()
             bpy.ops.mesh.select_all(action='TOGGLE')
             bpy.ops.uv.project_from_view(camera_bounds=True,
@@ -1028,7 +1119,7 @@ class DRAW2PAINT_OT_ReprojectMask(bpy.types.Operator):
                                          scale_to_bounds=False)
             bpy.ops.object.editmode_toggle()
             bpy.ops.paint.texture_paint_toggle()  # toggle texpaint
-            
+
         elif obj.type == 'MESH' and obj.mode == 'TEXTURE_PAINT':
 
             bpy.ops.object.editmode_toggle()
@@ -1036,186 +1127,13 @@ class DRAW2PAINT_OT_ReprojectMask(bpy.types.Operator):
             bpy.ops.uv.project_from_view(camera_bounds=True,
                                          correct_aspect=False,
                                          scale_to_bounds=False)
-                                         
+
             bpy.ops.object.editmode_toggle()
             bpy.ops.paint.texture_paint_toggle()  # toggle texpaint
- 
-        return {'FINISHED'}
-
-###########new curve primitives for drawing masks
-
-
-class DRAW2PAINT_OT_SquareCurve(bpy.types.Operator):
-    """Square Curve primitive for Mask"""
-    bl_idname = "draw2paint.square_curve"
-    bl_label = "Add Square Curve Primitive for Masking"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    def execute(self, context):
-        scene = context.scene
-        
-        #square curve primitive
-        bpy.ops.curve.primitive_bezier_circle_add(radius=0.25, enter_editmode=False, align='WORLD', location=(0, 0, 0), scale=(1, 1, 1))
-        bpy.context.object.data.dimensions = '2D'
-        bpy.context.object.data.fill_mode = 'BOTH'
-        bpy.ops.object.editmode_toggle()
-        bpy.ops.curve.handle_type_set(type='VECTOR')
-        bpy.ops.transform.rotate(value=0.785398, orient_axis='Z')
-                
-        return {'FINISHED'}
-        
-class DRAW2PAINT_OT_CircleCurve(bpy.types.Operator):
-    """Circle Curve primitive for Mask"""
-    bl_idname = "draw2paint.circle_curve"
-    bl_label = "Add Circle Curve Primitive for Masking"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    def execute(self, context):
-        scene = context.scene
-        
-        #square curve primitive
-        bpy.ops.curve.primitive_bezier_circle_add(radius=0.25, enter_editmode=False, align='WORLD', location=(0, 0, 0), scale=(1, 1, 1))
-        bpy.context.object.data.dimensions = '2D'
-        bpy.context.object.data.fill_mode = 'BOTH'
-        bpy.ops.object.editmode_toggle()
-                
-        return {'FINISHED'}
-
-
-
-class DRAW2PAINT_OT_VectorCurve(bpy.types.Operator):
-    """Vector Curve primitive for Mask"""
-    bl_idname = "draw2paint.vector_curve"
-    bl_label = "Add Vector Curve Primitive for Precise Masking"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    def execute(self, context):
-        scene = context.scene
-        
-        bpy.ops.curve.primitive_bezier_curve_add(enter_editmode=True, align='WORLD', location=(0, 0, 0.0125), scale=(1, 1, 1))
-
-        bpy.ops.curve.handle_type_set(type='VECTOR')
-        bpy.context.object.data.dimensions = '2D'
-        bpy.context.object.data.fill_mode = 'BOTH'
-
-        bpy.ops.transform.resize(value=(0.1, 0.1, 0.1))
-        
-                
-        return {'FINISHED'}
-
-                
-        
-    
-
-
-
-
-class DRAW2PAINT_OT_SolidifyDifference(bpy.types.Operator):
-    """Solidify and Difference Mask"""
-    bl_idname = "draw2paint.solidify_difference"
-    bl_label = "Add Solidify and Difference Bool"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    def execute(self, context):
-        scene = context.scene
-        context = bpy.context
-
-        obj = context.active_object
-        
-        mod = obj.modifiers.new("Solidify", 'SOLIDIFY')# add a solidify modifier on active object
-        
-        mod.thickness = 0.01# set modifier properties
-        obj.location.z = 0 
-    
-        for o in context.selected_objects:
-            if o == obj:
-                continue
-            # see if there is already a modifier named "SelectedSolidify" and use it
-            mod = o.modifiers.get("SelectedSolidify")
-            if mod is None:
-                # otherwise add a modifier to selected object
-                mod = o.modifiers.new("SelectedSolidify", 'SOLIDIFY')
-                mod.thickness = 0.3
-                o.location.z += 0.1
-            # add a boolean mod
-            #obj = context.active_object
-            o.display_type = 'WIRE'
-            
-            boolmod = obj.modifiers.new("Bool", 'BOOLEAN')
-            boolmod.object = o
-            boolmod.solver = 'FAST'
-            boolmod.operation = 'DIFFERENCE'
-          
-
-            return {'FINISHED'}
-
-
-class DRAW2PAINT_OT_SolidifyUnion(bpy.types.Operator):
-    """Solidify and Union Mask"""
-    bl_idname = "draw2paint.solidify_union"
-    bl_label = "Add Solidify and Union Bool"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    def execute(self, context):
-        scene = context.scene
-        context = bpy.context
-
-        obj = context.active_object
-        
-        mod = obj.modifiers.new("Solidify", 'SOLIDIFY')# add a solidify modifier on active object
-        
-        mod.thickness = 0.01# set modifier properties
-        obj.location.z = 0 
-    
-        for o in context.selected_objects:
-            if o == obj:
-                continue
-            # see if there is already a modifier named "SelectedSolidify" and use it
-            mod = o.modifiers.get("SelectedSolidify")
-            if mod is None:
-                # otherwise add a modifier to selected object
-                mod = o.modifiers.new("SelectedSolidify", 'SOLIDIFY')
-                mod.thickness = 0.01
-                o.location.z = 0
-            # add a boolean mod
-            #obj = context.active_object
-            #o.display_type = 'WIRE'
-            
-            boolmod = obj.modifiers.new("Bool", 'BOOLEAN')
-            boolmod.object = o
-            boolmod.solver = 'FAST'
-            boolmod.operation = 'UNION'
-          
-
-            return {'FINISHED'}
-
-
-class DRAW2PAINT_OT_RemoveMods(bpy.types.Operator):
-    """Remove Modifiers"""
-    bl_idname = "draw2paint.remove_modifiers"
-    bl_label = "Remove modifiers"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    def execute(self, context):
-        scene = context.scene
-        # init
-        obj = context.object
-        
-        bpy.ops.object.convert(target='MESH')
-
-        '''old_mesh = obj.data  # get a reference to the current obj.data
-
-        apply_modifiers = False  # settings for to_mesh
-        new_mesh = obj.to_mesh(preserve_all_data_layers=True, depsgraph=None)
-        obj.modifiers.clear()  # object will still have modifiers, remove them
-        obj.data = new_mesh  # assign the new mesh to obj.data
-        bpy.data.meshes.remove(old_mesh)  # remove the old mesh from the .blend
-        context.object.draw_type = 'TEXTURED'''
 
         return {'FINISHED'}
 
-
-# -------------------------------------------------------------------ALIGN LAYERS
+############## alignment of masks selected
 class DRAW2PAINT_OT_AlignLeft(bpy.types.Operator):
     """Left Align"""
     bl_idname = "draw2paint.align_left"
@@ -1316,27 +1234,200 @@ class DRAW2PAINT_OT_AlignBottom(bpy.types.Operator):
         return {'FINISHED'}
 
 
-###########################################
-###------- removed for BF broken code
-###########################################
-'''class DRAW2PAINT_OT_ToggleLock(bpy.types.Operator):
-    """Lock Screen"""
-    bl_idname = "draw2paint.lock_screen"
-    bl_label = "Lock Screen Toggle"
-    bl_options = { 'REGISTER', 'UNDO' }
+###########new curve primitives for drawing masks
+
+
+class DRAW2PAINT_OT_SquareCurve(bpy.types.Operator):
+    """Square Curve primitive for Mask"""
+    bl_idname = "draw2paint.square_curve"
+    bl_label = "Add Square Curve Primitive for Masking"
+    bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
-        data = bpy.context.space_data
-        A = data.lock_camera
+        scene = context.scene
 
-        if A:
-            data.lock_camera = False
-        else:
-            data.lock_camera = True
+        # square curve primitive
+        bpy.ops.curve.primitive_bezier_circle_add(radius=0.25, enter_editmode=False, align='WORLD', location=(0, 0, 0),
+                                                  scale=(1, 1, 1))
+        bpy.context.object.data.dimensions = '2D'
+        bpy.context.object.data.fill_mode = 'BOTH'
+        bpy.ops.object.editmode_toggle()
+        bpy.ops.curve.handle_type_set(type='VECTOR')
+        bpy.ops.transform.rotate(value=0.785398, orient_axis='Z')
 
-        return {'FINISHED'}'''
+        return {'FINISHED'}
 
 
+class DRAW2PAINT_OT_CircleCurve(bpy.types.Operator):
+    """Circle Curve primitive for Mask"""
+    bl_idname = "draw2paint.circle_curve"
+    bl_label = "Add Circle Curve Primitive for Masking"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        scene = context.scene
+
+        # square curve primitive
+        bpy.ops.curve.primitive_bezier_circle_add(radius=0.25, enter_editmode=False, align='WORLD', location=(0, 0, 0),
+                                                  scale=(1, 1, 1))
+        bpy.context.object.data.dimensions = '2D'
+        bpy.context.object.data.fill_mode = 'BOTH'
+        bpy.ops.object.editmode_toggle()
+
+        return {'FINISHED'}
+
+
+class DRAW2PAINT_OT_VectorCurve(bpy.types.Operator):
+    """Vector Curve primitive for Mask"""
+    bl_idname = "draw2paint.vector_curve"
+    bl_label = "Add Vector Curve Primitive for Precise Masking"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        scene = context.scene
+
+        bpy.ops.curve.primitive_bezier_curve_add(enter_editmode=True, align='WORLD', location=(0, 0, 0.0125),
+                                                 scale=(1, 1, 1))
+
+        bpy.ops.curve.handle_type_set(type='VECTOR')
+        bpy.context.object.data.dimensions = '2D'
+        bpy.context.object.data.fill_mode = 'BOTH'
+
+        bpy.ops.transform.resize(value=(0.1, 0.1, 0.1))
+
+        return {'FINISHED'}
+
+
+class DRAW2PAINT_OT_DrawCurveloop(bpy.types.Operator):
+    """Add New Curve Drawing"""
+    bl_idname = "draw2paint.draw_curve"
+
+    bl_label = "draw curve"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        scene = context.scene
+        ######### add a new curve at 0.15 Z
+        bpy.ops.curve.primitive_bezier_curve_add(radius=1, enter_editmode=False, align='WORLD', location=(0, 0, 0.15),
+                                                 scale=(1, 1, 1))
+        bpy.ops.object.editmode_toggle()
+        bpy.ops.curve.delete(type='VERT')
+        ########### need to add a material to the object and make it a holdout shader
+        bpy.ops.material.new()
+
+        bpy.ops.curve.cyclic_toggle()
+
+        bpy.context.object.data.dimensions = '2D'
+        bpy.context.object.data.fill_mode = 'BOTH'
+
+        bpy.ops.wm.tool_set_by_id(name="builtin.draw")
+
+        return {'FINISHED'}
+
+####################### boolean masks work
+class DRAW2PAINT_OT_RemoveMods(bpy.types.Operator):
+    """Remove Modifiers"""
+    bl_idname = "draw2paint.remove_modifiers"
+    bl_label = "Remove modifiers"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        scene = context.scene
+        # init
+        obj = context.object
+
+        bpy.ops.object.convert(target='MESH')
+
+        '''old_mesh = obj.data  # get a reference to the current obj.data
+
+        apply_modifiers = False  # settings for to_mesh
+        new_mesh = obj.to_mesh(preserve_all_data_layers=True, depsgraph=None)
+        obj.modifiers.clear()  # object will still have modifiers, remove them
+        obj.data = new_mesh  # assign the new mesh to obj.data
+        bpy.data.meshes.remove(old_mesh)  # remove the old mesh from the .blend
+        context.object.draw_type = 'TEXTURED'''
+
+        return {'FINISHED'}
+
+
+class DRAW2PAINT_OT_SolidifyDifference(bpy.types.Operator):
+    """Solidify and Difference Mask"""
+    bl_idname = "draw2paint.solidify_difference"
+    bl_label = "Add Solidify and Difference Bool"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        scene = context.scene
+        context = bpy.context
+
+        obj = context.active_object
+
+        mod = obj.modifiers.new("Solidify", 'SOLIDIFY')  # add a solidify modifier on active object
+
+        mod.thickness = 0.01  # set modifier properties
+        obj.location.z = 0
+
+        for o in context.selected_objects:
+            if o == obj:
+                continue
+            # see if there is already a modifier named "SelectedSolidify" and use it
+            mod = o.modifiers.get("SelectedSolidify")
+            if mod is None:
+                # otherwise add a modifier to selected object
+                mod = o.modifiers.new("SelectedSolidify", 'SOLIDIFY')
+                mod.thickness = 0.3
+                o.location.z += 0.1
+            # add a boolean mod
+            # obj = context.active_object
+            o.display_type = 'WIRE'
+
+            boolmod = obj.modifiers.new("Bool", 'BOOLEAN')
+            boolmod.object = o
+            boolmod.solver = 'FAST'
+            boolmod.operation = 'DIFFERENCE'
+
+            return {'FINISHED'}
+
+
+class DRAW2PAINT_OT_SolidifyUnion(bpy.types.Operator):
+    """Solidify and Union Mask"""
+    bl_idname = "draw2paint.solidify_union"
+    bl_label = "Add Solidify and Union Bool"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        scene = context.scene
+        context = bpy.context
+
+        obj = context.active_object
+
+        mod = obj.modifiers.new("Solidify", 'SOLIDIFY')  # add a solidify modifier on active object
+
+        mod.thickness = 0.01  # set modifier properties
+        obj.location.z = 0
+
+        for o in context.selected_objects:
+            if o == obj:
+                continue
+            # see if there is already a modifier named "SelectedSolidify" and use it
+            mod = o.modifiers.get("SelectedSolidify")
+            if mod is None:
+                # otherwise add a modifier to selected object
+                mod = o.modifiers.new("SelectedSolidify", 'SOLIDIFY')
+                mod.thickness = 0.01
+                o.location.z = 0
+            # add a boolean mod
+            # obj = context.active_object
+            # o.display_type = 'WIRE'
+
+            boolmod = obj.modifiers.new("Bool", 'BOOLEAN')
+            boolmod.object = o
+            boolmod.solver = 'FAST'
+            boolmod.operation = 'UNION'
+
+            return {'FINISHED'}
+
+############################## Vert Groups Forced into Ops
 ########################-------------------------vgroup force ops
 
 class DRAW2PAINT_OT_SelectVertgroup(bpy.types.Operator):
@@ -1406,13 +1497,7 @@ class DRAW2PAINT_OT_UnassignVertgroup(bpy.types.Operator):
 
         return {'FINISHED'}
 
-        # sub.operator("object.vertex_group_assign", text="Assign")
-        # sub.operator("object.vertex_group_remove_from", text="Remove")
-
-
-##################################---------------end block vgroup force ops
-
-
+#############################Face Mask Groups FMG+
 #############################  -------FMG
 
 class DRAW2PAINT_OT_getFaceMaskGroups(bpy.types.Operator):
@@ -1473,190 +1558,9 @@ class DRAW2PAINT_OT_getFaceMaskGroups(bpy.types.Operator):
 
         return {'FINISHED'}
 
-class DRAW2PAINT_OT_CustomFps(bpy.types.Operator):
-    """Slow Play FPS"""
-    bl_idname = "draw2paint.slow_play"
-    bl_label = "Slow Play FPS Toggle"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    def execute(self, context):
-        scene = context.scene
-        F = scene.render.fps
-
-        if F == 1:
-            scene.render.fps = 30
-            scene.render.fps_base = 1
-        else:
-            scene.render.fps = 1
-            scene.render.fps_base = 12
-
-        return {'FINISHED'}
-
-
-###################################################### SCULPT & PAINT REFERENCE+
-# Create reference scene
-class DRAW2PAINT_OT_RefMakerScene(bpy.types.Operator):
-    """Create Reference Scene"""
-    bl_description = "Create Scene for Composing Reference Slides"
-    bl_idname = "draw2paint.create_reference_scene"
-    bl_label = "Create Scene for Image Reference"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    @classmethod
-    def poll(self, context):
-        for sc in bpy.data.scenes:
-            if sc.name == "Refmaker":
-                return False
-        return context.area.type == 'VIEW_3D'
-
-    def execute(self, context):
-        _name = "Refmaker"
-        for sc in bpy.data.scenes:
-            if sc.name == _name:
-                return {'FINISHED'}
-
-        bpy.ops.scene.new(type='NEW')
-        context.scene.name = _name
-        # add camera to center and move up 4 units in Z
-        bpy.ops.object.camera_add(view_align=False,
-                                  enter_editmode=False,
-                                  location=(0, 0, 4),
-                                  rotation=(0, 0, 0)
-                                  )
-
-        context.object.name = _name + " Camera"  # rename selected camera
-
-        # change scene size to HD
-        _RenderScene = context.scene.render
-        _RenderScene.resolution_x = 1920
-        _RenderScene.resolution_y = 1080
-        _RenderScene.resolution_percentage = 100
-
-        # save scene size as preset
-        bpy.ops.render.preset_add(name=_name)
-
-        # change to camera view
-        for area in bpy.context.screen.areas:
-            if area.type == 'VIEW_3D':
-                override = bpy.context.copy()
-                override['area'] = area
-                bpy.ops.view3d.viewnumpad(override, type='CAMERA')
-                break
-
-        return {'FINISHED'}
-
-
-# sculpt the new duplicated canvas
-class DRAW2PAINT_OT_SculptView(bpy.types.Operator):
-    """Sculpt View Reference Camera"""
-    bl_idname = "draw2paint.sculpt_camera"
-    bl_label = "Sculpt Camera"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    def execute(self, context):
-        scene = context.scene
-
-        bpy.ops.object.camera_add(view_align=False,
-                                  enter_editmode=False,
-                                  location=(0, -4, 0),
-                                  rotation=(1.5708, 0, 0)
-                                  )
-        context.object.name = "Reference Cam"  # add camera to front view
-        context.object.data.show_passepartout = False
-        context.object.data.lens = 80
-
-        # change to camera view
-        for area in context.screen.areas:
-            if area.type == 'VIEW_3D':
-                override = bpy.context.copy()
-                override['area'] = area
-                bpy.ops.view3d.viewnumpad(override, type='CAMERA')
-                break
-        scene.render.resolution_x = 1920
-        scene.render.resolution_y = 1080
-
-        return {'FINISHED'}
-
-
-class DRAW2PAINT_OT_DrawCurveloop(bpy.types.Operator):
-    """Add New Curve Drawing"""
-    bl_idname = "draw2paint.draw_curve"
-
-    bl_label = "draw curve"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    def execute(self, context):
-        scene = context.scene
-        ######### add a new curve at 0.15 Z
-        bpy.ops.curve.primitive_bezier_curve_add(radius=1, enter_editmode=False, align='WORLD', location=(0, 0, 0.15),
-                                                 scale=(1, 1, 1))
-        bpy.ops.object.editmode_toggle()
-        bpy.ops.curve.delete(type='VERT')
-        ########### need to add a material to the object and make it a holdout shader
-        bpy.ops.material.new()
-
-        bpy.ops.curve.cyclic_toggle()
-
-        bpy.context.object.data.dimensions = '2D'
-        bpy.context.object.data.fill_mode = 'BOTH'
-        
-
-
-        bpy.ops.wm.tool_set_by_id(name="builtin.draw")
-
-        return {'FINISHED'}
-
-
-###############test material holdout generator
-class DRAW2PAINT_OT_holdout_shader(bpy.types.Operator):
-    bl_label = "Mask Holdout Shader"
-    bl_idname = "draw2paint.add_holdout"
-
-    @classmethod
-    def poll(self, context):
-        obj = context.active_object
-        A = obj is not None
-        if A:
-            B = obj.type == 'CURVE' or 'MESH'
-            return B
-
-    def execute(self, context):
-        mask = bpy.data.materials.new(name="Holdout Mask")
-        mask.use_nodes = True
-
-        bpy.context.object.active_material = mask
-
-        mask = bpy.data.materials.new(name="Holdout Mask")
-
-        mask.use_nodes = True
-
-        bpy.context.object.active_material = mask
-
-        ###output node new
-        # output = mask.node_tree.nodes.get('ShaderNodeOutputMaterial')
-        material_output = bpy.context.active_object.active_material.node_tree.nodes.get('Material Output')
-
-        # Principled Main Shader in Tree
-        principled_node = mask.node_tree.nodes.get('Principled BSDF')
-        mask.node_tree.nodes.remove(principled_node)
-
-        ###Tex Coordinate Node
-        hold = mask.node_tree.nodes.new('ShaderNodeHoldout')
-        hold.location = (-100, 0)
-        hold.label = ("Holdout Mask")
-
-        # output = mask.node_tree.nodes.new('ShaderNodeOutputMaterial')
-        # newout = mask.node_tree.nodes.new('ShaderNodeOutputMaterial')
-
-        #####LINKING
-        link = mask.node_tree.links.new
-
-        link(hold.outputs[0], material_output.inputs[0])
-
-        return {'FINISHED'}
 
 ########################################
-## panel
+## panel draw for Draw2Paint
 class DRAW2PAINT_PT_ImageState(bpy.types.Panel):
     """Image State Tools"""
     bl_label = "Image State Tools"
@@ -1741,7 +1645,7 @@ class DRAW2PAINT_PT_FlipRotate(bpy.types.Panel):
         row2.operator("draw2paint.rotate_ccw_15", text="15 CCW", icon='TRIA_LEFT')
         row2.operator("draw2paint.rotate_cw_15", text="15 CW", icon='TRIA_RIGHT')
         row2.operator("draw2paint.rotate_cw_90", text="90 CW", icon='TRIA_RIGHT_BAR')
-        
+
         row = layout.row()
         row.operator("draw2paint.canvas_resetrot", text="Reset Rotation", icon='RECOVER_LAST')
 
@@ -1779,8 +1683,7 @@ class DRAW2PAINT_PT_GuideControls(bpy.types.Panel):
         row = col.row(align=True)
         row.prop(context.object, "use_mesh_mirror_x", text="X", toggle=True)
         row.prop(context.object, "use_mesh_mirror_y", text="Y", toggle=True)
-        #row.prop(context.object, "use_mesh_mirror_z", text="Z", toggle=True)
-
+        # row.prop(context.object, "use_mesh_mirror_z", text="Z", toggle=True)
 
 
 ############### align
@@ -1805,27 +1708,27 @@ class DRAW2PAINT_PT_AlignMask(bpy.types.Panel):
         row1.scale_x = 0.50
         row1.scale_y = 1.25
         row1.operator("draw2paint.align_left", text='', icon='ANCHOR_LEFT')
-        
+
         row2 = row.split(align=True)
         row2.scale_x = 0.50
         row2.scale_y = 1.25
         row2.operator("draw2paint.align_top", text='', icon='ANCHOR_TOP')
-        
+
         row2 = row.split(align=True)
         row2.scale_x = 0.50
         row2.scale_y = 1.25
         row2.operator("draw2paint.align_hcenter", text='', icon='ANCHOR_CENTER')
-        
+
         row2 = row.split(align=True)
         row2.scale_x = 0.50
         row2.scale_y = 1.25
         row2.operator("draw2paint.align_center", text='', icon='ALIGN_CENTER')
-        
+
         row2 = row.split(align=True)
         row2.scale_x = 0.50
         row2.scale_y = 1.25
         row2.operator("draw2paint.align_bottom", text='', icon='ANCHOR_BOTTOM')
-        
+
         row2 = row.split(align=True)
         row2.scale_x = 0.50
         row2.scale_y = 1.25
@@ -1841,23 +1744,23 @@ class DRAW2PAINT_PT_AlignMask(bpy.types.Panel):
         row1.scale_x = 0.50
         row1.scale_y = 1.25
         row1.operator("draw2paint.reproject_mask", text='(Re)Project', icon='FULLSCREEN_EXIT')
-        
+
         row2 = row.split(align=True)
         row2.scale_x = 0.50
         row2.scale_y = 1.25
         row1.operator("draw2paint.canvas_material", text='Copy Canvas', icon='OUTLINER_OB_IMAGE')
-        #row2.operator("draw2paint.solidify_difference", text='Subtract Masks', icon='SELECT_SUBTRACT')
+        # row2.operator("draw2paint.solidify_difference", text='Subtract Masks', icon='SELECT_SUBTRACT')
         row3 = row.split(align=True)
         row3.scale_x = 0.50
         row3.scale_y = 1.25
         row2.operator("draw2paint.add_holdout", text='Holdout', icon='GHOST_ENABLED')
-        #row3.operator("draw2paint.solidify_union", text='Join Masks', icon='SELECT_EXTEND')
+        # row3.operator("draw2paint.solidify_union", text='Join Masks', icon='SELECT_EXTEND')
+
         layout = self.layout
         box = layout.box()
         col = box.column(align=True)
         col.label(text="Draw and Modify Masks")
         row = col.row(align=True)
-
 
         row1 = row.split(align=True)
         row1.scale_x = 0.50
@@ -1866,16 +1769,16 @@ class DRAW2PAINT_PT_AlignMask(bpy.types.Panel):
 
         row2 = row.split(align=True)
         row2.scale_x = 0.50
-        row2.scale_y = 1.25   
-        #row2.operator
-        row2.operator("draw2paint.vector_curve", text = 'Draw Vector', icon='HANDLE_VECTOR')
-        
+        row2.scale_y = 1.25
+        # row2.operator
+        row2.operator("draw2paint.vector_curve", text='Draw Vector', icon='HANDLE_VECTOR')
+
         row = col.row(align=True)
         row3 = row.split(align=True)
         row3.scale_x = 0.50
         row3.scale_y = 1.25
         row3.operator("draw2paint.square_curve", text='Draw Square', icon='MOD_MESHDEFORM')
-                
+
         row3 = row.split(align=True)
         row3.scale_x = 0.50
         row3.scale_y = 1.25
@@ -1891,29 +1794,12 @@ class DRAW2PAINT_PT_AlignMask(bpy.types.Panel):
         row2.scale_x = 0.50
         row2.scale_y = 1.25
         row2.operator("draw2paint.solidify_union", text='Join Masks', icon='SELECT_EXTEND')
-        #("draw2paint.remove_modifiers", text='Remove Mods', icon='UNLINKED')
+        # ("draw2paint.remove_modifiers", text='Remove Mods', icon='UNLINKED')
         row = col.row(align=True)
         row = row.split(align=True)
         row.scale_x = 0.50
         row.scale_y = 1.25
         row.operator("draw2paint.remove_modifiers", text='Remove Mods', icon='UNLINKED')
-        
-        
-        
-
-
-############# FMG Face Mask Groups Panel
-class DRAW2PAINT_PT_FMG(bpy.types.Panel):
-    """Use Face MAsk Groups In Texture Paint Mode"""
-    bl_label = "Face Mask Groups"
-    bl_idname = "DRAW2PAINT_PT_FMG"
-    bl_space_type = "VIEW_3D"
-    bl_region_type = "UI"
-    bl_category = "Draw2Paint"
-    bl_options = {'DEFAULT_CLOSED'}
-    
-    def draw(self, context):
-        
 
         layout = self.layout
 
@@ -1963,8 +1849,6 @@ class DRAW2PAINT_PT_FMG(bpy.types.Panel):
         # row = layout.row()
         row1.operator("draw2paint.unassign_vgroup", text="Unset", icon='REMOVE')
 
-    
-        
 
 ############# liquid sculpt
 class DRAW2PAINT_PT_Sculpt2D(bpy.types.Panel):
@@ -1988,7 +1872,7 @@ class DRAW2PAINT_PT_Sculpt2D(bpy.types.Panel):
         row1.scale_x = 0.50
         row1.scale_y = 1.25
         row1.operator("draw2paint.sculpt_duplicate", text='Copy and Erase', icon='NODE_TEXTURE')
-        
+
         row2 = row.split(align=True)
         row2.scale_x = 0.50
         row2.scale_y = 1.25
@@ -2017,17 +1901,17 @@ class DRAW2PAINT_PT_SceneExtras(bpy.types.Panel):
         row1.scale_x = 0.50
         row1.scale_y = 1.25
         row1.operator("draw2paint.create_brush", text='Create Brush/Mask', icon='BRUSHES_ALL')
-        
+
         row2 = row.split(align=True)
         row2.scale_x = 0.50
         row2.scale_y = 1.25
         row2.operator("draw2paint.create_reference_scene", text='Sculpt Ref', icon='SCULPTMODE_HLT')
-        
+
         row3 = row.split(align=True)
         row3.scale_x = 0.50
         row3.scale_y = 1.25
         row3.operator("draw2paint.sculpt_camera", text='Sculpt Camera', icon='VIEW_CAMERA')
-        
+
         row4 = row.split(align=True)
         row4.scale_x = 0.50
         row4.scale_y = 1.25
@@ -2041,11 +1925,6 @@ class DRAW2PAINT_PT_SceneExtras(bpy.types.Panel):
         row1.scale_x = 0.50
         row1.scale_y = 1.25
         row1.operator("draw2paint.frontof_paint", text='Align to Face', icon='TRACKER')
-        
-        #row2 = row.split(align=True)
-        #row2.scale_x = 0.50
-        #row2.scale_y = 1.25
-        #row2.operator("draw2paint.remove_modifiers", text='Remove Mods', icon='UNLINKED')
 
 classes = (
     DRAW2PAINT_OT_MacroCreateBrush,
@@ -2084,7 +1963,6 @@ classes = (
     DRAW2PAINT_PT_FlipRotate,
     DRAW2PAINT_PT_GuideControls,
     DRAW2PAINT_PT_AlignMask,
-    DRAW2PAINT_PT_FMG,
     DRAW2PAINT_PT_Sculpt2D,
     DRAW2PAINT_PT_SceneExtras,
     DRAW2PAINT_OT_SaveIncrem,
@@ -2107,3 +1985,12 @@ register, unregister = bpy.utils.register_classes_factory(classes)
 
 if __name__ == '__main__':
     register()
+
+
+
+
+
+
+
+
+
