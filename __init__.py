@@ -31,7 +31,17 @@ import bpy
 import bmesh
 
 ##### main operators grouped
+
 ########### props
+
+########PBRA Adopted
+
+bpy.types.Scene.x_min_pixels = bpy.props.IntProperty(min=0, description="Minimum X value (in pixel) for the render border")
+bpy.types.Scene.x_max_pixels = bpy.props.IntProperty(min=0, description="Maximum X value (in pixel) for the render border")
+bpy.types.Scene.y_min_pixels = bpy.props.IntProperty(min=0, description="Minimum Y value (in pixel) for the render border")
+bpy.types.Scene.y_max_pixels = bpy.props.IntProperty(min=0, description="Maximum Y value (in pixel) for the render border")
+########### propertygroup
+
 class MyProperties(bpy.types.PropertyGroup):
     
     my_string : bpy.props.StringProperty(name= "Enter Text")
@@ -809,6 +819,120 @@ class DRAW2PAINT_OT_CameraviewPaint(bpy.types.Operator):
         bpy.context.scene.render.film_transparent = True
 
         return {'FINISHED'}
+    
+###############################------------------------Precision Render Border Adjust Imported
+class DRAW2PAINT_OT_PixelsToBorder(bpy.types.Operator):
+    """ Convert the pixel value into the proportion needed by the Blender native property """
+    bl_idname = "draw2paint.pixelstoborder"
+    bl_label = "Convert Pixels to Border proportion"
+    
+    @classmethod
+    def poll(cls, context):
+        return True
+
+    def execute(self, context):
+        C = bpy.context
+    
+        X = C.scene.render.resolution_x
+        Y = C.scene.render.resolution_y
+        
+        C.scene.render.border_min_x = C.scene.x_min_pixels / X
+        C.scene.render.border_max_x = C.scene.x_max_pixels / X
+        C.scene.render.border_min_y = C.scene.y_min_pixels / Y
+        C.scene.render.border_max_y = C.scene.y_max_pixels / Y
+        
+        if C.scene.x_min_pixels > X:
+            C.scene.x_min_pixels = X
+        if C.scene.x_max_pixels > X:
+            C.scene.x_max_pixels = X
+        if C.scene.y_min_pixels > Y:
+            C.scene.y_min_pixels = Y
+        if C.scene.y_max_pixels > Y:
+            C.scene.y_max_pixels = Y
+        
+        return {'FINISHED'}
+    
+class DRAW2PAINT_OT_BorderToPixels(bpy.types.Operator):
+    """ Convert the Blender native property value to pixels"""
+    bl_idname = "draw2paint.bordertopixels"
+    bl_label = "Convert border values to pixels"
+    
+    @classmethod
+    def poll(cls, context):
+        return True
+
+    def execute(self, context):
+        C = bpy.context
+    
+        X = C.scene.render.resolution_x
+        Y = C.scene.render.resolution_y
+        
+        C.scene.x_min_pixels = int(C.scene.render.border_min_x * X)
+        C.scene.x_max_pixels = int(C.scene.render.border_max_x * X)
+        C.scene.y_min_pixels = int(C.scene.render.border_min_y * Y)
+        C.scene.y_max_pixels = int(C.scene.render.border_max_y * Y)
+                
+        return {'FINISHED'}
+
+
+######################## bordercrop from ez-draw panel revised
+
+#-----------------------------------------------------------------BORDER CROP ON
+class DRAW2PAINT_OT_BorderCrop(bpy.types.Operator):
+    """Turn on Border Crop in Render Settings"""
+    bl_description = "Border Crop ON"
+    bl_idname = "draw2paint.border_crop"
+    bl_label = ""
+    bl_options = {'REGISTER','UNDO'}
+
+    def execute(self, context):
+        rs = context.scene.render
+        rs.use_border = True
+        rs.use_crop_to_border = True
+        return {'FINISHED'}
+
+
+#----------------------------------------------------------------BORDER CROP OFF
+class DRAW2PAINT_OT_BorderUnCrop(bpy.types.Operator):
+    """Turn off Border Crop in Render Settings"""
+    bl_description = "Border Crop OFF"
+    bl_idname = "draw2paint.border_uncrop"
+    bl_label = ""
+    bl_options = {'REGISTER','UNDO'}
+
+    def execute(self, context):
+        rs = context.scene.render
+        rs.use_border = False
+        rs.use_crop_to_border = False
+        return {'FINISHED'}
+
+
+#-------------------------------------------------------------BORDER CROP TOGGLE
+class DRAW2PAINT_OT_BorderCropToggle(bpy.types.Operator):
+    """Set Border Crop in Render Settings"""
+    bl_description = "Border Crop On/Off TOGGLE"
+    bl_idname = "draw2paint.border_toggle"
+    bl_label = ""
+    bl_options = {'REGISTER','UNDO'}
+
+    @classmethod
+    def poll(self, context):
+        return poll_apt(self, context)
+
+    def execute(self, context):
+        scene = context.scene
+        rs = context.scene.render
+
+        if not(scene.prefs_are_locked):
+            if rs.use_border and rs.use_crop_to_border:
+                bpy.ops.draw2paint.border_uncrop()
+                scene.bordercrop_is_activated = False
+            else:
+                bpy.ops.draw2paint.border_crop()
+                scene.bordercrop_is_activated = True
+        return {'FINISHED'}
+
+
 # -----------------------------image save
 
 class DRAW2PAINT_OT_SaveImage(bpy.types.Operator):
@@ -1661,7 +1785,9 @@ class DRAW2PAINT_PT_ImageState(bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
-
+        scene = context.scene
+        rd = context.scene.render
+        
         box = layout.box()
         col = box.column(align=True)
         col.label(text="Painting Starts Here")
@@ -1697,7 +1823,64 @@ class DRAW2PAINT_PT_ImageState(bpy.types.Panel):
         row.scale_y = 1.25
         row3 = row.split(align=True)
         row3.operator("draw2paint.save_increm", text="Save Increment", icon='FILE_IMAGE')
+        ###################
 
+class DRAW2PAINT_PT_ImageCrop(bpy.types.Panel):
+    """Image Crop Tools - PRBA"""
+    bl_label = "Precise Crop PRBA"
+    bl_idname = "DRAW2PAINT_PT_imagecrop"
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "UI"
+    bl_category = "Draw2Paint"
+    bl_parent_id = 'DRAW2PAINT_PT_ImageState'
+    bl_options = {'DEFAULT_CLOSED'}
+    
+
+    def draw(self, context):
+        layout = self.layout
+        scene = context.scene
+        rd = context.scene.render
+        
+        ##################### render.use_crop_to_border
+        #box = layout.box()
+        #col = box.column(align=True)
+        #col.label(text="Crop Tools PRBA")
+        sub = layout.box()
+        sub.prop(rd, "use_crop_to_border")
+        if not scene.render.use_border:
+            sub = layout.split(factor=0.7)
+            sub.label(icon="ERROR", text="Border Render not activated:")
+            sub.prop(scene.render, "use_border")
+        
+        
+        row = sub.row()
+        row.label(text="")
+        row.prop(scene.render, "border_max_y", text="Max", slider=True)
+        row.label(text="")
+        row = sub.row(align=True)
+        row.prop(scene.render, "border_min_x", text="Min", slider=True)
+        row.prop(scene.render, "border_max_x", text="Max", slider=True)
+        row = sub.row()
+        row.label(text="")
+        row.prop(scene.render, "border_min_y", text="Min", slider=True)
+        row.label(text="")
+        
+        row = layout.row()
+        row.label(text="Convert values to pixels:")
+        row.operator("draw2paint.bordertopixels", text="Border -> Pixels")
+        
+        layout.label(text="Pixels position X:")
+        row = layout.row(align=True)
+        row.prop(scene, "x_min_pixels", text="Min")
+        row.prop(scene, "x_max_pixels", text="Max")
+        layout.label(text="Pixels position Y:")
+        row = layout.row(align=True)
+        row.prop(scene, "y_min_pixels", text="Min")
+        row.prop(scene, "y_max_pixels", text="Max")
+        
+        layout.label(icon="INFO", text="Don't forget to apply pixels values")
+        row = layout.row()
+        row.operator("draw2paint.pixelstoborder", text="Pixels -> Border")
 
 class DRAW2PAINT_PT_FlipRotate(bpy.types.Panel):
     """Flip and Rotate the Canvas"""
@@ -2019,6 +2202,10 @@ classes = (
     DRAW2PAINT_OT_CameraviewPaint,
     DRAW2PAINT_OT_EmptyGuides,
     # DRAW2PAINT_OT_CamGuides,
+    DRAW2PAINT_OT_PixelsToBorder,
+    DRAW2PAINT_OT_BorderToPixels,
+    DRAW2PAINT_OT_BorderCrop,
+    DRAW2PAINT_OT_BorderUnCrop,
     DRAW2PAINT_OT_SculptDuplicate,
     DRAW2PAINT_OT_SculptLiquid,
     DRAW2PAINT_OT_ReprojectMask,
@@ -2039,6 +2226,7 @@ classes = (
     DRAW2PAINT_OT_SelectVertgroup,
     DRAW2PAINT_OT_holdout_shader,
     DRAW2PAINT_PT_ImageState,
+    DRAW2PAINT_PT_ImageCrop,
     DRAW2PAINT_PT_FlipRotate,
     DRAW2PAINT_PT_GuideControls,
     DRAW2PAINT_PT_MaskControl,
