@@ -819,6 +819,52 @@ class DRAW2PAINT_OT_CameraviewPaint(bpy.types.Operator):
         bpy.context.scene.render.film_transparent = True
 
         return {'FINISHED'}
+
+##################### experimental get UV layout for camera ref
+
+##todo: set up string for file location or code to write to new file
+##todo: choose UV layer (get) or make new UV layer with current smart uv
+######: need second operator for placing the resulting image as current camera background
+
+     
+class DRAW2PAINT_OT_getuvlayout(bpy.types.Operator):
+    """Tooltip"""
+    bl_idname = "draw2paint.getuvlayout"
+    bl_label = "Get UV Layout for Selected Object"
+
+    @classmethod
+    def poll(cls, context):
+        return context.active_object is not None
+
+    def execute(self, context):
+        scene = context.scene
+        layer = bpy.context.view_layer
+        layer.update()
+
+        selObj = []
+ 
+        for obj in bpy.context.view_layer.objects:
+         selObj.append(obj.name)
+         
+        bpy.ops.object.select_all(action='TOGGLE')
+         
+        i=0
+        while i < len(selObj):
+         obj.select_set(True) == bpy.context.scene.objects[selObj[i]]
+         bpy.ops.object.mode_set(mode="EDIT")
+         bpy.ops.mesh.select_all(action='SELECT')
+         bpy.ops.mesh.select_all(action='SELECT')
+         bpy.ops.uv.smart_project(angle_limit=66.0, 
+                                island_margin=0.0, 
+                                area_weight=0.0)
+         f="C:\\Users\\artis\\OneDrive\\Desktop\\blender stuff\\" + bpy.data.objects[selObj[i]].name
+         bpy.ops.uv.export_layout(filepath=f, mode='PNG', opacity=0)
+         bpy.ops.object.mode_set(mode="OBJECT")
+         bpy.ops.object.select_all(action='TOGGLE')
+         i+=1      
+                
+
+        return {'FINISHED'}
     
 ###############################------------------------Precision Render Border Adjust Imported
 class DRAW2PAINT_OT_PixelsToBorder(bpy.types.Operator):
@@ -876,7 +922,7 @@ class DRAW2PAINT_OT_BorderToPixels(bpy.types.Operator):
 
 
 ######################## bordercrop from ez-draw panel revised
-
+############## haven't decided on setting this up as toggle or not, missing scene preferences stored in addon like ez-draw did
 #-----------------------------------------------------------------BORDER CROP ON
 class DRAW2PAINT_OT_BorderCrop(bpy.types.Operator):
     """Turn on Border Crop in Render Settings"""
@@ -1823,6 +1869,13 @@ class DRAW2PAINT_PT_ImageState(bpy.types.Panel):
         row.scale_y = 1.25
         row3 = row.split(align=True)
         row3.operator("draw2paint.save_increm", text="Save Increment", icon='FILE_IMAGE')
+        
+        row=layout.row()
+        row = col.row(align=True)
+        row.scale_x = 0.50
+        row.scale_y = 1.25
+        row4 = row.split(align=True)
+        row4.operator("draw2paint.getuvlayout",text="Get UV Overlay", icon='FILEBROWSER')
         ###################
 
 class DRAW2PAINT_PT_ImageCrop(bpy.types.Panel):
@@ -2200,6 +2253,7 @@ classes = (
     DRAW2PAINT_OT_CanvasResetrot,
     DRAW2PAINT_OT_SaveImage,
     DRAW2PAINT_OT_CameraviewPaint,
+    DRAW2PAINT_OT_getuvlayout,
     DRAW2PAINT_OT_EmptyGuides,
     # DRAW2PAINT_OT_CamGuides,
     DRAW2PAINT_OT_PixelsToBorder,
@@ -2249,7 +2303,6 @@ classes = (
 
 )
 
-#register, unregister = bpy.utils.register_classes_factory(classes)
 
 
 def register():
@@ -2261,29 +2314,15 @@ def register():
     bpy.types.Scene.my_tool = bpy.props.PointerProperty(type=MyProperties)
 
 def unregister():
-    remove_temp_props()
+    #remove_temp_props()
     from bpy.utils import unregister_class
     for cls in reversed(classes):
         unregister_class(cls)
         
     del bpy.types.Scene.my_tool
 
-    
-
-    # Remove module
-
-
-
 
     
 if __name__ == '__main__':
     register()
-
-
-
-
-
-
-
-
 
