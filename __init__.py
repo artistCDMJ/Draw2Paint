@@ -720,6 +720,7 @@ class DRAW2PAINT_OT_CameraviewPaint(bpy.types.Operator):
 
         # save selected plane by rename
         bpy.context.object.name = "canvas"
+        bpy.ops.object.move_to_collection(collection_index=0, is_new=True, new_collection_name="canvas view")
 
         # variable to get image texture dimensions - thanks to Mutant Bob http://blender.stackexchange.com/users/660/mutant-bob
         # select_mat = bpy.context.active_object.data.materials[0].texture_slots[0].texture.image.size[:]
@@ -745,6 +746,7 @@ class DRAW2PAINT_OT_CameraviewPaint(bpy.types.Operator):
 
         # name it
         bpy.context.object.name = "Camera View Paint"
+        bpy.ops.object.move_to_collection(collection_index=0, is_new=False, new_collection_name="canvas view")
 
         # switch to camera view
         bpy.ops.view3d.object_as_camera()
@@ -840,31 +842,112 @@ class DRAW2PAINT_OT_getuvlayout(bpy.types.Operator):
         scene = context.scene
         layer = bpy.context.view_layer
         layer.update()
+        
+        if bpy.context.active_object.data.uv_layers:
+            print("we have UVs")
+            
+        else:
+            self.report({"WARNING"}, "Please Create UV Layer")
+            return {"CANCELLED"}
 
-        selObj = []
- 
-        for obj in bpy.context.view_layer.objects:
-         selObj.append(obj.name)
-         
-        bpy.ops.object.select_all(action='TOGGLE')
-         
-        i=0
-        while i < len(selObj):
-         obj.select_set(True) == bpy.context.scene.objects[selObj[i]]
-         bpy.ops.object.mode_set(mode="EDIT")
-         bpy.ops.mesh.select_all(action='SELECT')
-         bpy.ops.mesh.select_all(action='SELECT')
-         bpy.ops.uv.smart_project(angle_limit=66.0, 
-                                island_margin=0.0, 
-                                area_weight=0.0)
-         f="C:\\Users\\artis\\OneDrive\\Desktop\\blender stuff\\" + bpy.data.objects[selObj[i]].name
-         bpy.ops.uv.export_layout(filepath=f, mode='PNG', opacity=0)
-         bpy.ops.object.mode_set(mode="OBJECT")
-         bpy.ops.object.select_all(action='TOGGLE')
-         i+=1      
-                
+        selObj = bpy.context.active_object
 
+        bpy.ops.object.mode_set(mode="EDIT")
+        bpy.ops.mesh.select_all(action='SELECT')
+        bpy.ops.mesh.select_all(action='SELECT')
+         
+        f="C:\\tmp\\" + selObj.name
+        bpy.ops.uv.export_layout(filepath=f, mode='PNG', opacity=0)
+        bpy.ops.object.mode_set(mode="OBJECT")
+               
         return {'FINISHED'}
+
+class DRAW2PAINT_OT_loadbgcam(bpy.types.Operator):
+    """apply uv layout to Camera View Paint"""
+    bl_idname = "draw2paint.loadbgcam"
+    bl_label = "UV Layout to Camera View Paint"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    @classmethod
+    def poll(cls, context):
+        return context.active_object is not None
+
+    def execute(self, context):
+        scene = context.scene
+        # new code
+        ob = bpy.context.active_object
+
+        cam = bpy.context.scene.camera
+        filepath = "C:/tmp/" + str(ob.name) + ".png"
+
+        img = bpy.data.images.load(filepath)
+        cam.data.show_background_images = True
+        bg = cam.data.background_images.new()
+        bg.image = img
+        
+        
+        return {'FINISHED'}        
+class DRAW2PAINT_OT_isolate_2d(bpy.types.Operator):
+    """Push to Isolate 2D Paint View"""
+    bl_idname = "draw2paint.swapcollview2d"
+    bl_label = "Toggle 2D View"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    #@classmethod
+    #def poll(cls, context):
+        #return context.active_object is not None
+
+    def execute(self, context):
+        scene = context.scene
+        # new code
+        
+        
+        eye = bpy.context.view_layer.layer_collection.children["object view"]
+        sore =bpy.context.view_layer.layer_collection.children["canvas view"]
+        if eye.hide_viewport == False:
+            eye.hide_viewport = True
+            sore.hide_viewport = False
+        bpy.ops.view3d.view_camera()
+        bpy.context.space_data.shading.type = 'SOLID'
+
+        bpy.context.space_data.shading.light = 'FLAT'
+
+        
+        
+        
+        return {'FINISHED'}        
+
+class DRAW2PAINT_OT_isolate_3d(bpy.types.Operator):
+    """Push to Isolate 3D Paint View"""
+    bl_idname = "draw2paint.swapcollview3d"
+    bl_label = "Toggle 3D View"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    #@classmethod
+    #def poll(cls, context):
+        #return context.active_object is not None
+
+    def execute(self, context):
+        scene = context.scene
+        # new code
+        
+        
+        eye = bpy.context.view_layer.layer_collection.children["object view"]
+        sore =bpy.context.view_layer.layer_collection.children["canvas view"]
+        if sore.hide_viewport == False:
+            sore.hide_viewport = True
+            eye.hide_viewport = False
+        
+        bpy.ops.view3d.view_axis(type='FRONT', align_active=True)
+        bpy.context.space_data.shading.type = 'SOLID'
+
+        bpy.context.space_data.shading.light = 'STUDIO'
+
+        
+        
+        return {'FINISHED'}
+
+
     
 ###############################------------------------Precision Render Border Adjust Imported
 class DRAW2PAINT_OT_PixelsToBorder(bpy.types.Operator):
@@ -1870,13 +1953,71 @@ class DRAW2PAINT_PT_ImageState(bpy.types.Panel):
         row3 = row.split(align=True)
         row3.operator("draw2paint.save_increm", text="Save Increment", icon='FILE_IMAGE')
         
+        
+        ###################
+
+
+
+
+
+################################ 3D to 2D Experimental Workflow Items
+
+############# Scene Extras
+class DRAW2PAINT_PT_2D_to_3D_Experimental(bpy.types.Panel):
+    """2D and 3D Workflow Experimental Operations"""
+    bl_label = "Mad Scientist Painter Ops"
+    bl_idname = "DRAW2PAINT_PT_2dto3d_experiment"
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "UI"
+    bl_category = "Draw2Paint"
+    bl_parent_id = 'DRAW2PAINT_PT_ImageState'
+    bl_options = {'DEFAULT_CLOSED'}
+
+    def draw(self, context):
+        layout = self.layout
+
+        
+        box = layout.box()
+        col = box.column(align=True)
+        col.label(text="Experimental-Use at YOUR OWN RISK")
+        col.label(text="coll: canvas view-object view")
+        row = col.row(align=True)
+
+        row1 = row.split(align=True)
+        row1.scale_x = 0.50
+        row1.scale_y = 1.25
+        row1.operator("draw2paint.swapcollview3d", 
+                    text='3D View', 
+                    icon='MESH_UVSPHERE')
+        row2 = row.split(align=True)
+        row2.scale_x = 0.50
+        row2.scale_y = 1.25
+        row2.operator("draw2paint.swapcollview2d", 
+                    text='2D View', 
+                    icon='MESH_CIRCLE')
+
+        row = layout.row()
+        row = col.row(align=True)
+        row.scale_x = 0.50
+        row.scale_y = 1.25
+        row2 = row.split(align=True)
+        row2.operator("draw2paint.getuvlayout", 
+                    text="Get UV Overlay", 
+                    icon='GROUP_UVS')
+        row2.operator("draw2paint.loadbgcam",
+                    text="UV to Camera", 
+                    icon='SCREEN_BACK')
         row=layout.row()
         row = col.row(align=True)
         row.scale_x = 0.50
         row.scale_y = 1.25
         row4 = row.split(align=True)
-        row4.operator("draw2paint.getuvlayout",text="Get UV Overlay", icon='FILEBROWSER')
-        ###################
+        row4.operator("draw2paint.frontof_paint",
+                    text="Align to Face", 
+                    icon='FILE_TICK')
+
+
+
 
 class DRAW2PAINT_PT_ImageCrop(bpy.types.Panel):
     """Image Crop Tools - PRBA"""
@@ -2008,7 +2149,7 @@ class DRAW2PAINT_PT_GuideControls(bpy.types.Panel):
         row = col.row(align=True)
         row.prop(context.object, "use_mesh_mirror_x", text="X", toggle=True)
         row.prop(context.object, "use_mesh_mirror_y", text="Y", toggle=True)
-        # row.prop(context.object, "use_mesh_mirror_z", text="Z", toggle=True)
+        row.prop(context.object, "use_mesh_mirror_z", text="Z", toggle=True)
 
 
 ############### align
@@ -2171,6 +2312,7 @@ class DRAW2PAINT_PT_Sculpt2D(bpy.types.Panel):
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_category = "Draw2Paint"
+    bl_parent_id = 'DRAW2PAINT_PT_ImageState'
     bl_options = {'DEFAULT_CLOSED'}
 
     def draw(self, context):
@@ -2230,14 +2372,6 @@ class DRAW2PAINT_PT_SceneExtras(bpy.types.Panel):
         row4.scale_y = 1.25
         row4.operator("draw2paint.slow_play", text='Slow Play', icon='RENDER_ANIMATION')
 
-        col = box.column(align=True)
-        col.label(text="Extras for 3D Paint")
-        row = col.row(align=True)
-
-        row1 = row.split(align=True)
-        row1.scale_x = 0.50
-        row1.scale_y = 1.25
-        row1.operator("draw2paint.frontof_paint", text='Align to Face', icon='TRACKER')
 
 classes = (
     
@@ -2245,7 +2379,7 @@ classes = (
     DRAW2PAINT_OT_MacroCreateBrush,
     DRAW2PAINT_OT_CanvasHoriz,
     DRAW2PAINT_OT_CanvasVertical,
-    DRAW2PAINT_OT_RotateCanvasCCW15,#
+    DRAW2PAINT_OT_RotateCanvasCCW15,
     DRAW2PAINT_OT_RotateCanvasCW15,
     DRAW2PAINT_OT_RotateCanvasCCW,
     DRAW2PAINT_OT_RotateCanvasCW,
@@ -2254,6 +2388,9 @@ classes = (
     DRAW2PAINT_OT_SaveImage,
     DRAW2PAINT_OT_CameraviewPaint,
     DRAW2PAINT_OT_getuvlayout,
+    DRAW2PAINT_OT_loadbgcam,
+    DRAW2PAINT_OT_isolate_2d,
+    DRAW2PAINT_OT_isolate_3d,
     DRAW2PAINT_OT_EmptyGuides,
     # DRAW2PAINT_OT_CamGuides,
     DRAW2PAINT_OT_PixelsToBorder,
@@ -2280,6 +2417,7 @@ classes = (
     DRAW2PAINT_OT_SelectVertgroup,
     DRAW2PAINT_OT_holdout_shader,
     DRAW2PAINT_PT_ImageState,
+    DRAW2PAINT_PT_2D_to_3D_Experimental,
     DRAW2PAINT_PT_ImageCrop,
     DRAW2PAINT_PT_FlipRotate,
     DRAW2PAINT_PT_GuideControls,
