@@ -746,7 +746,7 @@ class DRAW2PAINT_OT_CameraviewPaint(bpy.types.Operator):
 
         # name it
         bpy.context.object.name = "Camera View Paint"
-        bpy.ops.object.move_to_collection(collection_index=0, is_new=False, new_collection_name="canvas view")
+        
 
         # switch to camera view
         bpy.ops.view3d.object_as_camera()
@@ -796,10 +796,34 @@ class DRAW2PAINT_OT_CameraviewPaint(bpy.types.Operator):
 
         bpy.context.object.data.show_name = True
         bpy.context.object.data.passepartout_alpha = 0.65
+        
+        C = bpy.context
+
+        # List of object references
+        objs = C.selected_objects
+
+        # Set target collection to a known collection 
+        coll_target = C.scene.collection.children.get("canvas view")
+
+        # Set target collection based on the collection in context (selected) 
+        #coll_target = C.collection
+
+        # If target found and object list not empty
+        if coll_target and objs:
+
+            # Loop through all objects
+            for ob in objs:
+                # Loop through all collections the obj is linked to
+                for coll in ob.users_collection:
+                    # Unlink the object
+                    coll.objects.unlink(ob)
+
+        # Link each object to the target collection
+        coll_target.objects.link(ob)
 
         # hide camera itself
         bpy.ops.object.hide_view_set(unselected=False)
-
+        
         bpy.context.selectable_objects
 
         # deselect camera
@@ -858,7 +882,30 @@ class DRAW2PAINT_OT_getuvlayout(bpy.types.Operator):
          
         f="C:\\tmp\\" + selObj.name
         bpy.ops.uv.export_layout(filepath=f, mode='PNG', opacity=0)
-        bpy.ops.object.mode_set(mode="OBJECT")
+        bpy.ops.object.mode_set(mode='OBJECT')
+        
+        C = bpy.context
+
+        # List of object references
+        objs = C.selected_objects
+
+        # Set target collection to a known collection 
+        coll_target = C.scene.collection.children.get("object view")
+        if not coll_target:
+            bpy.ops.object.move_to_collection(collection_index=0, is_new=True, new_collection_name="object view")
+
+        # Set target collection based on the collection in context (selected) 
+        #coll_target = C.collection
+
+        # If target found and object list not empty
+        if coll_target and objs:
+
+            # Loop through all objects
+            for ob in objs:
+                # Loop through all collections the obj is linked to
+                for coll in ob.users_collection:
+                    # Unlink the object
+                    coll.objects.unlink(ob)
                
         return {'FINISHED'}
 
@@ -886,7 +933,35 @@ class DRAW2PAINT_OT_loadbgcam(bpy.types.Operator):
         bg.image = img
         bg.alpha=(1.0)
         bg.display_depth = 'FRONT'
+
+
+
         
+        bpy.context.selectable_objects
+
+        # deselect plane
+        bpy.ops.object.select_all(action='TOGGLE')
+        # bpy.ops.object.select_all(action='TOGGLE')
+
+        # select camera
+        bpy.ops.object.select_all(action='DESELECT')
+        ob = bpy.data.objects["Camera View Paint"]
+        bpy.context.view_layer.objects.active = ob
+
+        # unhide camera itself
+        bpy.ops.object.hide_view_clear()        
+
+        # deselect camera
+        bpy.ops.object.select_all(action='TOGGLE')
+        # bpy.ops.object.select_all(action='TOGGLE')
+
+        # select plane
+        bpy.ops.object.select_all(action='DESELECT')
+        ob = bpy.data.objects["canvas"]
+        bpy.context.view_layer.objects.active = ob
+
+        # selection to texpaint toggle
+        bpy.ops.paint.texture_paint_toggle()        
         
         return {'FINISHED'}        
 class DRAW2PAINT_OT_isolate_2d(bpy.types.Operator):
