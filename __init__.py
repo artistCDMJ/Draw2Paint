@@ -1016,7 +1016,7 @@ class DRAW2PAINT_OT_isolate_3d(bpy.types.Operator):
             eye.hide_viewport = False
         
         bpy.ops.view3d.view_axis(type='FRONT', align_active=True)
-        bpy.context.space_data.shading.type = 'SOLID'
+        bpy.context.space_data.shading.type = 'MATERIAL'
 
         bpy.context.space_data.shading.light = 'STUDIO'
 
@@ -1386,10 +1386,9 @@ class DRAW2PAINT_OT_FrontOfPaint(bpy.types.Operator):
         object = bpy.ops.object
         contextObj = context.object
 
-        context.space_data.viewport_shade = 'TEXTURED'  # texture draw
         paint.texture_paint_toggle()
         object.editmode_toggle()
-        bpy.ops.view3d.viewnumpad(type='TOP', align_active=True)
+        bpy.ops.view3d.view_axis(type='TOP', align_active=True)
         object.editmode_toggle()
         paint.texture_paint_toggle()
         contextObj.data.use_paint_mask = True
