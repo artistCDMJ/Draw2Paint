@@ -738,10 +738,11 @@ class DRAW2PAINT_OT_CameraviewPaint(bpy.types.Operator):
     def poll(self, context):
         obj = context.active_object
         if obj is not None:
-            A = obj.type == 'MESH'
+            A = obj.type == 'MESH' and obj.name != 'canvas'
             B = context.mode == 'OBJECT'
             return A and B
 
+        
     def execute(self, context):
 
         scene = context.scene
