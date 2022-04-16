@@ -67,6 +67,7 @@ class DRAW2PAINT_OT_MacroCreateBrush(bpy.types.Operator):
     bl_label = "Setup Scene for Image Brush Maker"
     bl_options = {'REGISTER', 'UNDO'}
 
+
     def execute(self, context):
 
         scene = context.scene
@@ -111,11 +112,21 @@ class DRAW2PAINT_OT_MacroCreateBrush(bpy.types.Operator):
                 break  # this will break the loop after it is first ran
 
         return {'FINISHED'}
+    
+    
 class DRAW2PAINT_OT_CustomFps(bpy.types.Operator):
     """Slow Play FPS"""
     bl_idname = "draw2paint.slow_play"
     bl_label = "Slow Play FPS Toggle"
     bl_options = {'REGISTER', 'UNDO'}
+
+    @classmethod
+    def poll(self, context):
+        obj = context.active_object
+        if obj is not None:
+            A = obj.type == 'MESH'
+            B = context.mode == 'SCULPT'
+            return A and B
 
     def execute(self, context):
         scene = context.scene
@@ -129,6 +140,8 @@ class DRAW2PAINT_OT_CustomFps(bpy.types.Operator):
             scene.render.fps_base = 12
 
         return {'FINISHED'}
+    
+    
 class DRAW2PAINT_OT_RefMakerScene(bpy.types.Operator):
     """Create Reference Scene"""
     bl_description = "Create Scene for Composing Reference Slides"
@@ -187,10 +200,19 @@ class DRAW2PAINT_OT_SculptView(bpy.types.Operator):
     bl_label = "Sculpt Camera"
     bl_options = {'REGISTER', 'UNDO'}
 
+    @classmethod
+    def poll(self, context):
+        obj = context.active_object
+        if obj is not None:
+            A = obj.type == 'MESH'
+            B = context.mode == 'SCULPT'
+            return A and B
+
+
     def execute(self, context):
         scene = context.scene
 
-        bpy.ops.object.camera_add(view_align=False,
+        bpy.ops.object.camera_add(align='VIEW',
                                   enter_editmode=False,
                                   location=(0, -4, 0),
                                   rotation=(1.5708, 0, 0)
@@ -198,16 +220,24 @@ class DRAW2PAINT_OT_SculptView(bpy.types.Operator):
         context.object.name = "Reference Cam"  # add camera to front view
         context.object.data.show_passepartout = False
         context.object.data.lens = 80
+        bpy.ops.view3d.object_as_camera()
 
         # change to camera view
         for area in context.screen.areas:
             if area.type == 'VIEW_3D':
                 override = bpy.context.copy()
                 override['area'] = area
-                bpy.ops.view3d.viewnumpad(override, type='CAMERA')
+                #bpy.ops.view3d.viewnumpad(override, type='CAMERA')
+                bpy.ops.view3d.camera_to_view()
                 break
         scene.render.resolution_x = 1920
         scene.render.resolution_y = 1080
+        
+        bpy.context.object.data.show_name = True
+        
+        #collection for sculpt reference
+        
+        
 
         return {'FINISHED'}
 
@@ -267,6 +297,14 @@ class DRAW2PAINT_OT_CanvasMaterial(bpy.types.Operator):
     bl_idname = "draw2paint.canvas_material"
     bl_label = "Set the Material to the same as Main Canvas"
     bl_options = {'REGISTER', 'UNDO'}
+
+    @classmethod
+    def poll(self, context):
+        obj = context.active_object
+        if obj is not None:
+            A = obj.type == 'MESH' or 'CURVE'
+            B = context.mode == 'OBJECT' or 'PAINT_TEXTURE'
+            return A and B
 
     def execute(self, context):
         scene = context.scene
@@ -834,6 +872,9 @@ class DRAW2PAINT_OT_CameraviewPaint(bpy.types.Operator):
         bpy.ops.object.select_all(action='DESELECT')
         ob = bpy.data.objects["canvas"]
         bpy.context.view_layer.objects.active = ob
+        # fix alpha blend in eevee
+        bpy.context.object.active_material.blend_method = 'HASHED'
+
 
         # selection to texpaint toggle
         bpy.ops.paint.texture_paint_toggle()
@@ -858,10 +899,16 @@ class DRAW2PAINT_OT_getuvlayout(bpy.types.Operator):
     bl_idname = "draw2paint.getuvlayout"
     bl_label = "Get UV Layout for Selected Object"
 
-    @classmethod
-    def poll(cls, context):
-        return context.active_object is not None
 
+    @classmethod
+    def poll(self, context):
+        obj = context.active_object
+        if obj is not None:
+            A = obj.type == 'MESH'
+            B = context.mode == 'OBJECT'
+            return A and B    
+    
+    
     def execute(self, context):
         scene = context.scene
         layer = bpy.context.view_layer
@@ -916,8 +963,12 @@ class DRAW2PAINT_OT_loadbgcam(bpy.types.Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     @classmethod
-    def poll(cls, context):
-        return context.active_object is not None
+    def poll(self, context):
+        obj = context.active_object
+        if obj is not None:
+            A = obj.type == 'MESH'
+            B = context.mode == 'OBJECT'
+            return A and B
 
     def execute(self, context):
         scene = context.scene
@@ -964,6 +1015,7 @@ class DRAW2PAINT_OT_loadbgcam(bpy.types.Operator):
         bpy.ops.paint.texture_paint_toggle()        
         
         return {'FINISHED'}        
+    
 class DRAW2PAINT_OT_isolate_2d(bpy.types.Operator):
     """Push to Isolate 2D Paint View"""
     bl_idname = "draw2paint.swapcollview2d"
@@ -1168,6 +1220,7 @@ class DRAW2PAINT_OT_SaveImage(bpy.types.Operator):
         bpy.context.area.type = original_type
 
         return {'FINISHED'}
+    
 ####experiment fix - doesn't work yet
 class DRAW2PAINT_OT_SaveIncrem(bpy.types.Operator):
     """Save Incremential Images - MUST SAVE SESSION FILE FIRST"""
@@ -1253,6 +1306,7 @@ class DRAW2PAINT_OT_ImageReload(bpy.types.Operator):
 
         context.area.ui_type = original_type
         return {'FINISHED'}
+    
 ########### pivot works
 class DRAW2PAINT_OT_EmptyGuides(bpy.types.Operator):
     """experimental- create new empty guide or selected guide relocates origin"""
@@ -1341,6 +1395,7 @@ class DRAW2PAINT_OT_EmptyGuides(bpy.types.Operator):
             return {'FINISHED'}
 
         return {'FINISHED'}
+    
 class DRAW2PAINT_OT_center_object(bpy.types.Operator):
     """Snaps cursor and Selected Object to World Center"""
     bl_idname = "draw2paint.center_object"
@@ -1359,6 +1414,7 @@ class DRAW2PAINT_OT_center_object(bpy.types.Operator):
         bpy.ops.view3d.snap_selected_to_cursor(use_offset=False)
 
         return {'FINISHED'}
+    
 ################ legacy
 
 ############################################################
@@ -1386,9 +1442,10 @@ class DRAW2PAINT_OT_FrontOfPaint(bpy.types.Operator):
         object = bpy.ops.object
         contextObj = context.object
 
+        context.space_data.viewport_shade = 'TEXTURED'  # texture draw
         paint.texture_paint_toggle()
         object.editmode_toggle()
-        bpy.ops.view3d.view_axis(type='TOP', align_active=True)
+        bpy.ops.view3d.viewnumpad(type='TOP', align_active=True)
         object.editmode_toggle()
         paint.texture_paint_toggle()
         contextObj.data.use_paint_mask = True
@@ -1427,6 +1484,14 @@ class DRAW2PAINT_OT_ReprojectMask(bpy.types.Operator):
     bl_idname = "draw2paint.reproject_mask"
     bl_label = "Reproject Mask to UV from Camera View"
     bl_options = {'REGISTER', 'UNDO'}
+
+    @classmethod
+    def poll(self, context):
+        obj = context.active_object
+        A = obj is not None
+        if A:
+            B = obj.type == 'CURVE' or 'MESH'
+            return B
 
     def execute(self, context):
         scene = context.scene
@@ -1485,6 +1550,14 @@ class DRAW2PAINT_OT_AlignLeft(bpy.types.Operator):
     bl_label = "Align Objects Left"
     bl_options = {'REGISTER', 'UNDO'}
 
+    @classmethod
+    def poll(self, context):
+        obj = context.active_object
+        if obj is not None:
+            A = obj.type == 'MESH' or 'CURVE'
+            B = context.mode == 'OBJECT'
+            return A and B
+
     def execute(self, context):
         scene = context.scene
 
@@ -1498,6 +1571,14 @@ class DRAW2PAINT_OT_AlignCenter(bpy.types.Operator):
     bl_idname = "draw2paint.align_center"
     bl_label = "Align Objects Center"
     bl_options = {'REGISTER', 'UNDO'}
+
+    @classmethod
+    def poll(self, context):
+        obj = context.active_object
+        if obj is not None:
+            A = obj.type == 'MESH' or 'CURVE'
+            B = context.mode == 'OBJECT'
+            return A and B
 
     def execute(self, context):
         scene = context.scene
@@ -1514,6 +1595,14 @@ class DRAW2PAINT_OT_AlignRight(bpy.types.Operator):
     bl_label = "Align Objects Right"
     bl_options = {'REGISTER', 'UNDO'}
 
+    @classmethod
+    def poll(self, context):
+        obj = context.active_object
+        if obj is not None:
+            A = obj.type == 'MESH' or 'CURVE'
+            B = context.mode == 'OBJECT'
+            return A and B
+
     def execute(self, context):
         scene = context.scene
 
@@ -1528,6 +1617,14 @@ class DRAW2PAINT_OT_AlignTop(bpy.types.Operator):
     bl_label = "Align Objects Top"
     bl_options = {'REGISTER', 'UNDO'}
 
+    @classmethod
+    def poll(self, context):
+        obj = context.active_object
+        if obj is not None:
+            A = obj.type == 'MESH' or 'CURVE'
+            B = context.mode == 'OBJECT'
+            return A and B
+
     def execute(self, context):
         scene = context.scene
 
@@ -1541,6 +1638,14 @@ class DRAW2PAINT_OT_AlignHcenter(bpy.types.Operator):
     bl_idname = "draw2paint.align_hcenter"
     bl_label = "Align Objects Horizontal Center"
     bl_options = {'REGISTER', 'UNDO'}
+
+    @classmethod
+    def poll(self, context):
+        obj = context.active_object
+        if obj is not None:
+            A = obj.type == 'MESH' or 'CURVE'
+            B = context.mode == 'OBJECT'
+            return A and B
 
     def execute(self, context):
         scene = context.scene
@@ -1557,6 +1662,14 @@ class DRAW2PAINT_OT_CenterAlignReset(bpy.types.Operator):
     bl_label = "Reset center alignment"
     bl_options = {'REGISTER', 'UNDO'}
 
+    @classmethod
+    def poll(self, context):
+        obj = context.active_object
+        if obj is not None:
+            A = obj.type == 'MESH' or 'CURVE'
+            B = context.mode == 'OBJECT'
+            return A and B
+
     def execute(self, context):
         scene = context.scene
         mva = scene.mask_V_align
@@ -1570,6 +1683,14 @@ class DRAW2PAINT_OT_AlignBottom(bpy.types.Operator):
     bl_idname = "draw2paint.align_bottom"
     bl_label = "Align Objects Horizontal Bottom"
     bl_options = {'REGISTER', 'UNDO'}
+
+    @classmethod
+    def poll(self, context):
+        obj = context.active_object
+        if obj is not None:
+            A = obj.type == 'MESH' or 'CURVE'
+            B = context.mode == 'OBJECT'
+            return A and B
 
     def execute(self, context):
         scene = context.scene
@@ -1615,7 +1736,7 @@ class DRAW2PAINT_OT_my_enum_shapes(bpy.types.Operator):
             
         if mytool.my_enum == 'OP2':
             #operators guts from draw vector
-            bpy.ops.curve.primitive_bezier_curve_add(enter_editmode=True, align='WORLD', location=(0, 0, 0.0125),
+            bpy.ops.curve.primitive_bezier_curve_add(enter_editmode=True, align='WORLD', location=(0, 0, 0.15),
                                                  scale=(1, 1, 1))
 
             bpy.ops.curve.handle_type_set(type='VECTOR')
@@ -1623,28 +1744,31 @@ class DRAW2PAINT_OT_my_enum_shapes(bpy.types.Operator):
             bpy.context.object.data.fill_mode = 'BOTH'
 
             bpy.ops.transform.resize(value=(0.1, 0.1, 0.1))
+            bpy.ops.wm.tool_set_by_id(name="builtin.select_box")
             
         
         
         
         if mytool.my_enum == 'OP3':
             #operators guts from draw square
-            bpy.ops.curve.primitive_bezier_circle_add(radius=0.25, enter_editmode=False, align='WORLD', location=(0, 0, 0),
+            bpy.ops.curve.primitive_bezier_circle_add(radius=0.25, enter_editmode=False, align='WORLD', location=(0, 0, 0.15),
                                                       scale=(1, 1, 1))
             bpy.context.object.data.dimensions = '2D'
             bpy.context.object.data.fill_mode = 'BOTH'
             bpy.ops.object.editmode_toggle()
             bpy.ops.curve.handle_type_set(type='VECTOR')
             bpy.ops.transform.rotate(value=0.785398, orient_axis='Z')
+            bpy.ops.wm.tool_set_by_id(name="builtin.select_box")
         
         
         if mytool.my_enum == 'OP4':
             #operators guts from draw circle
-            bpy.ops.curve.primitive_bezier_circle_add(radius=0.25, enter_editmode=False, align='WORLD', location=(0, 0, 0),
+            bpy.ops.curve.primitive_bezier_circle_add(radius=0.25, enter_editmode=False, align='WORLD', location=(0, 0, 0.15),
                                                       scale=(1, 1, 1))
             bpy.context.object.data.dimensions = '2D'
             bpy.context.object.data.fill_mode = 'BOTH'
-            bpy.ops.object.editmode_toggle()            
+            bpy.ops.object.editmode_toggle()
+            bpy.ops.wm.tool_set_by_id(name="builtin.select_box")            
         
         
             
@@ -1749,6 +1873,14 @@ class DRAW2PAINT_OT_RemoveMods(bpy.types.Operator):
     bl_label = "Remove modifiers"
     bl_options = {'REGISTER', 'UNDO'}
 
+    @classmethod
+    def poll(self, context):
+        obj = context.active_object
+        if obj is not None:
+            A = obj.type == 'MESH'
+            B = context.mode == 'OBJECT'
+            return A and B
+
     def execute(self, context):
         scene = context.scene
         # init
@@ -1773,6 +1905,14 @@ class DRAW2PAINT_OT_SolidifyDifference(bpy.types.Operator):
     bl_idname = "draw2paint.solidify_difference"
     bl_label = "Add Solidify and Difference Bool"
     bl_options = {'REGISTER', 'UNDO'}
+
+    @classmethod
+    def poll(self, context):
+        obj = context.active_object
+        if obj is not None:
+            A = obj.type == 'MESH'
+            B = context.mode == 'OBJECT'
+            return A and B
 
     def execute(self, context):
         scene = context.scene
@@ -1812,6 +1952,14 @@ class DRAW2PAINT_OT_SolidifyUnion(bpy.types.Operator):
     bl_idname = "draw2paint.solidify_union"
     bl_label = "Add Solidify and Union Bool"
     bl_options = {'REGISTER', 'UNDO'}
+
+    @classmethod
+    def poll(self, context):
+        obj = context.active_object
+        if obj is not None:
+            A = obj.type == 'MESH'
+            B = context.mode == 'OBJECT'
+            return A and B
 
     def execute(self, context):
         scene = context.scene
@@ -1919,9 +2067,9 @@ class DRAW2PAINT_OT_UnassignVertgroup(bpy.types.Operator):
 #############################  -------FMG
 
 class DRAW2PAINT_OT_getFaceMaskGroups(bpy.types.Operator):
-    """Test your addon operator here first"""
+    """FMG+ _ Get Face Mask Groups from Linked Mesh Islands"""
     bl_idname = "draw2paint.getfacemaskgroups"
-    bl_label = "Generic Operator Shell"
+    bl_label = "Get Face Mask Groups"
     bl_options = {'REGISTER', 'UNDO'}
 
     ####answer from batFINGER
