@@ -1414,8 +1414,8 @@ class DRAW2PAINT_OT_EmptyGuides(bpy.types.Operator):
 
                     bpy.ops.transform.resize(value=(10, 10, 10))  # scale up past the normal range of image plane
                     # add constraint to follow canvas rotation
-                    bpy.ops.object.constraint_add(type='COPY_ROTATION')
-                    bpy.context.object.constraints["Copy Rotation"].target = bpy.data.objects["canvas"]
+                    bpy.ops.object.constraint_add(type='Child Of')
+                    bpy.context.object.constraints["Child Of"].target = bpy.data.objects["canvas"]
                     # snap cursor to empty
                     bpy.ops.view3d.snap_cursor_to_selected()
 
@@ -1775,6 +1775,9 @@ class DRAW2PAINT_OT_my_enum_shapes(bpy.types.Operator):
             ######### add a new curve at 0.15 Z
             bpy.ops.curve.primitive_bezier_curve_add(radius=1, enter_editmode=False, align='WORLD', location=(0, 0, 0.15),
                                                      scale=(1, 1, 1))
+            # add constraint to follow canvas rotation
+            bpy.ops.object.constraint_add(type='CHILD_OF')
+            bpy.context.object.constraints["Child Of"].target = bpy.data.objects["canvas"]
             bpy.ops.object.editmode_toggle()
             bpy.ops.curve.delete(type='VERT')
             ########### need to add a material to the object and make it a holdout shader
@@ -1794,6 +1797,9 @@ class DRAW2PAINT_OT_my_enum_shapes(bpy.types.Operator):
             #operators guts from draw vector
             bpy.ops.curve.primitive_bezier_curve_add(enter_editmode=True, align='WORLD', location=(0, 0, 0.15),
                                                  scale=(1, 1, 1))
+            # add constraint to follow canvas rotation
+            bpy.ops.object.constraint_add(type='CHILD_OF')
+            bpy.context.object.constraints["Child Of"].target = bpy.data.objects["canvas"]
 
             bpy.ops.curve.handle_type_set(type='VECTOR')
             bpy.context.object.data.dimensions = '2D'
@@ -1809,6 +1815,9 @@ class DRAW2PAINT_OT_my_enum_shapes(bpy.types.Operator):
             #operators guts from draw square
             bpy.ops.curve.primitive_bezier_circle_add(radius=0.25, enter_editmode=False, align='WORLD', location=(0, 0, 0.15),
                                                       scale=(1, 1, 1))
+            # add constraint to follow canvas rotation
+            bpy.ops.object.constraint_add(type='CHILD_OF')
+            bpy.context.object.constraints["Child Of"].target = bpy.data.objects["canvas"]
             bpy.context.object.data.dimensions = '2D'
             bpy.context.object.data.fill_mode = 'BOTH'
             bpy.ops.object.editmode_toggle()
@@ -1821,6 +1830,9 @@ class DRAW2PAINT_OT_my_enum_shapes(bpy.types.Operator):
             #operators guts from draw circle
             bpy.ops.curve.primitive_bezier_circle_add(radius=0.25, enter_editmode=False, align='WORLD', location=(0, 0, 0.15),
                                                       scale=(1, 1, 1))
+            # add constraint to follow canvas rotation
+            bpy.ops.object.constraint_add(type='CHILD_OF')
+            bpy.context.object.constraints["Child Of"].target = bpy.data.objects["canvas"]
             bpy.context.object.data.dimensions = '2D'
             bpy.context.object.data.fill_mode = 'BOTH'
             bpy.ops.object.editmode_toggle()
