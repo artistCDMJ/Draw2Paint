@@ -47,6 +47,7 @@ class MyProperties(bpy.types.PropertyGroup):
     my_string : bpy.props.StringProperty(name= "Enter Text")
     
     #my_float_vector : bpy.props.FloatVectorProperty(name= "Scale", soft_min= 0, soft_max= 1000, default= (1,1,1))
+    my_float : bpy.props.FloatProperty(name= "CVP Influence", min = 0, max = 1.0, default= 1.0)
     
     my_enum : bpy.props.EnumProperty(
         name= "",
@@ -724,6 +725,51 @@ class DRAW2PAINT_OT_CanvasResetrot(bpy.types.Operator):
                                   center='MEDIAN')
 
         return {'FINISHED'}
+
+############# finally got a way to influence the camera constraint
+############ ugly but works :P
+# bpy.context.object.constraints["Cam Control"].influence == mytool.my_float
+class DRAW2PAINT_OT_cvp_influence(bpy.types.Operator):
+    """Set up influence of Camera View Paint Constraint"""
+    bl_idname = "draw2paint.cvp_influence"
+    bl_label = "CVP Influence"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    @classmethod
+    def poll(self, context):
+        obj = context.active_object
+        if obj is not None:
+            A = obj.type == 'MESH'
+            B = context.mode == 'PAINT_TEXTURE'
+            return A and B
+        
+    def execute(self, context):
+
+        scene = context.scene
+        mytool = scene.my_tool
+        
+        #deselect plane 'canvas'
+        bpy.ops.object.mode_set(mode='OBJECT')
+        bpy.context.selectable_objects
+        bpy.ops.object.select_all(action='TOGGLE')
+                
+        #select camera 'Camera View Paint'
+        bpy.ops.object.select_all(action='DESELECT')
+        ob = bpy.data.objects["Camera View Paint"]
+        bpy.context.view_layer.objects.active = ob
+        #assign mytool.my_float to "cam Control" influence            
+        bpy.context.object.constraints["Cam Control"].influence = mytool.my_float
+        
+        #deselect camera and reselect plane 'canvas'
+        bpy.context.selectable_objects
+        bpy.ops.object.select_all(action='TOGGLE')
+        
+        bpy.ops.object.select_all(action='DESELECT')
+        ob = bpy.data.objects["canvas"]
+        bpy.context.view_layer.objects.active = ob
+        bpy.ops.object.mode_set(mode='TEXTURE_PAINT')
+        return {'FINISHED'}
+
 ######################### image ops to camera
 
 # -----------------------------cameraview paint
@@ -746,6 +792,7 @@ class DRAW2PAINT_OT_CameraviewPaint(bpy.types.Operator):
     def execute(self, context):
 
         scene = context.scene
+        mytool = scene.my_tool
 
         # toggle on/off textpaint
 
@@ -829,10 +876,14 @@ class DRAW2PAINT_OT_CameraviewPaint(bpy.types.Operator):
 
         # set to orthographic
         bpy.context.object.data.ortho_scale = orthoscale
+        
+####################################################################################################        
         # try to constrain cam to canvas here
-        bpy.ops.object.constraint_add(type='COPY_ROTATION')
+        bpy.ops.object.constraint_add(type='CHILD_OF')
         bpy.context.object.constraints["Copy Rotation"].target = bpy.data.objects["canvas"]
+        bpy.context.object.constraints["Cam Control"].influence == mytool.my_float
 
+###################################################################################################
         bpy.context.object.data.show_name = True
         bpy.context.object.data.passepartout_alpha = 0.65
         
@@ -2313,7 +2364,9 @@ class DRAW2PAINT_PT_FlipRotate(bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
-
+        scene = context.scene
+        mytool = scene.my_tool
+        
         box = layout.box()
         col = box.column(align=True)
         col.label(text="Rotate and Flip Axis for Painting")
@@ -2339,6 +2392,9 @@ class DRAW2PAINT_PT_FlipRotate(bpy.types.Panel):
         row2.operator("draw2paint.rotate_cw_90", text="90 CW", icon='TRIA_RIGHT_BAR')
 
         row = layout.row()
+        row.prop(mytool, "my_float")
+        row.operator("draw2paint.cvp_influence", text="value to CVP", icon = 'ARROW_LEFTRIGHT')
+        row=layout.row()
         row.operator("draw2paint.canvas_resetrot", text="Reset Rotation", icon='RECOVER_LAST')
 
 
@@ -2663,7 +2719,8 @@ classes = (
     DRAW2PAINT_OT_CustomFps,
     DRAW2PAINT_OT_RefMakerScene,
     DRAW2PAINT_OT_SculptView,
-    DRAW2PAINT_OT_my_enum_shapes
+    DRAW2PAINT_OT_my_enum_shapes,
+    DRAW2PAINT_OT_cvp_influence
 
 )
 
