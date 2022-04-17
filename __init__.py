@@ -880,9 +880,13 @@ class DRAW2PAINT_OT_CameraviewPaint(bpy.types.Operator):
 ####################################################################################################        
         # try to constrain cam to canvas here
         bpy.ops.object.constraint_add(type='CHILD_OF')
-        bpy.context.object.constraints["Copy Rotation"].target = bpy.data.objects["canvas"]
+
+
+        bpy.context.object.constraints["Child Of"].target = bpy.data.objects["canvas"]
+        bpy.context.object.constraints["Child Of"].name = "Cam Control"
         bpy.context.object.constraints["Cam Control"].influence == mytool.my_float
 
+        
 ###################################################################################################
         bpy.context.object.data.show_name = True
         bpy.context.object.data.passepartout_alpha = 0.65
