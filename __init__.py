@@ -2099,10 +2099,10 @@ class DRAW2PAINT_OT_DeselectVertgroup(bpy.types.Operator):
 
 
 class DRAW2PAINT_OT_AssignVertgroup(bpy.types.Operator):
-    """Deselect Vertgroup"""
+    """Assign Vertgroup"""
     bl_idname = "draw2paint.assign_vgroup"
 
-    bl_label = "Deselect VGroup"
+    bl_label = "Assign VGroup"
     bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
@@ -2116,10 +2116,10 @@ class DRAW2PAINT_OT_AssignVertgroup(bpy.types.Operator):
 
 
 class DRAW2PAINT_OT_UnassignVertgroup(bpy.types.Operator):
-    """Deselect Vertgroup"""
+    """Unassign Vertgroup"""
     bl_idname = "draw2paint.unassign_vgroup"
 
-    bl_label = "Deselect VGroup"
+    bl_label = "Unassign VGroup"
     bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
@@ -2246,12 +2246,6 @@ class DRAW2PAINT_PT_ImageState(bpy.types.Panel):
         row3.operator("draw2paint.save_increm", text="Save Increment", icon='FILE_IMAGE')
         
         
-        ###################
-
-
-
-
-
 ################################ 3D to 2D Experimental Workflow Items
 
 ############# Scene Extras
