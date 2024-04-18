@@ -15,6 +15,10 @@ The panel can be found in the N panel once installed, and the plane must be in T
 
 **Save Increment** - not ready, but is wip.
 
+**Grease Pencil Shorts**
+
+** New GPencil** - this one is new, adds a GPencil Object to the View to enable painting with GPencil on the active painting. To get that into the canvas permanently, you need to render with F12, save, and reconnect the new image to the Canvas Object. More to come with this as I experiment. 
+
 **Canvas Controls**
 
 **Flip X and Flip Y** - both scale the image on axis to get your eye aware of imbalanced composition
