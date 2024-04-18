@@ -19,8 +19,8 @@
 bl_info = {
     "name": "Draw2Paint",
     "author": "CDMJ",
-    "version": (3, 5, 0),
-    "blender": (3, 0, 0),
+    "version": (3, 6, 0),
+    "blender": (4, 1, 0),
     "location": "UI > Draw2Paint",
     "description": "2D Paint in 3D View, Mask Manipulation",
     "warning": "",
@@ -2192,6 +2192,38 @@ class DRAW2PAINT_OT_getFaceMaskGroups(bpy.types.Operator):
 
         return {'FINISHED'}
 
+######## Grease Pencil Blank Addition to Paint
+
+class DRAW2PAINT_OT_NewGpencil(bpy.types.Operator):
+    """Add Grease Pencil Object to Paint"""
+    bl_idname = "draw2paint.grease_object"
+    bl_label = "Must Render F12 to capture GPencil in Canvas Project"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    @classmethod
+    def poll(self, context):
+        obj = context.active_object
+        if obj is not None:
+            A = obj.type == 'MESH' or 'CURVE'
+            B = context.mode == 'OBJECT' or 'PAINT_TEXTURE'
+            return A and B
+
+    def execute(self, context):
+        scene = context.scene
+
+        #obj = context.active_object
+        #canvas = bpy.data.objects['canvas'].material_slots[0].material
+        #obj.data.materials.append(canvas)
+        
+        bpy.context.space_data.shading.type = 'MATERIAL'
+        
+        bpy.ops.paint.texture_paint_toggle()
+        bpy.ops.object.gpencil_add(align='WORLD', location=(0, 0, 0), scale=(1, 1, 1), type='EMPTY')
+        bpy.ops.gpencil.paintmode_toggle()
+        bpy.context.object.data.layers["GP_Layer"].use_lights = False
+
+
+        return {'FINISHED'}
 
 ########################################
 ## panel draw for Draw2Paint
@@ -2244,7 +2276,28 @@ class DRAW2PAINT_PT_ImageState(bpy.types.Panel):
         row.scale_y = 1.25
         row3 = row.split(align=True)
         row3.operator("draw2paint.save_increm", text="Save Increment", icon='FILE_IMAGE')
+
+################################## GPencil Future Home of Shortcuts 
+class DRAW2PAINT_PT_GreasePencil(bpy.types.Panel):
+    """Panel for D2P GPencil"""
+    bl_label = "Grease Pencil Shorts"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+    bl_category = "Draw2Paint"
+    bl_options = {'DEFAULT_CLOSED'}
+
+    def draw(self, context):
+        layout = self.layout
+
+        box = layout.box()  # MACRO
+        col = box.column(align=True)
+        col.label(text="GPencil for D2P Session")
+        row = col.row(align=True)
+
+        row.operator("draw2paint.grease_object", text="New GPencil", icon='OUTLINER_DATA_GP_LAYER')
         
+
+                
         
 ################################ 3D to 2D Experimental Workflow Items
 
@@ -2709,6 +2762,7 @@ classes = (
     DRAW2PAINT_OT_SelectVertgroup,
     DRAW2PAINT_OT_holdout_shader,
     DRAW2PAINT_PT_ImageState,
+    DRAW2PAINT_PT_GreasePencil,    
     DRAW2PAINT_PT_FlipRotate,
     DRAW2PAINT_PT_ImageCrop,
     DRAW2PAINT_PT_2D_to_3D_Experimental,
@@ -2730,7 +2784,9 @@ classes = (
     DRAW2PAINT_OT_RefMakerScene,
     DRAW2PAINT_OT_SculptView,
     DRAW2PAINT_OT_my_enum_shapes,
-    DRAW2PAINT_OT_cvp_influence
+    DRAW2PAINT_OT_cvp_influence,
+    DRAW2PAINT_OT_NewGpencil
+
 
 )
 
