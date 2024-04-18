@@ -1245,7 +1245,32 @@ class DRAW2PAINT_OT_BorderCropToggle(bpy.types.Operator):
                 bpy.ops.draw2paint.border_crop()
                 scene.bordercrop_is_activated = True
         return {'FINISHED'}
+#------------------------------try new image make
+class DRAW2PAINT_OT_NewImage(bpy.types.Operator):
+    """New Image"""
+    bl_idname = "draw2paint.new_image"
+    bl_label = "New Image"
+    bl_options = {'REGISTER', 'UNDO'}
 
+    
+    def execute(self, context):
+        scene = context.scene
+        layer = bpy.context.view_layer
+        layer.update()
+        #original_type = bpy.context.area.type
+        #bpy.context.area.type = 'IMAGE_EDITOR'
+        # Call user prefs window
+        bpy.ops.screen.userpref_show('INVOKE_DEFAULT')
+        # Change area type
+        area = context.window_manager.windows[-1].screen.areas[0]
+        area.type = 'IMAGE_EDITOR'
+
+        # new image
+        bpy.ops.image.new()
+
+       # bpy.context.area.type = original_type
+
+        return {'FINISHED'}
 
 # -----------------------------image save
 
@@ -2240,12 +2265,15 @@ class DRAW2PAINT_PT_ImageState(bpy.types.Panel):
         layout = self.layout
         scene = context.scene
         rd = context.scene.render
-        
+                
         box = layout.box()
         col = box.column(align=True)
         col.label(text="Painting Starts Here")
         row = col.row(align=True)
-
+        row.scale_x = 0.50
+        row.scale_y = 1.25
+        row.operator("draw2paint.new_image", text="New Image", icon='TEXTURE')
+        row = col.row(align=True)
         row1 = row.split(align=True)
         row1.scale_x = 0.50
         row1.scale_y = 1.25
@@ -2276,6 +2304,7 @@ class DRAW2PAINT_PT_ImageState(bpy.types.Panel):
         row.scale_y = 1.25
         row3 = row.split(align=True)
         row3.operator("draw2paint.save_increm", text="Save Increment", icon='FILE_IMAGE')
+
 
 ################################## GPencil Future Home of Shortcuts 
 class DRAW2PAINT_PT_GreasePencil(bpy.types.Panel):
@@ -2785,7 +2814,8 @@ classes = (
     DRAW2PAINT_OT_SculptView,
     DRAW2PAINT_OT_my_enum_shapes,
     DRAW2PAINT_OT_cvp_influence,
-    DRAW2PAINT_OT_NewGpencil
+    DRAW2PAINT_OT_NewGpencil,
+    DRAW2PAINT_OT_NewImage
 
 
 )
