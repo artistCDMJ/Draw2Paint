@@ -193,6 +193,39 @@ class DRAW2PAINT_OT_RefMakerScene(bpy.types.Operator):
 
         return {'FINISHED'}
 
+#------------------------ DRAW2PAINT SCENE
+class DRAW2PAINT_OT_D2PaintScene(bpy.types.Operator):
+    """Create Draw2Paint Scene"""
+    bl_description = "Create Scene for Working in Draw2Paint"
+    bl_idname = "draw2paint.create_d2p_scene"
+    bl_label = "Create Scene for Draw2Paint"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    @classmethod
+    def poll(self, context):
+        for sc in bpy.data.scenes:
+            if sc.name == "Draw2Paint":
+                return False
+        return context.area.type == 'VIEW_3D'
+
+    def execute(self, context):
+        _name = "Draw2Paint"
+        for sc in bpy.data.scenes:
+            if sc.name == _name:
+                return {'FINISHED'}
+
+        bpy.ops.scene.new(type='NEW')
+        context.scene.name = _name
+       
+       
+        #set to top view
+        bpy.ops.view3d.view_axis(type='TOP', align_active=True)
+        #set to Eevee
+        bpy.context.scene.render.engine = 'BLENDER_EEVEE'
+
+       
+
+        return {'FINISHED'}
 
 # sculpt the new duplicated canvas
 class DRAW2PAINT_OT_SculptView(bpy.types.Operator):
@@ -2236,9 +2269,9 @@ class DRAW2PAINT_OT_NewGpencil(bpy.types.Operator):
     def execute(self, context):
         scene = context.scene
 
-        #obj = context.active_object
-        #canvas = bpy.data.objects['canvas'].material_slots[0].material
-        #obj.data.materials.append(canvas)
+        obj = context.active_object
+        canvas = bpy.data.objects['canvas'].material_slots[0].material
+        obj.data.materials.append(canvas)
         
         bpy.context.space_data.shading.type = 'MATERIAL'
         
@@ -2246,6 +2279,12 @@ class DRAW2PAINT_OT_NewGpencil(bpy.types.Operator):
         bpy.ops.object.gpencil_add(align='WORLD', location=(0, 0, 0), scale=(1, 1, 1), type='EMPTY')
         bpy.ops.gpencil.paintmode_toggle()
         bpy.context.object.data.layers["GP_Layer"].use_lights = False
+        
+        #parent
+        bpy.context.object.data.layers["GP_Layer"].parent = bpy.data.objects["canvas"]
+
+        
+
 
 
         return {'FINISHED'}
@@ -2273,6 +2312,10 @@ class DRAW2PAINT_PT_ImageState(bpy.types.Panel):
         row.scale_x = 0.50
         row.scale_y = 1.25
         row.operator("draw2paint.new_image", text="New Image", icon='TEXTURE')
+        row1 = row.split(align=True)
+        row1.scale_x = 0.50
+        row1.scale_y = 1.25
+        row1.operator("draw2paint.create_d2p_scene", text="+Scene", icon='PREFERENCES')
         row = col.row(align=True)
         row1 = row.split(align=True)
         row1.scale_x = 0.50
@@ -2815,7 +2858,9 @@ classes = (
     DRAW2PAINT_OT_my_enum_shapes,
     DRAW2PAINT_OT_cvp_influence,
     DRAW2PAINT_OT_NewGpencil,
-    DRAW2PAINT_OT_NewImage
+    DRAW2PAINT_OT_NewImage,
+    DRAW2PAINT_OT_D2PaintScene
+    
 
 
 )
