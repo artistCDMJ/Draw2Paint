@@ -36,18 +36,24 @@ import bmesh
 
 ########PBRA Adopted
 
-bpy.types.Scene.x_min_pixels = bpy.props.IntProperty(min=0, description="Minimum X value (in pixel) for the render border")
-bpy.types.Scene.x_max_pixels = bpy.props.IntProperty(min=0, description="Maximum X value (in pixel) for the render border")
-bpy.types.Scene.y_min_pixels = bpy.props.IntProperty(min=0, description="Minimum Y value (in pixel) for the render border")
-bpy.types.Scene.y_max_pixels = bpy.props.IntProperty(min=0, description="Maximum Y value (in pixel) for the render border")
+bpy.types.Scene.x_min_pixels = bpy.props.IntProperty(min=0,
+     description="Minimum X value (in pixel) for the render border")
+bpy.types.Scene.x_max_pixels = bpy.props.IntProperty(min=0, 
+     description="Maximum X value (in pixel) for the render border")
+bpy.types.Scene.y_min_pixels = bpy.props.IntProperty(min=0,
+     description="Minimum Y value (in pixel) for the render border")
+bpy.types.Scene.y_max_pixels = bpy.props.IntProperty(min=0,
+     description="Maximum Y value (in pixel) for the render border")
 ########### propertygroup
 
 class MyProperties(bpy.types.PropertyGroup):
     
     my_string : bpy.props.StringProperty(name= "Enter Text")
     
-    #my_float_vector : bpy.props.FloatVectorProperty(name= "Scale", soft_min= 0, soft_max= 1000, default= (1,1,1))
-    my_float : bpy.props.FloatProperty(name= "CVP Influence", min = 0, max = 1.0, default= 1.0)
+    #my_float_vector : bpy.props.FloatVectorProperty(name= "Scale", soft_min= 0,
+    # soft_max= 1000, default= (1,1,1))
+    my_float : bpy.props.FloatProperty(name= "CVP Influence", min = 0,
+                                             max = 1.0, default= 1.0)
     
     my_enum : bpy.props.EnumProperty(
         name= "",
@@ -79,15 +85,7 @@ class D2P_OT_MacroCreateBrush(bpy.types.Operator):
         bpy.context.scene.render.engine = 'CYCLES'
         bpy.data.worlds[0]
 
-        # add lamp and move up 4 units in z
-        # bpy.ops.object.light_add(  # you can sort elements like this if the code
-        #     # is gettings long
-        #     type='POINT',
-        #     radius=1,
-        #     align='VIEW',
-        #     location=(0, 0, 4)
-        # )
-        # add camera to center and move up 4 units in Z
+
         bpy.ops.object.camera_add(
             align='VIEW',
             enter_editmode=False,
@@ -360,23 +358,32 @@ class D2P_OT_SculptDuplicate(bpy.types.Operator):
         scene = context.scene
 
         bpy.ops.paint.texture_paint_toggle()
-        bpy.ops.object.duplicate_move(OBJECT_OT_duplicate={"linked": False, "mode": 'TRANSLATION'},
-                                      TRANSFORM_OT_translate={"value": (0, 0, 0), "orient_axis_ortho": 'X',
-                                                              "orient_type": 'GLOBAL',
-                                                              "orient_matrix": ((0, 0, 0), (0, 0, 0), (0, 0, 0)),
-                                                              "orient_matrix_type": 'GLOBAL',
-                                                              "constraint_axis": (False, False, False), "mirror": False,
-                                                              "use_proportional_edit": False,
-                                                              "proportional_edit_falloff": 'SMOOTH',
-                                                              "proportional_size": 1,
-                                                              "use_proportional_connected": False,
-                                                              "use_proportional_projected": False, "snap": False,
-                                                              "snap_target": 'CLOSEST', "snap_point": (0, 0, 0),
-                                                              "snap_align": False, "snap_normal": (0, 0, 0),
-                                                              "gpencil_strokes": False, "cursor_transform": False,
-                                                              "texture_space": False, "remove_on_cancel": False,
-                                                              "view2d_edge_pan": False, "release_confirm": False,
-                                                              "use_accurate": False, "use_automerge_and_split": False})
+        bpy.ops.object.duplicate_move(OBJECT_OT_duplicate={"linked":
+             False, "mode": 'TRANSLATION'},
+          TRANSFORM_OT_translate={"value": (0, 0, 0), "orient_axis_ortho": 'X',
+                                  "orient_type": 'GLOBAL',
+                                  "orient_matrix": ((0, 0, 0), (0, 0, 0),
+                                   (0, 0, 0)),
+                                  "orient_matrix_type": 'GLOBAL',
+                                  "constraint_axis": (False, False, False), 
+                                  "mirror": False,
+                                  "use_proportional_edit": False,
+                                  "proportional_edit_falloff": 'SMOOTH',
+                                  "proportional_size": 1,
+                                  "use_proportional_connected": False,
+                                  "use_proportional_projected": False, "snap":
+                                       False,
+                                  "snap_target": 'CLOSEST', "snap_point": 
+                                      (0, 0, 0),
+                                  "snap_align": False, "snap_normal": (0, 0, 0),
+                                  "gpencil_strokes": False, "cursor_transform":
+                                       False,
+                                  "texture_space": False, "remove_on_cancel": 
+                                      False,
+                                  "view2d_edge_pan": False, "release_confirm":
+                                       False,
+                                  "use_accurate": False, 
+                                  "use_automerge_and_split": False})
         bpy.ops.transform.translate(value=(0, 0, 0.1))
         # context.object.active_material.use_shadeless = True
         # context.object.active_material.use_transparency = True
@@ -392,7 +399,7 @@ class D2P_OT_SculptDuplicate(bpy.types.Operator):
             context.tool_settings.image_paint.brush = bpy.data.brushes["TexDraw"]
             bpy.ops.brush.add()
             bpy.data.brushes["TexDraw.001"].name = "Eraser"
-            # context.scene.tool_settings.unified_paint_settings.use_pressure_size = False
+# context.scene.tool_settings.unified_paint_settings.use_pressure_size = False
             bpy.data.brushes["Eraser"].use_pressure_strength = False
             bpy.data.brushes["Eraser"].blend = 'ERASE_ALPHA'
 
@@ -484,7 +491,8 @@ class D2P_OT_CanvasHoriz(bpy.types.Operator):
         ######scale -1 on axis
         bpy.ops.transform.resize(value=(-1, 1, 1),
                                  orient_type='GLOBAL',
-                                 orient_matrix=((1, 0, 0), (0, 1, 0), (0, 0, 1)),
+                                 orient_matrix=((1, 0, 0), (0, 1, 0),
+                                  (0, 0, 1)),
                                  orient_matrix_type='GLOBAL',
                                  constraint_axis=(True, False, False),
                                  mirror=True, use_proportional_edit=False,
@@ -549,7 +557,8 @@ class D2P_OT_CanvasVertical(bpy.types.Operator):
         ######scale -1 on axis
         bpy.ops.transform.resize(value=(1, -1, 1),
                                  orient_type='GLOBAL',
-                                 orient_matrix=((1, 0, 0), (0, 1, 0), (0, 0, 1)),
+                                 orient_matrix=((1, 0, 0), (0, 1, 0),
+                                  (0, 0, 1)),
                                  orient_matrix_type='GLOBAL',
                                  constraint_axis=(True, False, False),
                                  mirror=True, use_proportional_edit=False,
@@ -596,11 +605,14 @@ class D2P_OT_RotateCanvasCCW15(bpy.types.Operator):
         # rotate canvas 15 degrees left
         bpy.ops.transform.rotate(value=0.261799,
                                  orient_axis='Z', orient_type='GLOBAL',
-                                 orient_matrix=((1, 0, 0), (0, 1, 0), (0, 0, 1)),
+                                 orient_matrix=((1, 0, 0), (0, 1, 0), 
+                                 (0, 0, 1)),
                                  orient_matrix_type='GLOBAL',
-                                 constraint_axis=(False, False, True), mirror=True,
+                                 constraint_axis=(False, False, True),
+                                  mirror=True,
                                  use_proportional_edit=False,
-                                 proportional_edit_falloff='SMOOTH', proportional_size=1,
+                                 proportional_edit_falloff='SMOOTH',
+                                  proportional_size=1,
                                  use_proportional_connected=False,
                                  use_proportional_projected=False)
 
@@ -637,11 +649,14 @@ class D2P_OT_RotateCanvasCW15(bpy.types.Operator):
         # rotate canvas 15 degrees left
         bpy.ops.transform.rotate(value=-0.261799,
                                  orient_axis='Z', orient_type='GLOBAL',
-                                 orient_matrix=((1, 0, 0), (0, 1, 0), (0, 0, 1)),
+                                 orient_matrix=((1, 0, 0), (0, 1, 0), 
+                                 (0, 0, 1)),
                                  orient_matrix_type='GLOBAL',
-                                 constraint_axis=(False, False, True), mirror=True,
+                                 constraint_axis=(False, False, True),
+                                  mirror=True,
                                  use_proportional_edit=False,
-                                 proportional_edit_falloff='SMOOTH', proportional_size=1,
+                                 proportional_edit_falloff='SMOOTH', 
+                                 proportional_size=1,
                                  use_proportional_connected=False,
                                  use_proportional_projected=False)
 
@@ -678,11 +693,14 @@ class D2P_OT_RotateCanvasCCW(bpy.types.Operator):
         # rotate canvas 90 degrees left
         bpy.ops.transform.rotate(value=1.5708,
                                  orient_axis='Z', orient_type='GLOBAL',
-                                 orient_matrix=((1, 0, 0), (0, 1, 0), (0, 0, 1)),
+                                 orient_matrix=((1, 0, 0), (0, 1, 0),
+                                  (0, 0, 1)),
                                  orient_matrix_type='GLOBAL',
-                                 constraint_axis=(False, False, True), mirror=True,
+                                 constraint_axis=(False, False, True),
+                                  mirror=True,
                                  use_proportional_edit=False,
-                                 proportional_edit_falloff='SMOOTH', proportional_size=1,
+                                 proportional_edit_falloff='SMOOTH', 
+                                 proportional_size=1,
                                  use_proportional_connected=False,
                                  use_proportional_projected=False)
 
@@ -719,11 +737,14 @@ class D2P_OT_RotateCanvasCW(bpy.types.Operator):
         # rotate canvas 90 degrees left
         bpy.ops.transform.rotate(value=-1.5708,
                                  orient_axis='Z', orient_type='GLOBAL',
-                                 orient_matrix=((1, 0, 0), (0, 1, 0), (0, 0, 1)),
+                                 orient_matrix=((1, 0, 0), (0, 1, 0), 
+                                 (0, 0, 1)),
                                  orient_matrix_type='GLOBAL',
-                                 constraint_axis=(False, False, True), mirror=True,
+                                 constraint_axis=(False, False, True),
+                                  mirror=True,
                                  use_proportional_edit=False,
-                                 proportional_edit_falloff='SMOOTH', proportional_size=1,
+                                 proportional_edit_falloff='SMOOTH',
+                                  proportional_size=1,
                                  use_proportional_connected=False,
                                  use_proportional_projected=False)
 
@@ -839,10 +860,14 @@ class D2P_OT_CameraviewPaint(bpy.types.Operator):
 
         # save selected plane by rename
         bpy.context.object.name = "canvas"
-        bpy.ops.object.move_to_collection(collection_index=0, is_new=True, new_collection_name="canvas view")
+        bpy.ops.object.move_to_collection(collection_index=0, is_new=True,
+             new_collection_name="canvas view")
 
-        # variable to get image texture dimensions - thanks to Mutant Bob http://blender.stackexchange.com/users/660/mutant-bob
-        # select_mat = bpy.context.active_object.data.materials[0].texture_slots[0].texture.image.size[:]
+        # variable to get image texture dimensions - 
+        #thanks to Mutant Bob http://blender.stackexchange.com/users/
+        #660/mutant-bob
+        # select_mat = bpy.context.active_object.data.materials[0].
+        #texture_slots[0].texture.image.size[:]
 
         # select_mat = []
 
@@ -852,7 +877,8 @@ class D2P_OT_CameraviewPaint(bpy.types.Operator):
                     for n in s.material.node_tree.nodes:
                         if n.type == 'TEX_IMAGE':
                             select_mat = n.image.size[:]
-                            # print(obj.name,'uses',n.image.name,'saved at',n.image.filepath)
+                            # print(obj.name,'uses',n.image.name,'saved at',n
+                            #.image.filepath)
 
         # add camera
         bpy.ops.object.camera_add(enter_editmode=False,
@@ -875,7 +901,8 @@ class D2P_OT_CameraviewPaint(bpy.types.Operator):
         # move cam up in Z by 1 unit
         bpy.ops.transform.translate(value=(0, 0, 1),
                                     orient_type='GLOBAL',
-                                    orient_matrix=((1, 0, 0), (0, 1, 0), (0, 0, 1)),
+                                    orient_matrix=((1, 0, 0), (0, 1, 0), 
+                                    (0, 0, 1)),
                                     orient_matrix_type='GLOBAL',
                                     constraint_axis=(False, False, True),
                                     mirror=True,
@@ -910,7 +937,7 @@ class D2P_OT_CameraviewPaint(bpy.types.Operator):
         # set to orthographic
         bpy.context.object.data.ortho_scale = orthoscale
         
-####################################################################################################        
+###############################################################################        
         # try to constrain cam to canvas here
         bpy.ops.object.constraint_add(type='CHILD_OF')
 
@@ -920,7 +947,7 @@ class D2P_OT_CameraviewPaint(bpy.types.Operator):
         bpy.context.object.constraints["Cam Control"].influence == mytool.my_float
 
         
-###################################################################################################
+###############################################################################
         bpy.context.object.data.show_name = True
         bpy.context.object.data.passepartout_alpha = 0.65
         
@@ -979,8 +1006,11 @@ class D2P_OT_CameraviewPaint(bpy.types.Operator):
 ##################### experimental get UV layout for camera ref
 
 ##todo: set up string for file location or code to write to new file
+
 ##todo: choose UV layer (get) or make new UV layer with current smart uv
-######: need second operator for placing the resulting image as current camera background
+
+######: need second operator for placing the resulting image
+# as current camera background
 
      
 class D2P_OT_getuvlayout(bpy.types.Operator):
@@ -1028,7 +1058,8 @@ class D2P_OT_getuvlayout(bpy.types.Operator):
         # Set target collection to a known collection 
         coll_target = C.scene.collection.children.get("object view")
         if not coll_target:
-            bpy.ops.object.move_to_collection(collection_index=0, is_new=True, new_collection_name="object view")
+            bpy.ops.object.move_to_collection(collection_index=0, is_new=True,
+                 new_collection_name="object view")
 
         # Set target collection based on the collection in context (selected) 
         #coll_target = C.collection
@@ -1167,9 +1198,10 @@ class D2P_OT_isolate_3d(bpy.types.Operator):
 
 
     
-###############################------------------------Precision Render Border Adjust Imported
+################------------------------Precision Render Border Adjust Imported
 class D2P_OT_PixelsToBorder(bpy.types.Operator):
-    """ Convert the pixel value into the proportion needed by the Blender native property """
+    """ Convert the pixel value into the proportion needed 
+        by the Blender native property """
     bl_idname = "d2p.pixelstoborder"
     bl_label = "Convert Pixels to Border proportion"
     
@@ -1223,7 +1255,8 @@ class D2P_OT_BorderToPixels(bpy.types.Operator):
 
 
 ######################## bordercrop from ez-draw panel revised
-############## haven't decided on setting this up as toggle or not, missing scene preferences stored in addon like ez-draw did
+############## haven't decided on setting this up as toggle or not,
+# missing scene preferences stored in addon like ez-draw did
 #-----------------------------------------------------------------BORDER CROP ON
 class D2P_OT_BorderCrop(bpy.types.Operator):
     """Turn on Border Crop in Render Settings"""
@@ -1423,7 +1456,7 @@ class D2P_OT_ImageReload(bpy.types.Operator):
     
 ########### pivot works
 class D2P_OT_EmptyGuides(bpy.types.Operator):
-    """experimental- create new empty guide or selected guide relocates origin"""
+    """experimental- create new empty guide or selected guide relocate origin"""
     bl_idname = "d2p.empty_guides"
     bl_label = "Empty Guides Constrained"
     bl_options = {'REGISTER', 'UNDO'}
@@ -1465,22 +1498,26 @@ class D2P_OT_EmptyGuides(bpy.types.Operator):
                 else:
                     # add empty here
                     bpy.ops.object.empty_add(type='SPHERE', location=(0, 0, 0),
-                                             radius=0.01)  # add empty for reference and movement of origin
+                                             radius=0.01)  
+                                # add empty for reference and movement of origin
 
                     # rename new empty to Symmetry Guide
                     bpy.context.object.name = "Symmetry Guide"
 
-                    bpy.ops.transform.resize(value=(10, 10, 10))  # scale up past the normal range of image plane
+                    bpy.ops.transform.resize(value=(10, 10, 10))  
+                                # scale up past the normal range of image plane
                     # add constraint to follow canvas rotation
                     bpy.ops.object.constraint_add(type='Child Of')
-                    bpy.context.object.constraints["Child Of"].target = bpy.data.objects["canvas"]
+                    bpy.context.object.constraints["Child Of"].target =\
+                                            bpy.data.objects["canvas"]
                     # snap cursor to empty
                     bpy.ops.view3d.snap_cursor_to_selected()
 
                     bpy.ops.object.select_all(action='DESELECT')
                     bpy.data.objects['Symmetry Guide'].select_set(False)
                     bpy.data.objects['canvas'].select_set(True)
-                    bpy.context.view_layer.objects.active = bpy.data.objects['canvas']
+                    bpy.context.view_layer.objects.active = \
+                                            bpy.data.objects['canvas']
 
                     bpy.ops.paint.texture_paint_toggle()
 
@@ -1534,7 +1571,7 @@ class D2P_OT_center_object(bpy.types.Operator):
 ############################################################
 # -------------------LEGACY FOR ADDITION TO PANEL OPERATORS
 ############################################################
-# -----------------------------------------------------------------FRONT OF PAINT
+# ----------------------------------------------------------------FRONT OF PAINT
 class D2P_OT_FrontOfPaint(bpy.types.Operator):
     """fast front of face view paint"""
     bl_description = ""
@@ -1566,7 +1603,7 @@ class D2P_OT_FrontOfPaint(bpy.types.Operator):
         return {'FINISHED'}
 
 
-# -------------------------------------------------------------BORDER CROP TOGGLE
+# -----------------------------------------------------------\BORDER CROP TOGGLE
 class D2P_OT_BorderCropToggle(bpy.types.Operator):
     """Set Border Crop in Render Settings"""
     bl_description = "Border Crop On/Off TOGGLE"
@@ -1831,14 +1868,16 @@ class D2P_OT_my_enum_shapes(bpy.types.Operator):
             #def execute(self, context):
             scene = context.scene
             ######### add a new curve at 0.15 Z
-            bpy.ops.curve.primitive_bezier_curve_add(radius=1, enter_editmode=False, align='WORLD', location=(0, 0, 0.15),
+            bpy.ops.curve.primitive_bezier_curve_add(radius=1,
+                 enter_editmode=False, align='WORLD', location=(0, 0, 0.15),
                                                      scale=(1, 1, 1))
             # add constraint to follow canvas rotation
             bpy.ops.object.constraint_add(type='CHILD_OF')
-            bpy.context.object.constraints["Child Of"].target = bpy.data.objects["canvas"]
+            bpy.context.object.constraints["Child Of"].target =\
+                                        bpy.data.objects["canvas"]
             bpy.ops.object.editmode_toggle()
             bpy.ops.curve.delete(type='VERT')
-            ########### need to add a material to the object and make it a holdout shader
+            # need to add a material to the object and make it a holdout shader
             bpy.ops.material.new()
 
             bpy.ops.curve.cyclic_toggle()
@@ -1853,11 +1892,13 @@ class D2P_OT_my_enum_shapes(bpy.types.Operator):
             
         if mytool.my_enum == 'OP2':
             #operators guts from draw vector
-            bpy.ops.curve.primitive_bezier_curve_add(enter_editmode=True, align='WORLD', location=(0, 0, 0.15),
+            bpy.ops.curve.primitive_bezier_curve_add(enter_editmode=True,
+                                     align='WORLD', location=(0, 0, 0.15),
                                                  scale=(1, 1, 1))
             # add constraint to follow canvas rotation
             bpy.ops.object.constraint_add(type='CHILD_OF')
-            bpy.context.object.constraints["Child Of"].target = bpy.data.objects["canvas"]
+            bpy.context.object.constraints["Child Of"].target =\
+                                        bpy.data.objects["canvas"]
 
             bpy.ops.curve.handle_type_set(type='VECTOR')
             bpy.context.object.data.dimensions = '2D'
@@ -1871,11 +1912,13 @@ class D2P_OT_my_enum_shapes(bpy.types.Operator):
         
         if mytool.my_enum == 'OP3':
             #operators guts from draw square
-            bpy.ops.curve.primitive_bezier_circle_add(radius=0.25, enter_editmode=False, align='WORLD', location=(0, 0, 0.15),
+            bpy.ops.curve.primitive_bezier_circle_add(radius=0.25,
+                 enter_editmode=False, align='WORLD', location=(0, 0, 0.15),
                                                       scale=(1, 1, 1))
             # add constraint to follow canvas rotation
             bpy.ops.object.constraint_add(type='CHILD_OF')
-            bpy.context.object.constraints["Child Of"].target = bpy.data.objects["canvas"]
+            bpy.context.object.constraints["Child Of"].target =\
+                                        bpy.data.objects["canvas"]
             bpy.context.object.data.dimensions = '2D'
             bpy.context.object.data.fill_mode = 'BOTH'
             bpy.ops.object.editmode_toggle()
@@ -1886,11 +1929,13 @@ class D2P_OT_my_enum_shapes(bpy.types.Operator):
         
         if mytool.my_enum == 'OP4':
             #operators guts from draw circle
-            bpy.ops.curve.primitive_bezier_circle_add(radius=0.25, enter_editmode=False, align='WORLD', location=(0, 0, 0.15),
+            bpy.ops.curve.primitive_bezier_circle_add(radius=0.25, 
+                    enter_editmode=False, align='WORLD', location=(0, 0, 0.15),
                                                       scale=(1, 1, 1))
             # add constraint to follow canvas rotation
             bpy.ops.object.constraint_add(type='CHILD_OF')
-            bpy.context.object.constraints["Child Of"].target = bpy.data.objects["canvas"]
+            bpy.context.object.constraints["Child Of"].target =\
+                                        bpy.data.objects["canvas"]
             bpy.context.object.data.dimensions = '2D'
             bpy.context.object.data.fill_mode = 'BOTH'
             bpy.ops.object.editmode_toggle()
@@ -1905,92 +1950,7 @@ class D2P_OT_my_enum_shapes(bpy.types.Operator):
 
 
 
-'''class D2P_OT_SquareCurve(bpy.types.Operator):
-    """Square Curve primitive for Mask"""
-    bl_idname = "d2p.square_curve"
-    bl_label = "Add Square Curve Primitive for Masking"
-    bl_options = {'REGISTER', 'UNDO'}
 
-    def execute(self, context):
-        scene = context.scene
-
-        # square curve primitive
-        bpy.ops.curve.primitive_bezier_circle_add(radius=0.25, enter_editmode=False, align='WORLD', location=(0, 0, 0),
-                                                  scale=(1, 1, 1))
-        bpy.context.object.data.dimensions = '2D'
-        bpy.context.object.data.fill_mode = 'BOTH'
-        bpy.ops.object.editmode_toggle()
-        bpy.ops.curve.handle_type_set(type='VECTOR')
-        bpy.ops.transform.rotate(value=0.785398, orient_axis='Z')
-
-        return {'FINISHED'}
-
-
-class D2P_OT_CircleCurve(bpy.types.Operator):
-    """Circle Curve primitive for Mask"""
-    bl_idname = "d2p.circle_curve"
-    bl_label = "Add Circle Curve Primitive for Masking"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    def execute(self, context):
-        scene = context.scene
-
-        # square curve primitive
-        bpy.ops.curve.primitive_bezier_circle_add(radius=0.25, enter_editmode=False, align='WORLD', location=(0, 0, 0),
-                                                  scale=(1, 1, 1))
-        bpy.context.object.data.dimensions = '2D'
-        bpy.context.object.data.fill_mode = 'BOTH'
-        bpy.ops.object.editmode_toggle()
-
-        return {'FINISHED'}
-
-
-class D2P_OT_VectorCurve(bpy.types.Operator):
-    """Vector Curve primitive for Mask"""
-    bl_idname = "d2p.vector_curve"
-    bl_label = "Add Vector Curve Primitive for Precise Masking"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    def execute(self, context):
-        scene = context.scene
-
-        bpy.ops.curve.primitive_bezier_curve_add(enter_editmode=True, align='WORLD', location=(0, 0, 0.0125),
-                                                 scale=(1, 1, 1))
-
-        bpy.ops.curve.handle_type_set(type='VECTOR')
-        bpy.context.object.data.dimensions = '2D'
-        bpy.context.object.data.fill_mode = 'BOTH'
-
-        bpy.ops.transform.resize(value=(0.1, 0.1, 0.1))
-
-        return {'FINISHED'}
-
-
-class D2P_OT_DrawCurveloop(bpy.types.Operator):
-    """Add New Curve Drawing"""
-    bl_idname = "d2p.draw_curve"
-
-    bl_label = "draw curve"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    def execute(self, context):
-        scene = context.scene
-        ######### add a new curve at 0.15 Z
-        bpy.ops.curve.primitive_bezier_curve_add(radius=1, enter_editmode=False, align='WORLD', location=(0, 0, 0.15),
-                                                 scale=(1, 1, 1))
-        bpy.ops.object.editmode_toggle()
-        bpy.ops.curve.delete(type='VERT')
-        ########### need to add a material to the object and make it a holdout shader
-        bpy.ops.material.new()
-
-        bpy.ops.curve.cyclic_toggle()
-
-        bpy.context.object.data.dimensions = '2D'
-        bpy.context.object.data.fill_mode = 'BOTH'
-
-        bpy.ops.wm.tool_set_by_id(name="builtin.draw")
-
-        return {'FINISHED'}'''
 
 ####################### boolean masks work
 class D2P_OT_RemoveMods(bpy.types.Operator):
@@ -2046,7 +2006,8 @@ class D2P_OT_SolidifyDifference(bpy.types.Operator):
 
         obj = context.active_object
 
-        mod = obj.modifiers.new("Solidify", 'SOLIDIFY')  # add a solidify modifier on active object
+        mod = obj.modifiers.new("Solidify", 'SOLIDIFY')
+              # add a solidify modifier on active object
 
         mod.thickness = 0.01  # set modifier properties
         obj.location.z = 0
@@ -2054,7 +2015,8 @@ class D2P_OT_SolidifyDifference(bpy.types.Operator):
         for o in context.selected_objects:
             if o == obj:
                 continue
-            # see if there is already a modifier named "SelectedSolidify" and use it
+            # see if there is already a modifier named  \
+                        #"SelectedSolidify" and use it
             mod = o.modifiers.get("SelectedSolidify")
             if mod is None:
                 # otherwise add a modifier to selected object
@@ -2093,7 +2055,8 @@ class D2P_OT_SolidifyUnion(bpy.types.Operator):
 
         obj = context.active_object
 
-        mod = obj.modifiers.new("Solidify", 'SOLIDIFY')  # add a solidify modifier on active object
+        mod = obj.modifiers.new("Solidify", 'SOLIDIFY') 
+             # add a solidify modifier on active object
 
         mod.thickness = 0.01  # set modifier properties
         obj.location.z = 0
@@ -2101,7 +2064,8 @@ class D2P_OT_SolidifyUnion(bpy.types.Operator):
         for o in context.selected_objects:
             if o == obj:
                 continue
-            # see if there is already a modifier named "SelectedSolidify" and use it
+            #see if there is already a modifier named
+            # "SelectedSolidify" and use it
             mod = o.modifiers.get("SelectedSolidify")
             if mod is None:
                 # otherwise add a modifier to selected object
@@ -2134,7 +2098,8 @@ class D2P_OT_SelectVertgroup(bpy.types.Operator):
         bpy.ops.object.vertex_group_select()  # select current active vgroup
         bpy.ops.object.editmode_toggle()  # toggle editmode
         bpy.ops.paint.texture_paint_toggle()  # Texpaint
-        bpy.context.object.data.use_paint_mask = True  # set face select masking on in case we forgot
+        bpy.context.object.data.use_paint_mask = True  
+            # set face select masking on in case we forgot
 
         return {'FINISHED'}
 
@@ -2151,7 +2116,8 @@ class D2P_OT_DeselectVertgroup(bpy.types.Operator):
         bpy.ops.object.vertex_group_deselect()  # select current active vgroup
         bpy.ops.object.editmode_toggle()  # toggle editmode
         bpy.ops.paint.texture_paint_toggle()  # Texpaint
-        bpy.context.object.data.use_paint_mask = True  # set face select masking on in case we forgot
+        bpy.context.object.data.use_paint_mask = True 
+            # set face select masking on in case we forgot
 
         return {'FINISHED'}
 
@@ -2168,7 +2134,8 @@ class D2P_OT_AssignVertgroup(bpy.types.Operator):
         bpy.ops.object.vertex_group_assign()  # select current active vgroup
         bpy.ops.object.editmode_toggle()  # toggle editmode
         bpy.ops.paint.texture_paint_toggle()  # Texpaint
-        bpy.context.object.data.use_paint_mask = True  # set face select masking on in case we forgot
+        bpy.context.object.data.use_paint_mask = True 
+             # set face select masking on in case we forgot
 
         return {'FINISHED'}
 
@@ -2182,10 +2149,11 @@ class D2P_OT_UnassignVertgroup(bpy.types.Operator):
 
     def execute(self, context):
         bpy.ops.object.editmode_toggle()  # toggle editmode
-        bpy.ops.object.vertex_group_remove_from()  # select current active vgroup
+        bpy.ops.object.vertex_group_remove_from() # select current active vgroup
         bpy.ops.object.editmode_toggle()  # toggle editmode
         bpy.ops.paint.texture_paint_toggle()  # Texpaint
-        bpy.context.object.data.use_paint_mask = True  # set face select masking on in case we forgot
+        bpy.context.object.data.use_paint_mask = True
+              # set face select masking on in case we forgot
 
         return {'FINISHED'}
 
@@ -2276,12 +2244,14 @@ class D2P_OT_NewGpencil(bpy.types.Operator):
         bpy.context.space_data.shading.type = 'MATERIAL'
         
         bpy.ops.paint.texture_paint_toggle()
-        bpy.ops.object.gpencil_add(align='WORLD', location=(0, 0, 0), scale=(1, 1, 1), type='EMPTY')
+        bpy.ops.object.gpencil_add(align='WORLD', location=(0, 0, 0),
+                                         scale=(1, 1, 1), type='EMPTY')
         bpy.ops.gpencil.paintmode_toggle()
         bpy.context.object.data.layers["GP_Layer"].use_lights = False
         
         #parent
-        bpy.context.object.data.layers["GP_Layer"].parent = bpy.data.objects["canvas"]
+        bpy.context.object.data.layers["GP_Layer"].parent = \
+                                     bpy.data.objects["canvas"]
 
         
 
@@ -2320,11 +2290,13 @@ class D2P_PT_ImageState(bpy.types.Panel):
         row1 = row.split(align=True)
         row1.scale_x = 0.50
         row1.scale_y = 1.25
-        row1.operator("import_image.to_plane", text="Load Canvas", icon='IMAGE_PLANE')
+        row1.operator("import_image.to_plane", text="Load Canvas", 
+                                                icon='IMAGE_PLANE')
         row2 = row.split(align=True)
         row2.scale_x = 0.50
         row2.scale_y = 1.25
-        row2.operator("d2p.cameraview_paint", text="Camera View Paint", icon='CAMERA_STEREO')
+        row2.operator("d2p.cameraview_paint", text="Camera View Paint",
+                                                 icon='CAMERA_STEREO')
         # row3 = row.split(align=True)
         # row3.scale_x=0.50
         # row3.scale_y=1.25
@@ -2338,15 +2310,18 @@ class D2P_PT_ImageState(bpy.types.Panel):
         row.scale_x = 0.50
         row.scale_y = 1.25
         row2 = row.split(align=True)
-        row2.operator("d2p.reload_saved_state", text="Reload Image", icon='IMAGE')
-        row2.operator("d2p.save_current", text="Save Image", icon='FILE_IMAGE')
+        row2.operator("d2p.reload_saved_state", text="Reload Image",
+                                                         icon='IMAGE')
+        row2.operator("d2p.save_current", text="Save Image", 
+                                            icon='FILE_IMAGE')
 
         row = layout.row()
         row = col.row(align=True)
         row.scale_x = 0.50
         row.scale_y = 1.25
         row3 = row.split(align=True)
-        row3.operator("d2p.save_increm", text="Save Increment", icon='FILE_IMAGE')
+        row3.operator("d2p.save_increm", text="Save Increment", 
+                                            icon='FILE_IMAGE')
 
 
 ################################## GPencil Future Home of Shortcuts 
@@ -2366,7 +2341,8 @@ class D2P_PT_GreasePencil(bpy.types.Panel):
         col.label(text="GPencil for D2P Session")
         row = col.row(align=True)
 
-        row.operator("d2p.grease_object", text="New GPencil", icon='OUTLINER_DATA_GP_LAYER')
+        row.operator("d2p.grease_object", text="New GPencil", 
+                                icon='OUTLINER_DATA_GP_LAYER')
         
 
                 
@@ -2528,9 +2504,11 @@ class D2P_PT_FlipRotate(bpy.types.Panel):
 
         row = layout.row()
         row.prop(mytool, "my_float")
-        row.operator("d2p.cvp_influence", text="value to CVP", icon = 'ARROW_LEFTRIGHT')
+        row.operator("d2p.cvp_influence", text="value to CVP", 
+                                    icon = 'ARROW_LEFTRIGHT')
         row=layout.row()
-        row.operator("d2p.canvas_resetrot", text="Reset Rotation", icon='RECOVER_LAST')
+        row.operator("d2p.canvas_resetrot", text="Reset Rotation",
+                                             icon='RECOVER_LAST')
 
 
 class D2P_PT_GuideControls(bpy.types.Panel):
@@ -2549,8 +2527,10 @@ class D2P_PT_GuideControls(bpy.types.Panel):
         col.label(text="Use for Setting Up Symmetry Guide")
         row = col.row(align=True)
 
-        row.operator("d2p.empty_guides", text="Guide", icon='ORIENTATION_CURSOR')
-        row.operator("d2p.center_object", text="Recenter Guide", icon='ORIENTATION_CURSOR')
+        row.operator("d2p.empty_guides", text="Guide",
+                             icon='ORIENTATION_CURSOR')
+        row.operator("d2p.center_object", text="Recenter Guide",
+                                     icon='ORIENTATION_CURSOR')
 
         tool_settings = context.tool_settings
         ipaint = tool_settings.image_paint
@@ -2628,18 +2608,22 @@ class D2P_PT_MaskControl(bpy.types.Panel):
         row1 = row.split(align=True)
         row1.scale_x = 0.50
         row1.scale_y = 1.25
-        row1.operator("d2p.reproject_mask", text='(Re)Project', icon='FULLSCREEN_EXIT')
+        row1.operator("d2p.reproject_mask", text='(Re)Project', 
+                                        icon='FULLSCREEN_EXIT')
 
         row2 = row.split(align=True)
         row2.scale_x = 0.50
         row2.scale_y = 1.25
-        row1.operator("d2p.canvas_material", text='Copy Canvas', icon='OUTLINER_OB_IMAGE')
-        # row2.operator("d2p.solidify_difference", text='Subtract Masks', icon='SELECT_SUBTRACT')
+        row1.operator("d2p.canvas_material", text='Copy Canvas', 
+                                        icon='OUTLINER_OB_IMAGE')
+        # row2.operator("d2p.solidify_difference", text='Subtract Masks', 
+                                                #icon='SELECT_SUBTRACT')
         row3 = row.split(align=True)
         row3.scale_x = 0.50
         row3.scale_y = 1.25
         row2.operator("d2p.add_holdout", text='Holdout', icon='GHOST_ENABLED')
-        # row3.operator("d2p.solidify_union", text='Join Masks', icon='SELECT_EXTEND')
+        # row3.operator("d2p.solidify_union", text='Join Masks',
+                                            # icon='SELECT_EXTEND')
 
         layout = self.layout
         box = layout.box()
@@ -2650,7 +2634,8 @@ class D2P_PT_MaskControl(bpy.types.Panel):
         row1 = row.split(align=True)
         row1.scale_x = 0.50
         row1.scale_y = 1.25
-        #row1.operator("d2p.draw_curve", text='Draw Curve', icon='CURVE_BEZCURVE')
+        #row1.operator("d2p.draw_curve", text='Draw Curve',
+                                    # icon='CURVE_BEZCURVE')
         row1.prop(mytool, "my_enum")
         row1.operator("d2p.my_enum_shapes")
         
@@ -2659,18 +2644,21 @@ class D2P_PT_MaskControl(bpy.types.Panel):
         row1 = row.split(align=True)
         row1.scale_x = 0.50
         row1.scale_y = 1.25
-        row1.operator("d2p.solidify_difference", text='Subtract Masks', icon='SELECT_SUBTRACT')
+        row1.operator("d2p.solidify_difference", text='Subtract Masks',
+                                                 icon='SELECT_SUBTRACT')
 
         row2 = row.split(align=True)
         row2.scale_x = 0.50
         row2.scale_y = 1.25
-        row2.operator("d2p.solidify_union", text='Join Masks', icon='SELECT_EXTEND')
+        row2.operator("d2p.solidify_union", text='Join Masks',
+                                         icon='SELECT_EXTEND')
         # ("d2p.remove_modifiers", text='Remove Mods', icon='UNLINKED')
         row = col.row(align=True)
         row = row.split(align=True)
         row.scale_x = 0.50
         row.scale_y = 1.25
-        row.operator("d2p.remove_modifiers", text='Remove Mods', icon='UNLINKED')
+        row.operator("d2p.remove_modifiers", text='Remove Mods',
+                                                 icon='UNLINKED')
 
         layout = self.layout
 
@@ -2696,16 +2684,21 @@ class D2P_PT_MaskControl(bpy.types.Panel):
             rows = 4
 
         row = layout.row()
-        row.template_list("MESH_UL_vgroups", "", ob, "vertex_groups", ob.vertex_groups, "active_index", rows=rows)
+        row.template_list("MESH_UL_vgroups", "", ob, "vertex_groups", 
+                        ob.vertex_groups, "active_index", rows=rows)
 
         col = row.column(align=True)
         col.operator("object.vertex_group_add", icon='ADD', text="")
-        col.operator("object.vertex_group_remove", icon='REMOVE', text="").all = False
-        col.menu("MESH_MT_vertex_group_context_menu", icon='DOWNARROW_HLT', text="")
+        col.operator("object.vertex_group_remove", icon='REMOVE', 
+                                            text="").all = False
+        col.menu("MESH_MT_vertex_group_context_menu",
+                                             icon='DOWNARROW_HLT', text="")
         if group:
             col.separator()
-            col.operator("object.vertex_group_move", icon='TRIA_UP', text="").direction = 'UP'
-            col.operator("object.vertex_group_move", icon='TRIA_DOWN', text="").direction = 'DOWN'
+            col.operator("object.vertex_group_move", 
+                        icon='TRIA_UP', text="").direction = 'UP'
+            col.operator("object.vertex_group_move", 
+                        icon='TRIA_DOWN', text="").direction = 'DOWN'
 
         box = layout.box()
         col = box.column(align=True)
@@ -2743,12 +2736,14 @@ class D2P_PT_Sculpt2D(bpy.types.Panel):
         row1 = row.split(align=True)
         row1.scale_x = 0.50
         row1.scale_y = 1.25
-        row1.operator("d2p.sculpt_duplicate", text='Copy and Erase', icon='NODE_TEXTURE')
+        row1.operator("d2p.sculpt_duplicate", text='Copy and Erase',
+                                                 icon='NODE_TEXTURE')
 
         row2 = row.split(align=True)
         row2.scale_x = 0.50
         row2.scale_y = 1.25
-        row2.operator("d2p.sculpt_liquid", text='Liquid Sculpt', icon='MOD_FLUIDSIM')
+        row2.operator("d2p.sculpt_liquid", text='Liquid Sculpt',
+                                                 icon='MOD_FLUIDSIM')
 
 
 ############# Scene Extras
@@ -2772,22 +2767,26 @@ class D2P_PT_SceneExtras(bpy.types.Panel):
         row1 = row.split(align=True)
         row1.scale_x = 0.50
         row1.scale_y = 1.25
-        row1.operator("d2p.create_brush", text='Create Brush/Mask', icon='BRUSHES_ALL')
+        row1.operator("d2p.create_brush", text='Create Brush/Mask', 
+                                                icon='BRUSHES_ALL')
 
         row2 = row.split(align=True)
         row2.scale_x = 0.50
         row2.scale_y = 1.25
-        row2.operator("d2p.create_reference_scene", text='Sculpt Ref', icon='SCULPTMODE_HLT')
+        row2.operator("d2p.create_reference_scene", text='Sculpt Ref',
+                                                 icon='SCULPTMODE_HLT')
 
         row3 = row.split(align=True)
         row3.scale_x = 0.50
         row3.scale_y = 1.25
-        row3.operator("d2p.sculpt_camera", text='Sculpt Camera', icon='VIEW_CAMERA')
+        row3.operator("d2p.sculpt_camera", text='Sculpt Camera', 
+                                            icon='VIEW_CAMERA')
 
         row4 = row.split(align=True)
         row4.scale_x = 0.50
         row4.scale_y = 1.25
-        row4.operator("d2p.slow_play", text='Slow Play', icon='RENDER_ANIMATION')
+        row4.operator("d2p.slow_play", text='Slow Play', 
+                                        icon='RENDER_ANIMATION')
 
 
 classes = (
