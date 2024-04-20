@@ -62,9 +62,9 @@ class MyProperties(bpy.types.PropertyGroup):
 
 ####brush scenes and sculpt scenes
 
-class DRAW2PAINT_OT_MacroCreateBrush(bpy.types.Operator):
+class D2P_OT_MacroCreateBrush(bpy.types.Operator):
     """Image Brush Scene Setup Macro"""
-    bl_idname = "draw2paint.create_brush"
+    bl_idname = "d2p.create_brush"
     bl_label = "Setup Scene for Image Brush Maker"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -115,9 +115,9 @@ class DRAW2PAINT_OT_MacroCreateBrush(bpy.types.Operator):
         return {'FINISHED'}
     
     
-class DRAW2PAINT_OT_CustomFps(bpy.types.Operator):
+class D2P_OT_CustomFps(bpy.types.Operator):
     """Slow Play FPS"""
-    bl_idname = "draw2paint.slow_play"
+    bl_idname = "d2p.slow_play"
     bl_label = "Slow Play FPS Toggle"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -143,10 +143,10 @@ class DRAW2PAINT_OT_CustomFps(bpy.types.Operator):
         return {'FINISHED'}
     
     
-class DRAW2PAINT_OT_RefMakerScene(bpy.types.Operator):
+class D2P_OT_RefMakerScene(bpy.types.Operator):
     """Create Reference Scene"""
     bl_description = "Create Scene for Composing Reference Slides"
-    bl_idname = "draw2paint.create_reference_scene"
+    bl_idname = "d2p.create_reference_scene"
     bl_label = "Create Scene for Image Reference"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -193,11 +193,11 @@ class DRAW2PAINT_OT_RefMakerScene(bpy.types.Operator):
 
         return {'FINISHED'}
 
-#------------------------ DRAW2PAINT SCENE
-class DRAW2PAINT_OT_D2PaintScene(bpy.types.Operator):
+#------------------------ D2P SCENE
+class D2P_OT_D2PaintScene(bpy.types.Operator):
     """Create Draw2Paint Scene"""
     bl_description = "Create Scene for Working in Draw2Paint"
-    bl_idname = "draw2paint.create_d2p_scene"
+    bl_idname = "d2p.create_d2p_scene"
     bl_label = "Create Scene for Draw2Paint"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -228,9 +228,9 @@ class DRAW2PAINT_OT_D2PaintScene(bpy.types.Operator):
         return {'FINISHED'}
 
 # sculpt the new duplicated canvas
-class DRAW2PAINT_OT_SculptView(bpy.types.Operator):
+class D2P_OT_SculptView(bpy.types.Operator):
     """Sculpt View Reference Camera"""
-    bl_idname = "draw2paint.sculpt_camera"
+    bl_idname = "d2p.sculpt_camera"
     bl_label = "Sculpt Camera"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -278,9 +278,9 @@ class DRAW2PAINT_OT_SculptView(bpy.types.Operator):
 
 #################### shader applications
 ###############test material holdout generator
-class DRAW2PAINT_OT_holdout_shader(bpy.types.Operator):
+class D2P_OT_holdout_shader(bpy.types.Operator):
     bl_label = "Mask Holdout Shader"
-    bl_idname = "draw2paint.add_holdout"
+    bl_idname = "d2p.add_holdout"
 
     @classmethod
     def poll(self, context):
@@ -326,9 +326,9 @@ class DRAW2PAINT_OT_holdout_shader(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class DRAW2PAINT_OT_CanvasMaterial(bpy.types.Operator):
+class D2P_OT_CanvasMaterial(bpy.types.Operator):
     """Adopt Canvas Material"""
-    bl_idname = "draw2paint.canvas_material"
+    bl_idname = "d2p.canvas_material"
     bl_label = "Set the Material to the same as Main Canvas"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -350,9 +350,9 @@ class DRAW2PAINT_OT_CanvasMaterial(bpy.types.Operator):
         return {'FINISHED'}
 
 ######################## sculpt to liquid
-class DRAW2PAINT_OT_SculptDuplicate(bpy.types.Operator):
+class D2P_OT_SculptDuplicate(bpy.types.Operator):
     """Duplicate Selected Image Plane, Single User for Eraser Paint"""
-    bl_idname = "draw2paint.sculpt_duplicate"
+    bl_idname = "d2p.sculpt_duplicate"
     bl_label = "Sculpt Liquid Duplicate"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -409,9 +409,9 @@ class DRAW2PAINT_OT_SculptDuplicate(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class DRAW2PAINT_OT_SculptLiquid(bpy.types.Operator):
+class D2P_OT_SculptLiquid(bpy.types.Operator):
     """Convert to Subdivided Plane & Sculpt Liquid"""
-    bl_idname = "draw2paint.sculpt_liquid"
+    bl_idname = "d2p.sculpt_liquid"
     bl_label = "Sculpt like Liquid"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -440,9 +440,9 @@ class DRAW2PAINT_OT_SculptLiquid(bpy.types.Operator):
         return {'FINISHED'}
 ############### canvas rotations
 # flip horizontal macro
-class DRAW2PAINT_OT_CanvasHoriz(bpy.types.Operator):
+class D2P_OT_CanvasHoriz(bpy.types.Operator):
     """Flip the Canvas Left/Right"""
-    bl_idname = "draw2paint.canvas_horizontal"
+    bl_idname = "d2p.canvas_horizontal"
     bl_label = "Canvas Horizontal"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -506,9 +506,9 @@ class DRAW2PAINT_OT_CanvasHoriz(bpy.types.Operator):
 
 # --------------------------------flip vertical macro
 
-class DRAW2PAINT_OT_CanvasVertical(bpy.types.Operator):
+class D2P_OT_CanvasVertical(bpy.types.Operator):
     """Flip the Canvas Top/Bottom"""
-    bl_idname = "draw2paint.canvas_vertical"
+    bl_idname = "d2p.canvas_vertical"
     bl_label = "Canvas Vertical"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -571,9 +571,9 @@ class DRAW2PAINT_OT_CanvasVertical(bpy.types.Operator):
 
 # --------------------------ccw15
 
-class DRAW2PAINT_OT_RotateCanvasCCW15(bpy.types.Operator):
+class D2P_OT_RotateCanvasCCW15(bpy.types.Operator):
     """Rotate Image CounterClockwise 15 degrees"""
-    bl_idname = "draw2paint.rotate_ccw_15"
+    bl_idname = "d2p.rotate_ccw_15"
     bl_label = "Canvas Rotate CounterClockwise 15"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -612,9 +612,9 @@ class DRAW2PAINT_OT_RotateCanvasCCW15(bpy.types.Operator):
 
 # --------------------------cw15
 
-class DRAW2PAINT_OT_RotateCanvasCW15(bpy.types.Operator):
+class D2P_OT_RotateCanvasCW15(bpy.types.Operator):
     """Rotate Image Clockwise 15 degrees"""
-    bl_idname = "draw2paint.rotate_cw_15"
+    bl_idname = "d2p.rotate_cw_15"
     bl_label = "Canvas Rotate Clockwise 15"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -653,9 +653,9 @@ class DRAW2PAINT_OT_RotateCanvasCW15(bpy.types.Operator):
 
 # ---------------------------ccw 90
 
-class DRAW2PAINT_OT_RotateCanvasCCW(bpy.types.Operator):
+class D2P_OT_RotateCanvasCCW(bpy.types.Operator):
     """Rotate Image CounterClockwise 90 degrees"""
-    bl_idname = "draw2paint.rotate_ccw_90"
+    bl_idname = "d2p.rotate_ccw_90"
     bl_label = "Canvas Rotate CounterClockwise 90"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -694,9 +694,9 @@ class DRAW2PAINT_OT_RotateCanvasCCW(bpy.types.Operator):
 
 # -----------------------------------cw 90
 
-class DRAW2PAINT_OT_RotateCanvasCW(bpy.types.Operator):
+class D2P_OT_RotateCanvasCW(bpy.types.Operator):
     """Rotate Image Clockwise 90 degrees"""
-    bl_idname = "draw2paint.rotate_cw_90"
+    bl_idname = "d2p.rotate_cw_90"
     bl_label = "Canvas Rotate Clockwise 90"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -733,9 +733,9 @@ class DRAW2PAINT_OT_RotateCanvasCW(bpy.types.Operator):
         return {'FINISHED'}
 # --------------------------------image rotation reset
 
-class DRAW2PAINT_OT_CanvasResetrot(bpy.types.Operator):
+class D2P_OT_CanvasResetrot(bpy.types.Operator):
     """Reset Canvas Rotation"""
-    bl_idname = "draw2paint.canvas_resetrot"
+    bl_idname = "d2p.canvas_resetrot"
     bl_label = "Canvas Reset Rotation"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -762,9 +762,9 @@ class DRAW2PAINT_OT_CanvasResetrot(bpy.types.Operator):
 ############# finally got a way to influence the camera constraint
 ############ ugly but works :P
 # bpy.context.object.constraints["Cam Control"].influence == mytool.my_float
-class DRAW2PAINT_OT_cvp_influence(bpy.types.Operator):
+class D2P_OT_cvp_influence(bpy.types.Operator):
     """Set up influence of Camera View Paint Constraint"""
-    bl_idname = "draw2paint.cvp_influence"
+    bl_idname = "d2p.cvp_influence"
     bl_label = "CVP Influence"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -807,9 +807,9 @@ class DRAW2PAINT_OT_cvp_influence(bpy.types.Operator):
 
 # -----------------------------cameraview paint
 
-class DRAW2PAINT_OT_CameraviewPaint(bpy.types.Operator):
+class D2P_OT_CameraviewPaint(bpy.types.Operator):
     """Set up Camera to match and follow Canvas"""
-    bl_idname = "draw2paint.cameraview_paint"
+    bl_idname = "d2p.cameraview_paint"
     bl_label = "Cameraview Paint"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -983,9 +983,9 @@ class DRAW2PAINT_OT_CameraviewPaint(bpy.types.Operator):
 ######: need second operator for placing the resulting image as current camera background
 
      
-class DRAW2PAINT_OT_getuvlayout(bpy.types.Operator):
+class D2P_OT_getuvlayout(bpy.types.Operator):
     """Tooltip"""
-    bl_idname = "draw2paint.getuvlayout"
+    bl_idname = "d2p.getuvlayout"
     bl_label = "Get UV Layout for Selected Object"
 
 
@@ -1045,9 +1045,9 @@ class DRAW2PAINT_OT_getuvlayout(bpy.types.Operator):
                
         return {'FINISHED'}
 
-class DRAW2PAINT_OT_loadbgcam(bpy.types.Operator):
+class D2P_OT_loadbgcam(bpy.types.Operator):
     """apply uv layout to Camera View Paint"""
-    bl_idname = "draw2paint.loadbgcam"
+    bl_idname = "d2p.loadbgcam"
     bl_label = "UV Layout to Camera View Paint"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -1105,9 +1105,9 @@ class DRAW2PAINT_OT_loadbgcam(bpy.types.Operator):
         
         return {'FINISHED'}        
     
-class DRAW2PAINT_OT_isolate_2d(bpy.types.Operator):
+class D2P_OT_isolate_2d(bpy.types.Operator):
     """Push to Isolate 2D Paint View"""
-    bl_idname = "draw2paint.swapcollview2d"
+    bl_idname = "d2p.swapcollview2d"
     bl_label = "Toggle 2D View"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -1135,9 +1135,9 @@ class DRAW2PAINT_OT_isolate_2d(bpy.types.Operator):
         
         return {'FINISHED'}        
 
-class DRAW2PAINT_OT_isolate_3d(bpy.types.Operator):
+class D2P_OT_isolate_3d(bpy.types.Operator):
     """Push to Isolate 3D Paint View"""
-    bl_idname = "draw2paint.swapcollview3d"
+    bl_idname = "d2p.swapcollview3d"
     bl_label = "Toggle 3D View"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -1168,9 +1168,9 @@ class DRAW2PAINT_OT_isolate_3d(bpy.types.Operator):
 
     
 ###############################------------------------Precision Render Border Adjust Imported
-class DRAW2PAINT_OT_PixelsToBorder(bpy.types.Operator):
+class D2P_OT_PixelsToBorder(bpy.types.Operator):
     """ Convert the pixel value into the proportion needed by the Blender native property """
-    bl_idname = "draw2paint.pixelstoborder"
+    bl_idname = "d2p.pixelstoborder"
     bl_label = "Convert Pixels to Border proportion"
     
     @classmethod
@@ -1199,9 +1199,9 @@ class DRAW2PAINT_OT_PixelsToBorder(bpy.types.Operator):
         
         return {'FINISHED'}
     
-class DRAW2PAINT_OT_BorderToPixels(bpy.types.Operator):
+class D2P_OT_BorderToPixels(bpy.types.Operator):
     """ Convert the Blender native property value to pixels"""
-    bl_idname = "draw2paint.bordertopixels"
+    bl_idname = "d2p.bordertopixels"
     bl_label = "Convert border values to pixels"
     
     @classmethod
@@ -1225,10 +1225,10 @@ class DRAW2PAINT_OT_BorderToPixels(bpy.types.Operator):
 ######################## bordercrop from ez-draw panel revised
 ############## haven't decided on setting this up as toggle or not, missing scene preferences stored in addon like ez-draw did
 #-----------------------------------------------------------------BORDER CROP ON
-class DRAW2PAINT_OT_BorderCrop(bpy.types.Operator):
+class D2P_OT_BorderCrop(bpy.types.Operator):
     """Turn on Border Crop in Render Settings"""
     bl_description = "Border Crop ON"
-    bl_idname = "draw2paint.border_crop"
+    bl_idname = "d2p.border_crop"
     bl_label = ""
     bl_options = {'REGISTER','UNDO'}
 
@@ -1240,10 +1240,10 @@ class DRAW2PAINT_OT_BorderCrop(bpy.types.Operator):
 
 
 #----------------------------------------------------------------BORDER CROP OFF
-class DRAW2PAINT_OT_BorderUnCrop(bpy.types.Operator):
+class D2P_OT_BorderUnCrop(bpy.types.Operator):
     """Turn off Border Crop in Render Settings"""
     bl_description = "Border Crop OFF"
-    bl_idname = "draw2paint.border_uncrop"
+    bl_idname = "d2p.border_uncrop"
     bl_label = ""
     bl_options = {'REGISTER','UNDO'}
 
@@ -1255,10 +1255,10 @@ class DRAW2PAINT_OT_BorderUnCrop(bpy.types.Operator):
 
 
 #-------------------------------------------------------------BORDER CROP TOGGLE
-class DRAW2PAINT_OT_BorderCropToggle(bpy.types.Operator):
+class D2P_OT_BorderCropToggle(bpy.types.Operator):
     """Set Border Crop in Render Settings"""
     bl_description = "Border Crop On/Off TOGGLE"
-    bl_idname = "draw2paint.border_toggle"
+    bl_idname = "d2p.border_toggle"
     bl_label = ""
     bl_options = {'REGISTER','UNDO'}
 
@@ -1272,16 +1272,16 @@ class DRAW2PAINT_OT_BorderCropToggle(bpy.types.Operator):
 
         if not(scene.prefs_are_locked):
             if rs.use_border and rs.use_crop_to_border:
-                bpy.ops.draw2paint.border_uncrop()
+                bpy.ops.d2p.border_uncrop()
                 scene.bordercrop_is_activated = False
             else:
-                bpy.ops.draw2paint.border_crop()
+                bpy.ops.d2p.border_crop()
                 scene.bordercrop_is_activated = True
         return {'FINISHED'}
 #------------------------------try new image make
-class DRAW2PAINT_OT_NewImage(bpy.types.Operator):
+class D2P_OT_NewImage(bpy.types.Operator):
     """New Image"""
-    bl_idname = "draw2paint.new_image"
+    bl_idname = "d2p.new_image"
     bl_label = "New Image"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -1307,9 +1307,9 @@ class DRAW2PAINT_OT_NewImage(bpy.types.Operator):
 
 # -----------------------------image save
 
-class DRAW2PAINT_OT_SaveImage(bpy.types.Operator):
+class D2P_OT_SaveImage(bpy.types.Operator):
     """Save Image"""
-    bl_idname = "draw2paint.save_current"
+    bl_idname = "d2p.save_current"
     bl_label = "Save Image Current"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -1336,10 +1336,10 @@ class DRAW2PAINT_OT_SaveImage(bpy.types.Operator):
         return {'FINISHED'}
     
 ####experiment fix - doesn't work yet
-class DRAW2PAINT_OT_SaveIncrem(bpy.types.Operator):
+class D2P_OT_SaveIncrem(bpy.types.Operator):
     """Save Incremential Images - MUST SAVE SESSION FILE FIRST"""
     bl_description = ""
-    bl_idname = "draw2paint.save_increm"
+    bl_idname = "d2p.save_increm"
     bl_label = "Save incremential Image Current"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -1395,9 +1395,9 @@ class DRAW2PAINT_OT_SaveIncrem(bpy.types.Operator):
         return {'FINISHED'}
 # -----------------------------------reload image
 
-class DRAW2PAINT_OT_ImageReload(bpy.types.Operator):
+class D2P_OT_ImageReload(bpy.types.Operator):
     """Reload Image Last Saved State"""
-    bl_idname = "draw2paint.reload_saved_state"
+    bl_idname = "d2p.reload_saved_state"
     bl_label = "Reload Image Save Point"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -1422,9 +1422,9 @@ class DRAW2PAINT_OT_ImageReload(bpy.types.Operator):
         return {'FINISHED'}
     
 ########### pivot works
-class DRAW2PAINT_OT_EmptyGuides(bpy.types.Operator):
+class D2P_OT_EmptyGuides(bpy.types.Operator):
     """experimental- create new empty guide or selected guide relocates origin"""
-    bl_idname = "draw2paint.empty_guides"
+    bl_idname = "d2p.empty_guides"
     bl_label = "Empty Guides Constrained"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -1510,9 +1510,9 @@ class DRAW2PAINT_OT_EmptyGuides(bpy.types.Operator):
 
         return {'FINISHED'}
     
-class DRAW2PAINT_OT_center_object(bpy.types.Operator):
+class D2P_OT_center_object(bpy.types.Operator):
     """Snaps cursor and Selected Object to World Center"""
-    bl_idname = "draw2paint.center_object"
+    bl_idname = "d2p.center_object"
     bl_label = "Center Object to World"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -1535,10 +1535,10 @@ class DRAW2PAINT_OT_center_object(bpy.types.Operator):
 # -------------------LEGACY FOR ADDITION TO PANEL OPERATORS
 ############################################################
 # -----------------------------------------------------------------FRONT OF PAINT
-class DRAW2PAINT_OT_FrontOfPaint(bpy.types.Operator):
+class D2P_OT_FrontOfPaint(bpy.types.Operator):
     """fast front of face view paint"""
     bl_description = ""
-    bl_idname = "draw2paint.frontof_paint"
+    bl_idname = "d2p.frontof_paint"
     bl_label = "Front Of Paint"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -1567,10 +1567,10 @@ class DRAW2PAINT_OT_FrontOfPaint(bpy.types.Operator):
 
 
 # -------------------------------------------------------------BORDER CROP TOGGLE
-class DRAW2PAINT_OT_BorderCropToggle(bpy.types.Operator):
+class D2P_OT_BorderCropToggle(bpy.types.Operator):
     """Set Border Crop in Render Settings"""
     bl_description = "Border Crop On/Off TOGGLE"
-    bl_idname = "draw2paint.border_toggle"
+    bl_idname = "d2p.border_toggle"
     bl_label = ""
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -1593,9 +1593,9 @@ class DRAW2PAINT_OT_BorderCropToggle(bpy.types.Operator):
 
 #################### mask specials
 
-class DRAW2PAINT_OT_ReprojectMask(bpy.types.Operator):
+class D2P_OT_ReprojectMask(bpy.types.Operator):
     """Reproject Mask"""
-    bl_idname = "draw2paint.reproject_mask"
+    bl_idname = "d2p.reproject_mask"
     bl_label = "Reproject Mask to UV from Camera View"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -1658,9 +1658,9 @@ class DRAW2PAINT_OT_ReprojectMask(bpy.types.Operator):
         return {'FINISHED'}
 
 ############## alignment of masks selected
-class DRAW2PAINT_OT_AlignLeft(bpy.types.Operator):
+class D2P_OT_AlignLeft(bpy.types.Operator):
     """Left Align"""
-    bl_idname = "draw2paint.align_left"
+    bl_idname = "d2p.align_left"
     bl_label = "Align Objects Left"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -1680,9 +1680,9 @@ class DRAW2PAINT_OT_AlignLeft(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class DRAW2PAINT_OT_AlignCenter(bpy.types.Operator):
+class D2P_OT_AlignCenter(bpy.types.Operator):
     """Center Align"""
-    bl_idname = "draw2paint.align_center"
+    bl_idname = "d2p.align_center"
     bl_label = "Align Objects Center"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -1703,9 +1703,9 @@ class DRAW2PAINT_OT_AlignCenter(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class DRAW2PAINT_OT_AlignRight(bpy.types.Operator):
+class D2P_OT_AlignRight(bpy.types.Operator):
     """Center Align"""
-    bl_idname = "draw2paint.align_right"
+    bl_idname = "d2p.align_right"
     bl_label = "Align Objects Right"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -1725,9 +1725,9 @@ class DRAW2PAINT_OT_AlignRight(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class DRAW2PAINT_OT_AlignTop(bpy.types.Operator):
+class D2P_OT_AlignTop(bpy.types.Operator):
     """Top Align"""
-    bl_idname = "draw2paint.align_top"
+    bl_idname = "d2p.align_top"
     bl_label = "Align Objects Top"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -1747,9 +1747,9 @@ class DRAW2PAINT_OT_AlignTop(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class DRAW2PAINT_OT_AlignHcenter(bpy.types.Operator):
+class D2P_OT_AlignHcenter(bpy.types.Operator):
     """Horizontal Center Align"""
-    bl_idname = "draw2paint.align_hcenter"
+    bl_idname = "d2p.align_hcenter"
     bl_label = "Align Objects Horizontal Center"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -1770,9 +1770,9 @@ class DRAW2PAINT_OT_AlignHcenter(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class DRAW2PAINT_OT_CenterAlignReset(bpy.types.Operator):
+class D2P_OT_CenterAlignReset(bpy.types.Operator):
     """Center Alignment Reset"""
-    bl_idname = "draw2paint.center_align_reset"
+    bl_idname = "d2p.center_align_reset"
     bl_label = "Reset center alignment"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -1792,9 +1792,9 @@ class DRAW2PAINT_OT_CenterAlignReset(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class DRAW2PAINT_OT_AlignBottom(bpy.types.Operator):
+class D2P_OT_AlignBottom(bpy.types.Operator):
     """Horizontal Bottom Align"""
-    bl_idname = "draw2paint.align_bottom"
+    bl_idname = "d2p.align_bottom"
     bl_label = "Align Objects Horizontal Bottom"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -1816,9 +1816,9 @@ class DRAW2PAINT_OT_AlignBottom(bpy.types.Operator):
 
 ###########new curve primitives for drawing masks
 
-class DRAW2PAINT_OT_my_enum_shapes(bpy.types.Operator):
+class D2P_OT_my_enum_shapes(bpy.types.Operator):
     bl_label = "Add Mask Object"
-    bl_idname = "draw2paint.my_enum_shapes"
+    bl_idname = "d2p.my_enum_shapes"
     
     
     
@@ -1905,9 +1905,9 @@ class DRAW2PAINT_OT_my_enum_shapes(bpy.types.Operator):
 
 
 
-'''class DRAW2PAINT_OT_SquareCurve(bpy.types.Operator):
+'''class D2P_OT_SquareCurve(bpy.types.Operator):
     """Square Curve primitive for Mask"""
-    bl_idname = "draw2paint.square_curve"
+    bl_idname = "d2p.square_curve"
     bl_label = "Add Square Curve Primitive for Masking"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -1926,9 +1926,9 @@ class DRAW2PAINT_OT_my_enum_shapes(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class DRAW2PAINT_OT_CircleCurve(bpy.types.Operator):
+class D2P_OT_CircleCurve(bpy.types.Operator):
     """Circle Curve primitive for Mask"""
-    bl_idname = "draw2paint.circle_curve"
+    bl_idname = "d2p.circle_curve"
     bl_label = "Add Circle Curve Primitive for Masking"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -1945,9 +1945,9 @@ class DRAW2PAINT_OT_CircleCurve(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class DRAW2PAINT_OT_VectorCurve(bpy.types.Operator):
+class D2P_OT_VectorCurve(bpy.types.Operator):
     """Vector Curve primitive for Mask"""
-    bl_idname = "draw2paint.vector_curve"
+    bl_idname = "d2p.vector_curve"
     bl_label = "Add Vector Curve Primitive for Precise Masking"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -1966,9 +1966,9 @@ class DRAW2PAINT_OT_VectorCurve(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class DRAW2PAINT_OT_DrawCurveloop(bpy.types.Operator):
+class D2P_OT_DrawCurveloop(bpy.types.Operator):
     """Add New Curve Drawing"""
-    bl_idname = "draw2paint.draw_curve"
+    bl_idname = "d2p.draw_curve"
 
     bl_label = "draw curve"
     bl_options = {'REGISTER', 'UNDO'}
@@ -1993,9 +1993,9 @@ class DRAW2PAINT_OT_DrawCurveloop(bpy.types.Operator):
         return {'FINISHED'}'''
 
 ####################### boolean masks work
-class DRAW2PAINT_OT_RemoveMods(bpy.types.Operator):
+class D2P_OT_RemoveMods(bpy.types.Operator):
     """Remove Modifiers"""
-    bl_idname = "draw2paint.remove_modifiers"
+    bl_idname = "d2p.remove_modifiers"
     bl_label = "Remove modifiers"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -2026,9 +2026,9 @@ class DRAW2PAINT_OT_RemoveMods(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class DRAW2PAINT_OT_SolidifyDifference(bpy.types.Operator):
+class D2P_OT_SolidifyDifference(bpy.types.Operator):
     """Solidify and Difference Mask"""
-    bl_idname = "draw2paint.solidify_difference"
+    bl_idname = "d2p.solidify_difference"
     bl_label = "Add Solidify and Difference Bool"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -2073,9 +2073,9 @@ class DRAW2PAINT_OT_SolidifyDifference(bpy.types.Operator):
             return {'FINISHED'}
 
 
-class DRAW2PAINT_OT_SolidifyUnion(bpy.types.Operator):
+class D2P_OT_SolidifyUnion(bpy.types.Operator):
     """Solidify and Union Mask"""
-    bl_idname = "draw2paint.solidify_union"
+    bl_idname = "d2p.solidify_union"
     bl_label = "Add Solidify and Union Bool"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -2122,9 +2122,9 @@ class DRAW2PAINT_OT_SolidifyUnion(bpy.types.Operator):
 ############################## Vert Groups Forced into Ops
 ########################-------------------------vgroup force ops
 
-class DRAW2PAINT_OT_SelectVertgroup(bpy.types.Operator):
+class D2P_OT_SelectVertgroup(bpy.types.Operator):
     """Select Vertgroup"""
-    bl_idname = "draw2paint.select_vgroup"
+    bl_idname = "d2p.select_vgroup"
 
     bl_label = "Select VGroup"
     bl_options = {'REGISTER', 'UNDO'}
@@ -2139,9 +2139,9 @@ class DRAW2PAINT_OT_SelectVertgroup(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class DRAW2PAINT_OT_DeselectVertgroup(bpy.types.Operator):
+class D2P_OT_DeselectVertgroup(bpy.types.Operator):
     """Deselect Vertgroup"""
-    bl_idname = "draw2paint.deselect_vgroup"
+    bl_idname = "d2p.deselect_vgroup"
 
     bl_label = "Deselect VGroup"
     bl_options = {'REGISTER', 'UNDO'}
@@ -2156,9 +2156,9 @@ class DRAW2PAINT_OT_DeselectVertgroup(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class DRAW2PAINT_OT_AssignVertgroup(bpy.types.Operator):
+class D2P_OT_AssignVertgroup(bpy.types.Operator):
     """Assign Vertgroup"""
-    bl_idname = "draw2paint.assign_vgroup"
+    bl_idname = "d2p.assign_vgroup"
 
     bl_label = "Assign VGroup"
     bl_options = {'REGISTER', 'UNDO'}
@@ -2173,9 +2173,9 @@ class DRAW2PAINT_OT_AssignVertgroup(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class DRAW2PAINT_OT_UnassignVertgroup(bpy.types.Operator):
+class D2P_OT_UnassignVertgroup(bpy.types.Operator):
     """Unassign Vertgroup"""
-    bl_idname = "draw2paint.unassign_vgroup"
+    bl_idname = "d2p.unassign_vgroup"
 
     bl_label = "Unassign VGroup"
     bl_options = {'REGISTER', 'UNDO'}
@@ -2192,9 +2192,9 @@ class DRAW2PAINT_OT_UnassignVertgroup(bpy.types.Operator):
 #############################Face Mask Groups FMG+
 #############################  -------FMG
 
-class DRAW2PAINT_OT_getFaceMaskGroups(bpy.types.Operator):
+class D2P_OT_getFaceMaskGroups(bpy.types.Operator):
     """FMG+ _ Get Face Mask Groups from Linked Mesh Islands"""
-    bl_idname = "draw2paint.getfacemaskgroups"
+    bl_idname = "d2p.getfacemaskgroups"
     bl_label = "Get Face Mask Groups"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -2252,9 +2252,9 @@ class DRAW2PAINT_OT_getFaceMaskGroups(bpy.types.Operator):
 
 ######## Grease Pencil Blank Addition to Paint
 
-class DRAW2PAINT_OT_NewGpencil(bpy.types.Operator):
+class D2P_OT_NewGpencil(bpy.types.Operator):
     """Add Grease Pencil Object to Paint"""
-    bl_idname = "draw2paint.grease_object"
+    bl_idname = "d2p.grease_object"
     bl_label = "Must Render F12 to capture GPencil in Canvas Project"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -2291,10 +2291,10 @@ class DRAW2PAINT_OT_NewGpencil(bpy.types.Operator):
 
 ########################################
 ## panel draw for Draw2Paint
-class DRAW2PAINT_PT_ImageState(bpy.types.Panel):
+class D2P_PT_ImageState(bpy.types.Panel):
     """Image State Tools"""
     bl_label = "Image State Tools"
-    bl_idname = "DRAW2PAINT_PT_ImageState"
+    bl_idname = "D2P_PT_ImageState"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_category = "Draw2Paint"
@@ -2311,11 +2311,11 @@ class DRAW2PAINT_PT_ImageState(bpy.types.Panel):
         row = col.row(align=True)
         row.scale_x = 0.50
         row.scale_y = 1.25
-        row.operator("draw2paint.new_image", text="New Image", icon='TEXTURE')
+        row.operator("d2p.new_image", text="New Image", icon='TEXTURE')
         row1 = row.split(align=True)
         row1.scale_x = 0.50
         row1.scale_y = 1.25
-        row1.operator("draw2paint.create_d2p_scene", text="+Scene", icon='PREFERENCES')
+        row1.operator("d2p.create_d2p_scene", text="+Scene", icon='PREFERENCES')
         row = col.row(align=True)
         row1 = row.split(align=True)
         row1.scale_x = 0.50
@@ -2324,33 +2324,33 @@ class DRAW2PAINT_PT_ImageState(bpy.types.Panel):
         row2 = row.split(align=True)
         row2.scale_x = 0.50
         row2.scale_y = 1.25
-        row2.operator("draw2paint.cameraview_paint", text="Camera View Paint", icon='CAMERA_STEREO')
+        row2.operator("d2p.cameraview_paint", text="Camera View Paint", icon='CAMERA_STEREO')
         # row3 = row.split(align=True)
         # row3.scale_x=0.50
         # row3.scale_y=1.25
-        # row3.operator("draw2paint.lock_screen", icon = 'DECORATE_LOCKED')
+        # row3.operator("d2p.lock_screen", icon = 'DECORATE_LOCKED')
         # row3.prop(view.region_3d, "lock_rotation", text="Lock Rotation")
 
-        # draw2paint.lock_screen
+        # d2p.lock_screen
 
         row = layout.row()
         row = col.row(align=True)
         row.scale_x = 0.50
         row.scale_y = 1.25
         row2 = row.split(align=True)
-        row2.operator("draw2paint.reload_saved_state", text="Reload Image", icon='IMAGE')
-        row2.operator("draw2paint.save_current", text="Save Image", icon='FILE_IMAGE')
+        row2.operator("d2p.reload_saved_state", text="Reload Image", icon='IMAGE')
+        row2.operator("d2p.save_current", text="Save Image", icon='FILE_IMAGE')
 
         row = layout.row()
         row = col.row(align=True)
         row.scale_x = 0.50
         row.scale_y = 1.25
         row3 = row.split(align=True)
-        row3.operator("draw2paint.save_increm", text="Save Increment", icon='FILE_IMAGE')
+        row3.operator("d2p.save_increm", text="Save Increment", icon='FILE_IMAGE')
 
 
 ################################## GPencil Future Home of Shortcuts 
-class DRAW2PAINT_PT_GreasePencil(bpy.types.Panel):
+class D2P_PT_GreasePencil(bpy.types.Panel):
     """Panel for D2P GPencil"""
     bl_label = "Grease Pencil Shorts"
     bl_space_type = 'VIEW_3D'
@@ -2366,7 +2366,7 @@ class DRAW2PAINT_PT_GreasePencil(bpy.types.Panel):
         col.label(text="GPencil for D2P Session")
         row = col.row(align=True)
 
-        row.operator("draw2paint.grease_object", text="New GPencil", icon='OUTLINER_DATA_GP_LAYER')
+        row.operator("d2p.grease_object", text="New GPencil", icon='OUTLINER_DATA_GP_LAYER')
         
 
                 
@@ -2374,14 +2374,14 @@ class DRAW2PAINT_PT_GreasePencil(bpy.types.Panel):
 ################################ 3D to 2D Experimental Workflow Items
 
 ############# Scene Extras
-class DRAW2PAINT_PT_2D_to_3D_Experimental(bpy.types.Panel):
+class D2P_PT_2D_to_3D_Experimental(bpy.types.Panel):
     """2D and 3D Workflow Experimental Operations"""
     bl_label = "Mad Scientist Painter Ops"
-    bl_idname = "DRAW2PAINT_PT_2dto3d_experiment"
+    bl_idname = "D2P_PT_2dto3d_experiment"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_category = "Draw2Paint"
-    bl_parent_id = 'DRAW2PAINT_PT_ImageState'
+    bl_parent_id = 'D2P_PT_ImageState'
     bl_options = {'DEFAULT_CLOSED'}
 
     def draw(self, context):
@@ -2397,13 +2397,13 @@ class DRAW2PAINT_PT_2D_to_3D_Experimental(bpy.types.Panel):
         row1 = row.split(align=True)
         row1.scale_x = 0.50
         row1.scale_y = 1.25
-        row1.operator("draw2paint.swapcollview3d", 
+        row1.operator("d2p.swapcollview3d", 
                     text='3D View', 
                     icon='MESH_UVSPHERE')
         row2 = row.split(align=True)
         row2.scale_x = 0.50
         row2.scale_y = 1.25
-        row2.operator("draw2paint.swapcollview2d", 
+        row2.operator("d2p.swapcollview2d", 
                     text='2D View', 
                     icon='MESH_CIRCLE')
 
@@ -2412,10 +2412,10 @@ class DRAW2PAINT_PT_2D_to_3D_Experimental(bpy.types.Panel):
         row.scale_x = 0.50
         row.scale_y = 1.25
         row2 = row.split(align=True)
-        row2.operator("draw2paint.getuvlayout", 
+        row2.operator("d2p.getuvlayout", 
                     text="Get UV Overlay", 
                     icon='GROUP_UVS')
-        row2.operator("draw2paint.loadbgcam",
+        row2.operator("d2p.loadbgcam",
                     text="UV to Camera", 
                     icon='SCREEN_BACK')
         row=layout.row()
@@ -2423,21 +2423,21 @@ class DRAW2PAINT_PT_2D_to_3D_Experimental(bpy.types.Panel):
         row.scale_x = 0.50
         row.scale_y = 1.25
         row4 = row.split(align=True)
-        row4.operator("draw2paint.frontof_paint",
+        row4.operator("d2p.frontof_paint",
                     text="Align to Face", 
                     icon='FILE_TICK')
 
 
 
 
-class DRAW2PAINT_PT_ImageCrop(bpy.types.Panel):
+class D2P_PT_ImageCrop(bpy.types.Panel):
     """Image Crop Tools - PRBA"""
     bl_label = "Crop PRBA"
-    bl_idname = "DRAW2PAINT_PT_imagecrop"
+    bl_idname = "D2P_PT_imagecrop"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_category = "Draw2Paint"
-    bl_parent_id = 'DRAW2PAINT_PT_ImageState'
+    bl_parent_id = 'D2P_PT_ImageState'
     bl_options = {'DEFAULT_CLOSED'}
     
 
@@ -2472,7 +2472,7 @@ class DRAW2PAINT_PT_ImageCrop(bpy.types.Panel):
         
         row = layout.row()
         row.label(text="Convert values to pixels:")
-        row.operator("draw2paint.bordertopixels", text="Border -> Pixels")
+        row.operator("d2p.bordertopixels", text="Border -> Pixels")
         
         layout.label(text="Pixels position X:")
         row = layout.row(align=True)
@@ -2485,16 +2485,16 @@ class DRAW2PAINT_PT_ImageCrop(bpy.types.Panel):
         
         layout.label(icon="INFO", text="Don't forget to apply pixels values")
         row = layout.row()
-        row.operator("draw2paint.pixelstoborder", text="Pixels -> Border")
+        row.operator("d2p.pixelstoborder", text="Pixels -> Border")
 
-class DRAW2PAINT_PT_FlipRotate(bpy.types.Panel):
+class D2P_PT_FlipRotate(bpy.types.Panel):
     """Flip and Rotate the Canvas"""
     bl_label = "Canvas Controls"
-    bl_idname = "DRAW2PAINT_PT_FlipRotate"
+    bl_idname = "D2P_PT_FlipRotate"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_category = "Draw2Paint"
-    bl_parent_id = 'DRAW2PAINT_PT_ImageState'
+    bl_parent_id = 'D2P_PT_ImageState'
     bl_options = {'DEFAULT_CLOSED'}
 
     def draw(self, context):
@@ -2510,30 +2510,30 @@ class DRAW2PAINT_PT_FlipRotate(bpy.types.Panel):
         row1 = row.split(align=True)
         row1.scale_x = 0.50
         row1.scale_y = 1.25
-        row1.operator("draw2paint.canvas_horizontal", text="Flip X", icon='TRIA_RIGHT')
+        row1.operator("d2p.canvas_horizontal", text="Flip X", icon='TRIA_RIGHT')
         row2 = row.split(align=True)
         row2.scale_x = 0.50
         row2.scale_y = 1.25
-        row2.operator("draw2paint.canvas_vertical", text="Flip Y", icon='TRIA_UP')
+        row2.operator("d2p.canvas_vertical", text="Flip Y", icon='TRIA_UP')
 
         row = layout.row()
         row = col.row(align=True)
         row.scale_x = 0.50
         row.scale_y = 1.25
         row2 = row.split(align=True)
-        row2.operator("draw2paint.rotate_ccw_90", text="90 CCW", icon='TRIA_LEFT_BAR')
-        row2.operator("draw2paint.rotate_ccw_15", text="15 CCW", icon='TRIA_LEFT')
-        row2.operator("draw2paint.rotate_cw_15", text="15 CW", icon='TRIA_RIGHT')
-        row2.operator("draw2paint.rotate_cw_90", text="90 CW", icon='TRIA_RIGHT_BAR')
+        row2.operator("d2p.rotate_ccw_90", text="90 CCW", icon='TRIA_LEFT_BAR')
+        row2.operator("d2p.rotate_ccw_15", text="15 CCW", icon='TRIA_LEFT')
+        row2.operator("d2p.rotate_cw_15", text="15 CW", icon='TRIA_RIGHT')
+        row2.operator("d2p.rotate_cw_90", text="90 CW", icon='TRIA_RIGHT_BAR')
 
         row = layout.row()
         row.prop(mytool, "my_float")
-        row.operator("draw2paint.cvp_influence", text="value to CVP", icon = 'ARROW_LEFTRIGHT')
+        row.operator("d2p.cvp_influence", text="value to CVP", icon = 'ARROW_LEFTRIGHT')
         row=layout.row()
-        row.operator("draw2paint.canvas_resetrot", text="Reset Rotation", icon='RECOVER_LAST')
+        row.operator("d2p.canvas_resetrot", text="Reset Rotation", icon='RECOVER_LAST')
 
 
-class DRAW2PAINT_PT_GuideControls(bpy.types.Panel):
+class D2P_PT_GuideControls(bpy.types.Panel):
     """A custom panel in the viewport toolbar"""
     bl_label = "Guide Controls"
     bl_space_type = 'VIEW_3D'
@@ -2549,8 +2549,8 @@ class DRAW2PAINT_PT_GuideControls(bpy.types.Panel):
         col.label(text="Use for Setting Up Symmetry Guide")
         row = col.row(align=True)
 
-        row.operator("draw2paint.empty_guides", text="Guide", icon='ORIENTATION_CURSOR')
-        row.operator("draw2paint.center_object", text="Recenter Guide", icon='ORIENTATION_CURSOR')
+        row.operator("d2p.empty_guides", text="Guide", icon='ORIENTATION_CURSOR')
+        row.operator("d2p.center_object", text="Recenter Guide", icon='ORIENTATION_CURSOR')
 
         tool_settings = context.tool_settings
         ipaint = tool_settings.image_paint
@@ -2570,10 +2570,10 @@ class DRAW2PAINT_PT_GuideControls(bpy.types.Panel):
 
 
 ############### align
-class DRAW2PAINT_PT_MaskControl(bpy.types.Panel):
+class D2P_PT_MaskControl(bpy.types.Panel):
     """Align selected Objects in Camera View"""
     bl_label = "Mask Controls"
-    bl_idname = "DRAW2PAINT_PT_AlignMask"
+    bl_idname = "D2P_PT_AlignMask"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_category = "Draw2Paint"
@@ -2592,32 +2592,32 @@ class DRAW2PAINT_PT_MaskControl(bpy.types.Panel):
         row1 = row.split(align=True)
         row1.scale_x = 0.50
         row1.scale_y = 1.25
-        row1.operator("draw2paint.align_left", text='', icon='ANCHOR_LEFT')
+        row1.operator("d2p.align_left", text='', icon='ANCHOR_LEFT')
 
         row2 = row.split(align=True)
         row2.scale_x = 0.50
         row2.scale_y = 1.25
-        row2.operator("draw2paint.align_top", text='', icon='ANCHOR_TOP')
+        row2.operator("d2p.align_top", text='', icon='ANCHOR_TOP')
 
         row2 = row.split(align=True)
         row2.scale_x = 0.50
         row2.scale_y = 1.25
-        row2.operator("draw2paint.align_hcenter", text='', icon='ANCHOR_CENTER')
+        row2.operator("d2p.align_hcenter", text='', icon='ANCHOR_CENTER')
 
         row2 = row.split(align=True)
         row2.scale_x = 0.50
         row2.scale_y = 1.25
-        row2.operator("draw2paint.align_center", text='', icon='ALIGN_CENTER')
+        row2.operator("d2p.align_center", text='', icon='ALIGN_CENTER')
 
         row2 = row.split(align=True)
         row2.scale_x = 0.50
         row2.scale_y = 1.25
-        row2.operator("draw2paint.align_bottom", text='', icon='ANCHOR_BOTTOM')
+        row2.operator("d2p.align_bottom", text='', icon='ANCHOR_BOTTOM')
 
         row2 = row.split(align=True)
         row2.scale_x = 0.50
         row2.scale_y = 1.25
-        row2.operator("draw2paint.align_right", text='', icon='ANCHOR_RIGHT')
+        row2.operator("d2p.align_right", text='', icon='ANCHOR_RIGHT')
 
         layout = self.layout
         box = layout.box()
@@ -2628,18 +2628,18 @@ class DRAW2PAINT_PT_MaskControl(bpy.types.Panel):
         row1 = row.split(align=True)
         row1.scale_x = 0.50
         row1.scale_y = 1.25
-        row1.operator("draw2paint.reproject_mask", text='(Re)Project', icon='FULLSCREEN_EXIT')
+        row1.operator("d2p.reproject_mask", text='(Re)Project', icon='FULLSCREEN_EXIT')
 
         row2 = row.split(align=True)
         row2.scale_x = 0.50
         row2.scale_y = 1.25
-        row1.operator("draw2paint.canvas_material", text='Copy Canvas', icon='OUTLINER_OB_IMAGE')
-        # row2.operator("draw2paint.solidify_difference", text='Subtract Masks', icon='SELECT_SUBTRACT')
+        row1.operator("d2p.canvas_material", text='Copy Canvas', icon='OUTLINER_OB_IMAGE')
+        # row2.operator("d2p.solidify_difference", text='Subtract Masks', icon='SELECT_SUBTRACT')
         row3 = row.split(align=True)
         row3.scale_x = 0.50
         row3.scale_y = 1.25
-        row2.operator("draw2paint.add_holdout", text='Holdout', icon='GHOST_ENABLED')
-        # row3.operator("draw2paint.solidify_union", text='Join Masks', icon='SELECT_EXTEND')
+        row2.operator("d2p.add_holdout", text='Holdout', icon='GHOST_ENABLED')
+        # row3.operator("d2p.solidify_union", text='Join Masks', icon='SELECT_EXTEND')
 
         layout = self.layout
         box = layout.box()
@@ -2650,27 +2650,27 @@ class DRAW2PAINT_PT_MaskControl(bpy.types.Panel):
         row1 = row.split(align=True)
         row1.scale_x = 0.50
         row1.scale_y = 1.25
-        #row1.operator("draw2paint.draw_curve", text='Draw Curve', icon='CURVE_BEZCURVE')
+        #row1.operator("d2p.draw_curve", text='Draw Curve', icon='CURVE_BEZCURVE')
         row1.prop(mytool, "my_enum")
-        row1.operator("draw2paint.my_enum_shapes")
+        row1.operator("d2p.my_enum_shapes")
         
 
         row = col.row(align=True)
         row1 = row.split(align=True)
         row1.scale_x = 0.50
         row1.scale_y = 1.25
-        row1.operator("draw2paint.solidify_difference", text='Subtract Masks', icon='SELECT_SUBTRACT')
+        row1.operator("d2p.solidify_difference", text='Subtract Masks', icon='SELECT_SUBTRACT')
 
         row2 = row.split(align=True)
         row2.scale_x = 0.50
         row2.scale_y = 1.25
-        row2.operator("draw2paint.solidify_union", text='Join Masks', icon='SELECT_EXTEND')
-        # ("draw2paint.remove_modifiers", text='Remove Mods', icon='UNLINKED')
+        row2.operator("d2p.solidify_union", text='Join Masks', icon='SELECT_EXTEND')
+        # ("d2p.remove_modifiers", text='Remove Mods', icon='UNLINKED')
         row = col.row(align=True)
         row = row.split(align=True)
         row.scale_x = 0.50
         row.scale_y = 1.25
-        row.operator("draw2paint.remove_modifiers", text='Remove Mods', icon='UNLINKED')
+        row.operator("d2p.remove_modifiers", text='Remove Mods', icon='UNLINKED')
 
         layout = self.layout
 
@@ -2683,7 +2683,7 @@ class DRAW2PAINT_PT_MaskControl(bpy.types.Panel):
         row1 = row.split(align=True)
         # row = layout.row()
         row1.label(text="Generate FMG from Islands")
-        row1.operator("draw2paint.getfacemaskgroups", text="FMG+", icon='SHADERFX')
+        row1.operator("d2p.getfacemaskgroups", text="FMG+", icon='SHADERFX')
 
         # def draw(self, context):
         layout = self.layout
@@ -2712,24 +2712,24 @@ class DRAW2PAINT_PT_MaskControl(bpy.types.Panel):
         row = col.row(align=True)
         row1 = row.split(align=True)
         # row = layout.row()
-        row1.operator("draw2paint.select_vgroup", text="Sel", icon='RADIOBUT_ON')
+        row1.operator("d2p.select_vgroup", text="Sel", icon='RADIOBUT_ON')
         # row1 = layout.row()
-        row1.operator("draw2paint.deselect_vgroup", text="Desel", icon='RADIOBUT_OFF')
+        row1.operator("d2p.deselect_vgroup", text="Desel", icon='RADIOBUT_OFF')
         # row = layout.row()
-        row1.operator("draw2paint.assign_vgroup", text="Set", icon='ADD')
+        row1.operator("d2p.assign_vgroup", text="Set", icon='ADD')
         # row = layout.row()
-        row1.operator("draw2paint.unassign_vgroup", text="Unset", icon='REMOVE')
+        row1.operator("d2p.unassign_vgroup", text="Unset", icon='REMOVE')
 
 
 ############# liquid sculpt
-class DRAW2PAINT_PT_Sculpt2D(bpy.types.Panel):
+class D2P_PT_Sculpt2D(bpy.types.Panel):
     """Liquid Sculpt on a Copy of the Canvas"""
     bl_label = "Sculpt 2D Controls"
-    bl_idname = "DRAW2PAINT_PT_Sculpt2D"
+    bl_idname = "D2P_PT_Sculpt2D"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_category = "Draw2Paint"
-    bl_parent_id = 'DRAW2PAINT_PT_ImageState'
+    bl_parent_id = 'D2P_PT_ImageState'
     bl_options = {'DEFAULT_CLOSED'}
 
     def draw(self, context):
@@ -2743,19 +2743,19 @@ class DRAW2PAINT_PT_Sculpt2D(bpy.types.Panel):
         row1 = row.split(align=True)
         row1.scale_x = 0.50
         row1.scale_y = 1.25
-        row1.operator("draw2paint.sculpt_duplicate", text='Copy and Erase', icon='NODE_TEXTURE')
+        row1.operator("d2p.sculpt_duplicate", text='Copy and Erase', icon='NODE_TEXTURE')
 
         row2 = row.split(align=True)
         row2.scale_x = 0.50
         row2.scale_y = 1.25
-        row2.operator("draw2paint.sculpt_liquid", text='Liquid Sculpt', icon='MOD_FLUIDSIM')
+        row2.operator("d2p.sculpt_liquid", text='Liquid Sculpt', icon='MOD_FLUIDSIM')
 
 
 ############# Scene Extras
-class DRAW2PAINT_PT_SceneExtras(bpy.types.Panel):
+class D2P_PT_SceneExtras(bpy.types.Panel):
     """Creation and Use of new Scenes for Brush and Sculpt Extras"""
     bl_label = "Scene and Sculpt Extras"
-    bl_idname = "DRAW2PAINT_PT_SceneExtras"
+    bl_idname = "D2P_PT_SceneExtras"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_category = "Draw2Paint"
@@ -2772,94 +2772,94 @@ class DRAW2PAINT_PT_SceneExtras(bpy.types.Panel):
         row1 = row.split(align=True)
         row1.scale_x = 0.50
         row1.scale_y = 1.25
-        row1.operator("draw2paint.create_brush", text='Create Brush/Mask', icon='BRUSHES_ALL')
+        row1.operator("d2p.create_brush", text='Create Brush/Mask', icon='BRUSHES_ALL')
 
         row2 = row.split(align=True)
         row2.scale_x = 0.50
         row2.scale_y = 1.25
-        row2.operator("draw2paint.create_reference_scene", text='Sculpt Ref', icon='SCULPTMODE_HLT')
+        row2.operator("d2p.create_reference_scene", text='Sculpt Ref', icon='SCULPTMODE_HLT')
 
         row3 = row.split(align=True)
         row3.scale_x = 0.50
         row3.scale_y = 1.25
-        row3.operator("draw2paint.sculpt_camera", text='Sculpt Camera', icon='VIEW_CAMERA')
+        row3.operator("d2p.sculpt_camera", text='Sculpt Camera', icon='VIEW_CAMERA')
 
         row4 = row.split(align=True)
         row4.scale_x = 0.50
         row4.scale_y = 1.25
-        row4.operator("draw2paint.slow_play", text='Slow Play', icon='RENDER_ANIMATION')
+        row4.operator("d2p.slow_play", text='Slow Play', icon='RENDER_ANIMATION')
 
 
 classes = (
     
     MyProperties,
-    DRAW2PAINT_OT_MacroCreateBrush,
-    DRAW2PAINT_OT_CanvasHoriz,
-    DRAW2PAINT_OT_CanvasVertical,
-    DRAW2PAINT_OT_RotateCanvasCCW15,
-    DRAW2PAINT_OT_RotateCanvasCW15,
-    DRAW2PAINT_OT_RotateCanvasCCW,
-    DRAW2PAINT_OT_RotateCanvasCW,
-    DRAW2PAINT_OT_ImageReload,
-    DRAW2PAINT_OT_CanvasResetrot,
-    DRAW2PAINT_OT_SaveImage,
-    DRAW2PAINT_OT_CameraviewPaint,
-    DRAW2PAINT_OT_getuvlayout,
-    DRAW2PAINT_OT_loadbgcam,
-    DRAW2PAINT_OT_isolate_2d,
-    DRAW2PAINT_OT_isolate_3d,
-    DRAW2PAINT_OT_EmptyGuides,
-    # DRAW2PAINT_OT_CamGuides,
-    DRAW2PAINT_OT_PixelsToBorder,
-    DRAW2PAINT_OT_BorderToPixels,
-    DRAW2PAINT_OT_BorderCrop,
-    DRAW2PAINT_OT_BorderUnCrop,
-    DRAW2PAINT_OT_SculptDuplicate,
-    DRAW2PAINT_OT_SculptLiquid,
-    DRAW2PAINT_OT_ReprojectMask,
-    DRAW2PAINT_OT_CanvasMaterial,
-    DRAW2PAINT_OT_SolidifyDifference,
-    DRAW2PAINT_OT_SolidifyUnion,
-    DRAW2PAINT_OT_RemoveMods,
-    DRAW2PAINT_OT_BorderCropToggle,
-    DRAW2PAINT_OT_FrontOfPaint,
-    #DRAW2PAINT_OT_DrawCurveloop,
-    #DRAW2PAINT_OT_VectorCurve,
-    #DRAW2PAINT_OT_SquareCurve,
-    #DRAW2PAINT_OT_CircleCurve,
-    DRAW2PAINT_OT_getFaceMaskGroups,
-    DRAW2PAINT_OT_UnassignVertgroup,
-    DRAW2PAINT_OT_AssignVertgroup,
-    DRAW2PAINT_OT_DeselectVertgroup,
-    DRAW2PAINT_OT_SelectVertgroup,
-    DRAW2PAINT_OT_holdout_shader,
-    DRAW2PAINT_PT_ImageState,
-    DRAW2PAINT_PT_GreasePencil,    
-    DRAW2PAINT_PT_FlipRotate,
-    DRAW2PAINT_PT_ImageCrop,
-    DRAW2PAINT_PT_2D_to_3D_Experimental,
-    DRAW2PAINT_PT_GuideControls,
-    DRAW2PAINT_PT_MaskControl,
-    DRAW2PAINT_PT_Sculpt2D,
-    DRAW2PAINT_PT_SceneExtras,
-    DRAW2PAINT_OT_SaveIncrem,
-    DRAW2PAINT_OT_center_object,
-    DRAW2PAINT_OT_AlignLeft,
-    DRAW2PAINT_OT_AlignCenter,
-    DRAW2PAINT_OT_AlignRight,
-    DRAW2PAINT_OT_AlignTop,
-    DRAW2PAINT_OT_AlignHcenter,
-    DRAW2PAINT_OT_CenterAlignReset,
-    DRAW2PAINT_OT_AlignBottom,
-    # DRAW2PAINT_OT_ToggleLock,
-    DRAW2PAINT_OT_CustomFps,
-    DRAW2PAINT_OT_RefMakerScene,
-    DRAW2PAINT_OT_SculptView,
-    DRAW2PAINT_OT_my_enum_shapes,
-    DRAW2PAINT_OT_cvp_influence,
-    DRAW2PAINT_OT_NewGpencil,
-    DRAW2PAINT_OT_NewImage,
-    DRAW2PAINT_OT_D2PaintScene
+    D2P_OT_MacroCreateBrush,
+    D2P_OT_CanvasHoriz,
+    D2P_OT_CanvasVertical,
+    D2P_OT_RotateCanvasCCW15,
+    D2P_OT_RotateCanvasCW15,
+    D2P_OT_RotateCanvasCCW,
+    D2P_OT_RotateCanvasCW,
+    D2P_OT_ImageReload,
+    D2P_OT_CanvasResetrot,
+    D2P_OT_SaveImage,
+    D2P_OT_CameraviewPaint,
+    D2P_OT_getuvlayout,
+    D2P_OT_loadbgcam,
+    D2P_OT_isolate_2d,
+    D2P_OT_isolate_3d,
+    D2P_OT_EmptyGuides,
+    # D2P_OT_CamGuides,
+    D2P_OT_PixelsToBorder,
+    D2P_OT_BorderToPixels,
+    D2P_OT_BorderCrop,
+    D2P_OT_BorderUnCrop,
+    D2P_OT_SculptDuplicate,
+    D2P_OT_SculptLiquid,
+    D2P_OT_ReprojectMask,
+    D2P_OT_CanvasMaterial,
+    D2P_OT_SolidifyDifference,
+    D2P_OT_SolidifyUnion,
+    D2P_OT_RemoveMods,
+    D2P_OT_BorderCropToggle,
+    D2P_OT_FrontOfPaint,
+    #D2P_OT_DrawCurveloop,
+    #D2P_OT_VectorCurve,
+    #D2P_OT_SquareCurve,
+    #D2P_OT_CircleCurve,
+    D2P_OT_getFaceMaskGroups,
+    D2P_OT_UnassignVertgroup,
+    D2P_OT_AssignVertgroup,
+    D2P_OT_DeselectVertgroup,
+    D2P_OT_SelectVertgroup,
+    D2P_OT_holdout_shader,
+    D2P_PT_ImageState,
+    D2P_PT_GreasePencil,    
+    D2P_PT_FlipRotate,
+    D2P_PT_ImageCrop,
+    D2P_PT_2D_to_3D_Experimental,
+    D2P_PT_GuideControls,
+    D2P_PT_MaskControl,
+    D2P_PT_Sculpt2D,
+    D2P_PT_SceneExtras,
+    D2P_OT_SaveIncrem,
+    D2P_OT_center_object,
+    D2P_OT_AlignLeft,
+    D2P_OT_AlignCenter,
+    D2P_OT_AlignRight,
+    D2P_OT_AlignTop,
+    D2P_OT_AlignHcenter,
+    D2P_OT_CenterAlignReset,
+    D2P_OT_AlignBottom,
+    # D2P_OT_ToggleLock,
+    D2P_OT_CustomFps,
+    D2P_OT_RefMakerScene,
+    D2P_OT_SculptView,
+    D2P_OT_my_enum_shapes,
+    D2P_OT_cvp_influence,
+    D2P_OT_NewGpencil,
+    D2P_OT_NewImage,
+    D2P_OT_D2PaintScene
     
 
 
