@@ -18,8 +18,8 @@
 
 bl_info = {
     "name": "Draw2Paint",
-    "author": "CDMJ",
-    "version": (3, 6, 0),
+    "author": "CDMJ","Lapineige", "Spirou4D"
+    "version": (3, 7, 0),
     "blender": (4, 1, 0),
     "location": "UI > Draw2Paint",
     "description": "2D Paint in 3D View, Mask Manipulation",
@@ -54,7 +54,7 @@ class MyProperties(bpy.types.PropertyGroup):
     # my_float_vector : bpy.props.FloatVectorProperty(name= "Scale", soft_min= 0,
     # soft_max= 1000, default= (1,1,1))
     my_float: bpy.props.FloatProperty(name="CVP Influence", min=0,
-                                      max=1.0, default=1.0)
+                                      max=1.0, default=0.0)
 
     my_enum: bpy.props.EnumProperty(
         name="",
@@ -833,7 +833,7 @@ class D2P_OT_cvp_influence(bpy.types.Operator):
 # -----------------------------cameraview paint
 
 class D2P_OT_CameraviewPaint(bpy.types.Operator):
-    """Set up Camera to match and follow Canvas"""
+    """Setup A Camera to be Parent of Canvas"""
     bl_idname = "d2p.cameraview_paint"
     bl_label = "Cameraview Paint"
     bl_options = {'REGISTER', 'UNDO'}
@@ -849,7 +849,6 @@ class D2P_OT_CameraviewPaint(bpy.types.Operator):
     def execute(self, context):
 
         scene = context.scene
-        mytool = scene.my_tool
 
         # toggle on/off textpaint
 
@@ -894,6 +893,9 @@ class D2P_OT_CameraviewPaint(bpy.types.Operator):
 
         # name it
         bpy.context.object.name = "Camera View Paint"
+        
+        
+
 
         # switch to camera view
         bpy.ops.view3d.object_as_camera()
@@ -939,17 +941,6 @@ class D2P_OT_CameraviewPaint(bpy.types.Operator):
         # set to orthographic
         bpy.context.object.data.ortho_scale = orthoscale
 
-        ########################################################################
-        # try to constrain cam to canvas here
-        bpy.ops.object.constraint_add(type='CHILD_OF')
-
-        bpy.context.object.constraints["Child Of"].target = \
-                                    bpy.data.objects["canvas"]
-        bpy.context.object.constraints["Child Of"].name = "Cam Control"
-        bpy.context.object.constraints["Cam Control"].influence == \
-                                                        mytool.my_float
-
-        ########################################################################
         bpy.context.object.data.show_name = True
         bpy.context.object.data.passepartout_alpha = 0.65
 
@@ -1001,6 +992,14 @@ class D2P_OT_CameraviewPaint(bpy.types.Operator):
         # set to standard color
         bpy.context.scene.view_settings.view_transform = 'Standard'
         bpy.context.scene.render.film_transparent = True
+        
+        
+        
+        #can we make it parent to child canvas?
+        child = bpy.data.objects["canvas"]
+        parent = bpy.data.objects["Camera View Paint"]
+        child.parent = parent
+        child.matrix_parent_inverse = parent.matrix_world.inverted()
 
         return {'FINISHED'}
 
@@ -1506,9 +1505,8 @@ class D2P_OT_EmptyGuides(bpy.types.Operator):
                     bpy.ops.transform.resize(value=(10, 10, 10))
                     # scale up past the normal range of image plane
                     # add constraint to follow canvas rotation
-                    bpy.ops.object.constraint_add(type='Child Of')
-                    bpy.context.object.constraints["Child Of"].target = \
-                        bpy.data.objects["canvas"]
+                    bpy.ops.object.parent_set(type='OBJECT', keep_transform=False)
+                    
                     # snap cursor to empty
                     bpy.ops.view3d.snap_cursor_to_selected()
 
@@ -1560,10 +1558,14 @@ class D2P_OT_center_object(bpy.types.Operator):
     def execute(self, context):
         # cursor to world origin
         bpy.ops.view3d.snap_cursor_to_center()
-        # selected object origin to geometry
+        # selected object origin to geometry - SYMMETRY GUIDE
         bpy.ops.object.origin_set(type='ORIGIN_GEOMETRY', center='MEDIAN')
-        bpy.ops.view3d.snap_selected_to_cursor(use_offset=False)
-
+        bpy.ops.view3d.snap_selected_to_cursor(use_offset=True)
+        #need to deselect Guide and select canvas
+        #need to toggle canvas to OBJECT MODE
+        #need to set origin of canvas to cursor
+        #need to toggle to texture paint
+        #need guide as selected in case new move intended?
         return {'FINISHED'}
 
 
@@ -1911,7 +1913,9 @@ class D2P_OT_my_enum_shapes(bpy.types.Operator):
         if mytool.my_enum == 'OP3':
             # operators guts from draw square
             bpy.ops.curve.primitive_bezier_circle_add(radius=0.25,
-                                                      enter_editmode=False, align='WORLD', location=(0, 0, 0.15),
+                                                      enter_editmode=False, 
+                                                      align='WORLD', 
+                                                      location=(0, 0, 0.15),
                                                       scale=(1, 1, 1))
             # add constraint to follow canvas rotation
             bpy.ops.object.constraint_add(type='CHILD_OF')
@@ -1927,7 +1931,9 @@ class D2P_OT_my_enum_shapes(bpy.types.Operator):
         if mytool.my_enum == 'OP4':
             # operators guts from draw circle
             bpy.ops.curve.primitive_bezier_circle_add(radius=0.25,
-                                                      enter_editmode=False, align='WORLD', location=(0, 0, 0.15),
+                                                      enter_editmode=False, 
+                                                      align='WORLD', 
+                                                      location=(0, 0, 0.15),
                                                       scale=(1, 1, 1))
             # add constraint to follow canvas rotation
             bpy.ops.object.constraint_add(type='CHILD_OF')
@@ -2512,11 +2518,7 @@ class D2P_PT_FlipRotate(bpy.types.Panel):
         row2.operator("d2p.rotate_ccw_15", text="15 CCW", icon='TRIA_LEFT')
         row2.operator("d2p.rotate_cw_15", text="15 CW", icon='TRIA_RIGHT')
         row2.operator("d2p.rotate_cw_90", text="90 CW", icon='TRIA_RIGHT_BAR')
-
-        row = layout.row()
-        row.prop(mytool, "my_float")
-        row.operator("d2p.cvp_influence", text="value to CVP",
-                     icon='ARROW_LEFTRIGHT')
+    
         row = layout.row()
         row.operator("d2p.canvas_resetrot", text="Reset Rotation",
                      icon='RECOVER_LAST')
