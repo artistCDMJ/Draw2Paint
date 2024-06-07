@@ -19,7 +19,7 @@
 bl_info = {
     "name": "Draw2Paint",
     "author": "CDMJ,Lapineige, Spirou4D",
-    "version": (3, 7, 0),
+    "version": (3, 8, 0),
     "blender": (4, 1, 0),
     "location": "UI > Draw2Paint",
     "description": "2D Paint in 3D View, Mask Manipulation",
@@ -786,7 +786,7 @@ class D2P_OT_CanvasResetrot(bpy.types.Operator):
 ############# finally got a way to influence the camera constraint
 ############ ugly but works :P
 # bpy.context.object.constraints["Cam Control"].influence == mytool.my_float
-class D2P_OT_cvp_influence(bpy.types.Operator):
+'''class D2P_OT_cvp_influence(bpy.types.Operator):
     """Set up influence of Camera View Paint Constraint"""
     bl_idname = "d2p.cvp_influence"
     bl_label = "CVP Influence"
@@ -825,7 +825,7 @@ class D2P_OT_cvp_influence(bpy.types.Operator):
         ob = bpy.data.objects["canvas"]
         bpy.context.view_layer.objects.active = ob
         bpy.ops.object.mode_set(mode='TEXTURE_PAINT')
-        return {'FINISHED'}
+        return {'FINISHED'}'''
 
 
 ######################### image ops to camera
@@ -1154,9 +1154,9 @@ class D2P_OT_isolate_2d(bpy.types.Operator):
             eye.hide_viewport = True
             sore.hide_viewport = False
         bpy.ops.view3d.view_camera()
-        bpy.context.space_data.shading.type = 'SOLID'
+        bpy.context.space_data.shading.type = 'MATERIAL'
 
-        bpy.context.space_data.shading.light = 'FLAT'
+        #bpy.context.space_data.shading.light = 'FLAT'
 
         return {'FINISHED'}
 
@@ -1596,10 +1596,11 @@ class D2P_OT_FrontOfPaint(bpy.types.Operator):
         object = bpy.ops.object
         contextObj = context.object
 
-        context.space_data.viewport_shade = 'TEXTURED'  # texture draw
+        #context.space_data.viewport_shade = 'TEXTURED'  # texture draw
         paint.texture_paint_toggle()
         object.editmode_toggle()
-        bpy.ops.view3d.viewnumpad(type='TOP', align_active=True)
+        #previous was view3d.numpad()
+        bpy.ops.view3d.view_axis(type='TOP', align_active=True)
         object.editmode_toggle()
         paint.texture_paint_toggle()
         contextObj.data.use_paint_mask = True
@@ -2247,10 +2248,16 @@ class D2P_OT_NewGpencil(bpy.types.Operator):
                                    scale=(1, 1, 1), type='EMPTY')
         bpy.ops.gpencil.paintmode_toggle()
         bpy.context.object.data.layers["GP_Layer"].use_lights = False
+        
+
 
         # parent
         bpy.context.object.data.layers["GP_Layer"].parent = \
             bpy.data.objects["canvas"]
+            
+        #make some setup shortuct
+        bpy.context.scene.tool_settings.gpencil_stroke_placement_view3d = 'SURFACE'
+        bpy.context.scene.tool_settings.gpencil_paint.color_mode = 'VERTEXCOLOR'
 
         return {'FINISHED'}
 
@@ -2530,6 +2537,7 @@ class D2P_PT_GuideControls(bpy.types.Panel):
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_category = "Draw2Paint"
+    bl_parent_id = 'D2P_PT_ImageState'
     bl_options = {'DEFAULT_CLOSED'}
 
     def draw(self, context):
@@ -2867,7 +2875,7 @@ classes = (
     D2P_OT_RefMakerScene,
     D2P_OT_SculptView,
     D2P_OT_my_enum_shapes,
-    D2P_OT_cvp_influence,
+    #D2P_OT_cvp_influence,
     D2P_OT_NewGpencil,
     D2P_OT_NewImage,
     D2P_OT_D2PaintScene,
