@@ -92,6 +92,9 @@ Extras for 3D Paint
 
 **Align to Face** - selecting a face on a 3d model in Texpaint, this 'should' align the view to the selection
 
+**EZPaint Additions** - Press W for the Brush Pop-up, Alt-W for the Texture and Mask Popup, and Shift-W brings up a broken Vert Group and Texture Slot popup. I will be fixing these as I get time.
+D toggles Multiply and Add, Alt-D returns to Mix mode - Shift D toggles Screen, Color, and Soft Light. Have Fun.
+
 
 
 
