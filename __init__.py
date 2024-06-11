@@ -19,7 +19,7 @@
 bl_info = {
     "name": "Draw2Paint",
     "author": "CDMJ,Lapineige, Spirou4D, Bart Crouch",
-    "version": (4, 0, 0),
+    "version": (4, 0, 1),
     "blender": (4, 1, 0),
     "location": "UI > Draw2Paint",
     "description": "2D Paint in 3D View, Mask Manipulation, EZPaint Adoption",
@@ -1701,160 +1701,7 @@ class D2P_OT_ReprojectMask(bpy.types.Operator):
 
 
 ############## alignment of masks selected
-class D2P_OT_AlignLeft(bpy.types.Operator):
-    """Left Align"""
-    bl_idname = "d2p.align_left"
-    bl_label = "Align Objects Left"
-    bl_options = {'REGISTER', 'UNDO'}
 
-    @classmethod
-    def poll(self, context):
-        obj = context.active_object
-        if obj is not None:
-            A = obj.type == 'MESH' or 'CURVE'
-            B = context.mode == 'OBJECT'
-            return A and B
-
-    def execute(self, context):
-        scene = context.scene
-
-        bpy.ops.object.align(align_mode='OPT_1', \
-                             relative_to='OPT_4', align_axis={'X'})
-        return {'FINISHED'}
-
-
-class D2P_OT_AlignCenter(bpy.types.Operator):
-    """Center Align"""
-    bl_idname = "d2p.align_center"
-    bl_label = "Align Objects Center"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    @classmethod
-    def poll(self, context):
-        obj = context.active_object
-        if obj is not None:
-            A = obj.type == 'MESH' or 'CURVE'
-            B = context.mode == 'OBJECT'
-            return A and B
-
-    def execute(self, context):
-        scene = context.scene
-
-        bpy.ops.object.align(align_mode='OPT_2', \
-                             relative_to='OPT_4', align_axis={'X'})
-        scene.mask_V_align = True
-        return {'FINISHED'}
-
-
-class D2P_OT_AlignRight(bpy.types.Operator):
-    """Center Align"""
-    bl_idname = "d2p.align_right"
-    bl_label = "Align Objects Right"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    @classmethod
-    def poll(self, context):
-        obj = context.active_object
-        if obj is not None:
-            A = obj.type == 'MESH' or 'CURVE'
-            B = context.mode == 'OBJECT'
-            return A and B
-
-    def execute(self, context):
-        scene = context.scene
-
-        bpy.ops.object.align(align_mode='OPT_3', \
-                             relative_to='OPT_4', align_axis={'X'})
-        return {'FINISHED'}
-
-
-class D2P_OT_AlignTop(bpy.types.Operator):
-    """Top Align"""
-    bl_idname = "d2p.align_top"
-    bl_label = "Align Objects Top"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    @classmethod
-    def poll(self, context):
-        obj = context.active_object
-        if obj is not None:
-            A = obj.type == 'MESH' or 'CURVE'
-            B = context.mode == 'OBJECT'
-            return A and B
-
-    def execute(self, context):
-        scene = context.scene
-
-        bpy.ops.object.align(align_mode='OPT_3', \
-                             relative_to='OPT_4', align_axis={'Y'})
-        return {'FINISHED'}
-
-
-class D2P_OT_AlignHcenter(bpy.types.Operator):
-    """Horizontal Center Align"""
-    bl_idname = "d2p.align_hcenter"
-    bl_label = "Align Objects Horizontal Center"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    @classmethod
-    def poll(self, context):
-        obj = context.active_object
-        if obj is not None:
-            A = obj.type == 'MESH' or 'CURVE'
-            B = context.mode == 'OBJECT'
-            return A and B
-
-    def execute(self, context):
-        scene = context.scene
-
-        bpy.ops.object.align(align_mode='OPT_2', \
-                             relative_to='OPT_4', align_axis={'Y'})
-        scene.mask_V_align = False
-        return {'FINISHED'}
-
-
-class D2P_OT_CenterAlignReset(bpy.types.Operator):
-    """Center Alignment Reset"""
-    bl_idname = "d2p.center_align_reset"
-    bl_label = "Reset center alignment"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    @classmethod
-    def poll(self, context):
-        obj = context.active_object
-        if obj is not None:
-            A = obj.type == 'MESH' or 'CURVE'
-            B = context.mode == 'OBJECT'
-            return A and B
-
-    def execute(self, context):
-        scene = context.scene
-        mva = scene.mask_V_align
-
-        scene.mask_V_align = False if mva else True
-        return {'FINISHED'}
-
-
-class D2P_OT_AlignBottom(bpy.types.Operator):
-    """Horizontal Bottom Align"""
-    bl_idname = "d2p.align_bottom"
-    bl_label = "Align Objects Horizontal Bottom"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    @classmethod
-    def poll(self, context):
-        obj = context.active_object
-        if obj is not None:
-            A = obj.type == 'MESH' or 'CURVE'
-            B = context.mode == 'OBJECT'
-            return A and B
-
-    def execute(self, context):
-        scene = context.scene
-
-        bpy.ops.object.align(align_mode='OPT_1', \
-                             relative_to='OPT_4', align_axis={'Y'})
-        return {'FINISHED'}
 
 
 ###########new curve primitives for drawing masks
@@ -3495,41 +3342,6 @@ class D2P_PT_MaskControl(bpy.types.Panel):
         scene = context.scene
         mytool = scene.my_tool
 
-        box = layout.box()
-        col = box.column(align=True)
-        col.label(text="Align Selected Mask Objects")
-        row = col.row(align=True)
-
-        row1 = row.split(align=True)
-        row1.scale_x = 0.50
-        row1.scale_y = 1.25
-        row1.operator("d2p.align_left", text='', icon='ANCHOR_LEFT')
-
-        row2 = row.split(align=True)
-        row2.scale_x = 0.50
-        row2.scale_y = 1.25
-        row2.operator("d2p.align_top", text='', icon='ANCHOR_TOP')
-
-        row2 = row.split(align=True)
-        row2.scale_x = 0.50
-        row2.scale_y = 1.25
-        row2.operator("d2p.align_hcenter", text='', icon='ANCHOR_CENTER')
-
-        row2 = row.split(align=True)
-        row2.scale_x = 0.50
-        row2.scale_y = 1.25
-        row2.operator("d2p.align_center", text='', icon='ALIGN_CENTER')
-
-        row2 = row.split(align=True)
-        row2.scale_x = 0.50
-        row2.scale_y = 1.25
-        row2.operator("d2p.align_bottom", text='', icon='ANCHOR_BOTTOM')
-
-        row2 = row.split(align=True)
-        row2.scale_x = 0.50
-        row2.scale_y = 1.25
-        row2.operator("d2p.align_right", text='', icon='ANCHOR_RIGHT')
-
         layout = self.layout
         box = layout.box()
         col = box.column(align=True)
@@ -3773,13 +3585,6 @@ classes = (
     D2P_PT_SceneExtras,
     D2P_OT_SaveIncrem,
     D2P_OT_center_object,
-    D2P_OT_AlignLeft,
-    D2P_OT_AlignCenter,
-    D2P_OT_AlignRight,
-    D2P_OT_AlignTop,
-    D2P_OT_AlignHcenter,
-    D2P_OT_CenterAlignReset,
-    D2P_OT_AlignBottom,
     # D2P_OT_ToggleLock,
     D2P_OT_CustomFps,
     D2P_OT_RefMakerScene,
