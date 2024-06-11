@@ -35,7 +35,6 @@ The panel can be found in the N panel once installed, and the plane must be in T
 **Guide** - while canvas is selected, this creates an Empty controller for placement as a pivot for origin. Place the created empty, and then re-press the Guide button to assign that location as the Image Pivot. Turn on X and/or Y Symmetry underneath and painting will act on the controller position. To replace the controller and reset the image pivot, press **Recenter Guide**. Hide or Delete the Guide controller depending on personal preference.
 
 **Mask Controls**
-Align Selected Mask Objects - icons indicate the relation the selected masks should reflect once pressed
 
 Map and Apply Material to Mask
 
