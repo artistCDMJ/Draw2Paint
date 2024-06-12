@@ -1102,7 +1102,7 @@ class D2P_OT_loadbgcam(bpy.types.Operator):
         cam.data.show_background_images = True
         bg = cam.data.background_images.new()
         bg.image = img
-        bg.alpha = (1.0)
+        bg.alpha = (0.625)
         bg.display_depth = 'FRONT'
 
         bpy.context.selectable_objects
