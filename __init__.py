@@ -20,7 +20,7 @@ bl_info = {
     "name": "Draw2Paint",
     "author": "CDMJ,Lapineige, Spirou4D, Bart Crouch",
     "version": (4, 0, 1),
-    "blender": (4, 1, 0),
+    "blender": (4, 2, 0),
     "location": "UI > Draw2Paint",
     "description": "2D Paint in 3D View, Mask Manipulation, EZPaint Adoption",
     "warning": "",
@@ -29,6 +29,12 @@ bl_info = {
 
 import bpy
 import bmesh
+
+import bgl, blf, bpy, mathutils, os, time, copy, math
+
+from bpy.props import *
+from bpy.types import Operator, Menu, Panel, UIList
+from bpy_extras.io_utils import ImportHelper
 
 ##### main operators grouped
 
@@ -1004,20 +1010,10 @@ class D2P_OT_CameraviewPaint(bpy.types.Operator):
         return {'FINISHED'}
 
 
-##################### experimental get UV layout for camera ref
-
-##todo: set up string for file location or code to write to new file
-
-##todo: choose UV layer (get) or make new UV layer with current smart uv
-
-######: need second operator for placing the resulting image
-# as current camera background
-
-
-class D2P_OT_getuvlayout(bpy.types.Operator):
-    """Tooltip"""
-    bl_idname = "d2p.getuvlayout"
-    bl_label = "Get UV Layout for Selected Object"
+class D2P_OT_object2paint(bpy.types.Operator):
+    """Link Object UV to Canvas Material"""
+    bl_idname = "d2p.object2paint"
+    bl_label = "Object2Paint"
 
     @classmethod
     def poll(self, context):
@@ -1031,7 +1027,11 @@ class D2P_OT_getuvlayout(bpy.types.Operator):
         scene = context.scene
         layer = bpy.context.view_layer
         layer.update()
-
+        #########
+        obj = context.active_object
+        canvas = bpy.data.objects['canvas'].material_slots[0].material
+        obj.data.materials.append(canvas)
+        #########
         if bpy.context.active_object.data.uv_layers:
             print("we have UVs")
 
@@ -1320,6 +1320,7 @@ class D2P_OT_NewImage(bpy.types.Operator):
         # bpy.context.area.type = 'IMAGE_EDITOR'
         # Call user prefs window
         bpy.ops.screen.userpref_show('INVOKE_DEFAULT')
+        #bpy.ops.wm.window_new()
         # Change area type
         area = context.window_manager.windows[-1].screen.areas[0]
         area.type = 'IMAGE_EDITOR'
@@ -1454,7 +1455,7 @@ class D2P_OT_ImageReload(bpy.types.Operator):
 
 ########### pivot works
 class D2P_OT_EmptyGuides(bpy.types.Operator):
-    """experimental- create new empty guide or selected guide relocate origin"""
+    """Create new empty guide or selected guide relocate origin"""
     bl_idname = "d2p.empty_guides"
     bl_label = "Empty Guides Constrained"
     bl_options = {'REGISTER', 'UNDO'}
@@ -2979,7 +2980,8 @@ class PAINT_OT_DisplayActivePaintSlot(bpy.types.Operator):
             mat = bpy.context.object.active_material
             image = mat.texture_paint_images[mat.paint_active_slot]
             # Call user prefs window
-            bpy.ops.screen.userpref_show('INVOKE_DEFAULT')
+            #bpy.ops.screen.userpref_show('INVOKE_DEFAULT')
+            bpy.ops.wm.window_new()
             # Change area type
             area = context.window_manager.windows[-1].screen.areas[0]
             area.type = 'IMAGE_EDITOR'
@@ -3077,7 +3079,7 @@ class D2P_PT_ImageState(bpy.types.Panel):
         row1 = row.split(align=True)
         row1.scale_x = 0.50
         row1.scale_y = 1.25
-        row1.operator("import_image.to_plane", text="Load Canvas",
+        row1.operator("image.import_as_mesh_planes", text="Load Canvas",
                       icon='IMAGE_PLANE')
         row2 = row.split(align=True)
         row2.scale_x = 0.50
@@ -3137,7 +3139,7 @@ class D2P_PT_GreasePencil(bpy.types.Panel):
 ############# Scene Extras
 class D2P_PT_2D_to_3D_Experimental(bpy.types.Panel):
     """2D and 3D Workflow Experimental Operations"""
-    bl_label = "Mad Scientist Painter Ops"
+    bl_label = "Mad Scientist 2D 3D Parallel"
     bl_idname = "D2P_PT_2dto3d_experiment"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
@@ -3150,8 +3152,9 @@ class D2P_PT_2D_to_3D_Experimental(bpy.types.Panel):
 
         box = layout.box()
         col = box.column(align=True)
-        col.label(text="Experimental-Use at YOUR OWN RISK")
-        col.label(text="coll: canvas view-object view")
+        col.label(text="Object2Paint gets UV and New Collection")
+        col.label(text="Collections:")
+        col.label(text="3d: object view 2D:canvas view")
         row = col.row(align=True)
 
         row1 = row.split(align=True)
@@ -3172,8 +3175,8 @@ class D2P_PT_2D_to_3D_Experimental(bpy.types.Panel):
         row.scale_x = 0.50
         row.scale_y = 1.25
         row2 = row.split(align=True)
-        row2.operator("d2p.getuvlayout",
-                      text="Get UV Overlay",
+        row2.operator("d2p.object2paint",
+                      text="Object2Paint",
                       icon='GROUP_UVS')
         row2.operator("d2p.loadbgcam",
                       text="UV to Camera",
@@ -3299,17 +3302,7 @@ class D2P_PT_GuideControls(bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
-
-        box = layout.box()  # MACRO
-        col = box.column(align=True)
-        col.label(text="Use for Setting Up Symmetry Guide")
-        row = col.row(align=True)
-
-        row.operator("d2p.empty_guides", text="Guide",
-                     icon='ORIENTATION_CURSOR')
-        row.operator("d2p.center_object", text="Recenter Guide",
-                     icon='ORIENTATION_CURSOR')
-
+        
         tool_settings = context.tool_settings
         ipaint = tool_settings.image_paint
 
@@ -3326,6 +3319,18 @@ class D2P_PT_GuideControls(bpy.types.Panel):
         row.prop(context.object, "use_mesh_mirror_y", text="Y", toggle=True)
         row.prop(context.object, "use_mesh_mirror_z", text="Z", toggle=True)
 
+        box = layout.box()  # MACRO
+        col = box.column(align=True)
+        col.label(text="Use for Setting Up Symmetry Guide")
+        row = col.row(align=True)
+
+        row.operator("d2p.empty_guides", text="Guide",
+                     icon='ORIENTATION_CURSOR')
+        row.operator("d2p.center_object", text="Recenter Guide",
+                     icon='ORIENTATION_CURSOR')
+
+
+
 
 ############### align
 class D2P_PT_MaskControl(bpy.types.Panel):
@@ -3341,33 +3346,7 @@ class D2P_PT_MaskControl(bpy.types.Panel):
         layout = self.layout
         scene = context.scene
         mytool = scene.my_tool
-
-        layout = self.layout
-        box = layout.box()
-        col = box.column(align=True)
-        col.label(text="Map and Apply Material to Mask")
-        row = col.row(align=True)
-
-        row1 = row.split(align=True)
-        row1.scale_x = 0.50
-        row1.scale_y = 1.25
-        row1.operator("d2p.reproject_mask", text='(Re)Project',
-                      icon='FULLSCREEN_EXIT')
-
-        row2 = row.split(align=True)
-        row2.scale_x = 0.50
-        row2.scale_y = 1.25
-        row1.operator("d2p.canvas_material", text='Copy Canvas',
-                      icon='OUTLINER_OB_IMAGE')
-        # row2.operator("d2p.solidify_difference", text='Subtract Masks',
-        # icon='SELECT_SUBTRACT')
-        row3 = row.split(align=True)
-        row3.scale_x = 0.50
-        row3.scale_y = 1.25
-        row2.operator("d2p.add_holdout", text='Holdout', icon='GHOST_ENABLED')
-        # row3.operator("d2p.solidify_union", text='Join Masks',
-        # icon='SELECT_EXTEND')
-
+        
         layout = self.layout
         box = layout.box()
         col = box.column(align=True)
@@ -3401,6 +3380,33 @@ class D2P_PT_MaskControl(bpy.types.Panel):
         row.scale_y = 1.25
         row.operator("d2p.remove_modifiers", text='Remove Mods',
                      icon='UNLINKED')
+
+        layout = self.layout
+        box = layout.box()
+        col = box.column(align=True)
+        col.label(text="Map and Apply Material to Mask")
+        row = col.row(align=True)
+
+        row1 = row.split(align=True)
+        row1.scale_x = 0.50
+        row1.scale_y = 1.25
+        row1.operator("d2p.reproject_mask", text='(Re)Project',
+                      icon='FULLSCREEN_EXIT')
+
+        row2 = row.split(align=True)
+        row2.scale_x = 0.50
+        row2.scale_y = 1.25
+        row1.operator("d2p.canvas_material", text='Copy Canvas',
+                      icon='OUTLINER_OB_IMAGE')
+        # row2.operator("d2p.solidify_difference", text='Subtract Masks',
+        # icon='SELECT_SUBTRACT')
+        row3 = row.split(align=True)
+        row3.scale_x = 0.50
+        row3.scale_y = 1.25
+        row2.operator("d2p.add_holdout", text='Holdout', icon='GHOST_ENABLED')
+        # row3.operator("d2p.solidify_union", text='Join Masks',
+        # icon='SELECT_EXTEND')
+
 
         layout = self.layout
 
@@ -3545,7 +3551,7 @@ classes = (
     D2P_OT_CanvasResetrot,
     D2P_OT_SaveImage,
     D2P_OT_CameraviewPaint,
-    D2P_OT_getuvlayout,
+    D2P_OT_object2paint,
     D2P_OT_loadbgcam,
     D2P_OT_isolate_2d,
     D2P_OT_isolate_3d,
