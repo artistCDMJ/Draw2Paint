@@ -123,8 +123,9 @@ Import IMagesw as Planes is no longer necessary here for using Draw2Paint, as th
 D toggles Multiply and Add, Alt-D returns to Mix mode - Shift D toggles Screen, Color, and Soft Light. Have Fun.
 
 
+![new_d2p_061924](https://github.com/artistCDMJ/Draw2Paint/assets/16747273/37fe194c-ee59-49c3-842b-a6c356a48130)
 
 
 
-![screen_3 4 0_draw2paint](https://user-images.githubusercontent.com/16747273/161315004-19e0567e-5e09-47b5-9f08-d355775f421f.png)
+
 
