@@ -195,6 +195,9 @@ def save_incremental_copy(image):
     image.save_render(new_filepath)
     
     print(f"Image saved as {new_filepath}")
+
+
+
     
 ######### NEW OPERATORS FOR CANVAS AND CAMERA WORK
 
@@ -561,36 +564,44 @@ class D2P_OT_CanvasMaterial(bpy.types.Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     @classmethod
-    def poll(self, context):
+    def poll(cls, context):
         obj = context.active_object
-        if obj is not None:
-            A = obj.type == 'MESH' or 'CURVE'
-            B = context.mode == 'OBJECT' or 'PAINT_TEXTURE'
-            return A and B
+        return obj is not None and obj.type in {'MESH', 'CURVE'} and context.mode in {'OBJECT', 'PAINT_TEXTURE'}
 
     def execute(self, context):
         scene = context.scene
-        
-        
         suffix = '_canvas'
-        
         match_object_name = None
-        
-        for obj in bpy.context.scene.objects:
+
+        # Find the object with the specified suffix
+        for obj in scene.objects:
             if obj.name.endswith(suffix):
-                match__objet_name = obj.name
-                
+                match_object_name = obj.name
+                break
+
         if match_object_name:
             print(f"Object with suffix '{suffix}' found: {match_object_name}")
-        else:
-            print(f"No Object with suffix '{suffix}' found in scene.")
-        # how do I get the current object that is named _canvas when the first part is unknown?
-        
-        obj = context.active_object
-        canvas = bpy.data.objects[match_object_name].material_slots[0].material
-        obj.data.materials.append(canvas)
+            # Get the material from the matching object
+            canvas_object = bpy.data.objects.get(match_object_name)
+            if canvas_object and canvas_object.material_slots:
+                canvas_material = canvas_object.material_slots[0].material
 
+                # Assign the material to the active object if not already present
+                active_obj = context.active_object
+                material_names = [mat.name for mat in active_obj.data.materials]
+                if canvas_material.name not in material_names:
+                    active_obj.data.materials.append(canvas_material)
+                    print(f"Material '{canvas_material.name}' added to the active object.")
+                else:
+                    print(f"Material '{canvas_material.name}' already assigned to the object.")
+            else:
+                self.report({'WARNING'}, f"Object '{match_object_name}' has no materials.")
+        else:
+            self.report({'WARNING'}, f"No object with suffix '{suffix}' found in the scene.")
+        
         return {'FINISHED'}
+
+
 
 ########## POOR MAN'S LIQUIFY FILTER, ADJUST AFTER PAINTING
 ######################## sculpt to liquid
@@ -1313,7 +1324,9 @@ class D2P_OT_ReprojectMask(bpy.types.Operator):
             bpy.ops.uv.project_from_view(camera_bounds=True,
                                          correct_aspect=False,
                                          scale_to_bounds=False)
+            bpy.ops.mesh.normals_make_consistent(inside=False)
             bpy.ops.object.editmode_toggle()
+                      
             bpy.ops.paint.texture_paint_toggle()  # toggle texpaint
 
         elif obj.type == 'CURVE' and obj.mode == 'OBJECT':
@@ -1323,7 +1336,9 @@ class D2P_OT_ReprojectMask(bpy.types.Operator):
             bpy.ops.uv.project_from_view(camera_bounds=True,
                                          correct_aspect=False,
                                          scale_to_bounds=False)
+            bpy.ops.mesh.normals_make_consistent(inside=False)
             bpy.ops.object.editmode_toggle()
+            
             bpy.ops.paint.texture_paint_toggle()  # toggle texpaint
 
         elif obj.type == 'MESH' and obj.mode == 'OBJECT':
@@ -1333,7 +1348,9 @@ class D2P_OT_ReprojectMask(bpy.types.Operator):
             bpy.ops.uv.project_from_view(camera_bounds=True,
                                          correct_aspect=False,
                                          scale_to_bounds=False)
+            bpy.ops.mesh.normals_make_consistent(inside=False)
             bpy.ops.object.editmode_toggle()
+            
             bpy.ops.paint.texture_paint_toggle()  # toggle texpaint
 
         elif obj.type == 'MESH' and obj.mode == 'TEXTURE_PAINT':
@@ -1343,8 +1360,10 @@ class D2P_OT_ReprojectMask(bpy.types.Operator):
             bpy.ops.uv.project_from_view(camera_bounds=True,
                                          correct_aspect=False,
                                          scale_to_bounds=False)
+            bpy.ops.mesh.normals_make_consistent(inside=False)
 
             bpy.ops.object.editmode_toggle()
+            
             bpy.ops.paint.texture_paint_toggle()  # toggle texpaint
 
         return {'FINISHED'}
@@ -1362,82 +1381,78 @@ class D2P_OT_my_enum_shapes(bpy.types.Operator):
     def execute(self, context):
         scene = context.scene
         mytool = scene.my_tool
-
-        if mytool.my_enum == 'OP1':
-            # operators guts from draw curve
-            # def execute(self, context):
-            scene = context.scene
-            ######### add a new curve at 0.15 Z
-            bpy.ops.curve.primitive_bezier_curve_add(radius=1,
-                                                     enter_editmode=False, 
-                                                     align='WORLD', 
-                                                     location=(0, 0, 0.15),
-                                                     scale=(1, 1, 1))
-            # add constraint to follow canvas rotation
+        
+        # Find the parent object with suffix '_canvas'
+        suffix = '_canvas'
+        parent_object = None
+        for obj in scene.objects:
+            if obj.name.endswith(suffix):
+                parent_object = obj
+                break
+        
+        if not parent_object:
+            self.report({'WARNING'}, f"No object with suffix '{suffix}' found in the scene.")
+            return {'CANCELLED'}
+        
+        def add_child_constraint(obj):
             bpy.ops.object.constraint_add(type='CHILD_OF')
-            bpy.context.object.constraints["Child Of"].target = \
-                bpy.data.objects["canvas"]
+            obj.constraints["Child Of"].target = parent_object
+
+        def copy_material_to_new_object(new_obj):
+            if parent_object.material_slots:
+                parent_material = parent_object.material_slots[0].material
+                new_obj.data.materials.append(parent_material)
+            else:
+                self.report({'WARNING'}, f"Parent object '{parent_object.name}' has no materials.")
+        
+        if mytool.my_enum == 'OP1':
+            # Add a new bezier curve
+            bpy.ops.curve.primitive_bezier_curve_add(radius=1, enter_editmode=False, align='WORLD', location=(0, 0, 0.15), scale=(1, 1, 1))
+            new_obj = bpy.context.object
+            add_child_constraint(new_obj)
             bpy.ops.object.editmode_toggle()
             bpy.ops.curve.delete(type='VERT')
-            # need to add a material to the object and make it a holdout shader
-            bpy.ops.material.new()
-
-            bpy.ops.curve.cyclic_toggle()
-
-            bpy.context.object.data.dimensions = '2D'
-            bpy.context.object.data.fill_mode = 'BOTH'
-
+            bpy.ops.object.editmode_toggle()
+            copy_material_to_new_object(new_obj)
+            new_obj.data.dimensions = '2D'
+            new_obj.data.fill_mode = 'BOTH'
             bpy.ops.wm.tool_set_by_id(name="builtin.draw")
 
-        if mytool.my_enum == 'OP2':
-            # operators guts from draw vector
-            bpy.ops.curve.primitive_bezier_curve_add(enter_editmode=True,
-                                                     align='WORLD', 
-                                                     location=(0, 0, 0.15),
-                                                     scale=(1, 1, 1))
-            # add constraint to follow canvas rotation
-            bpy.ops.object.constraint_add(type='CHILD_OF')
-            bpy.context.object.constraints["Child Of"].target = \
-                bpy.data.objects["canvas"]
-
+        elif mytool.my_enum == 'OP2':
+            # Add a new bezier curve and set handle type to VECTOR
+            bpy.ops.curve.primitive_bezier_curve_add(enter_editmode=True, align='WORLD', location=(0, 0, 0.15), scale=(1, 1, 1))
+            new_obj = bpy.context.object
+            add_child_constraint(new_obj)
             bpy.ops.curve.handle_type_set(type='VECTOR')
-            bpy.context.object.data.dimensions = '2D'
-            bpy.context.object.data.fill_mode = 'BOTH'
-
+            bpy.ops.object.editmode_toggle()
+            copy_material_to_new_object(new_obj)
+            new_obj.data.dimensions = '2D'
+            new_obj.data.fill_mode = 'BOTH'
             bpy.ops.transform.resize(value=(0.1, 0.1, 0.1))
             bpy.ops.wm.tool_set_by_id(name="builtin.select_box")
 
-        if mytool.my_enum == 'OP3':
-            # operators guts from draw square
-            bpy.ops.curve.primitive_bezier_circle_add(radius=0.25,
-                                                      enter_editmode=False, 
-                                                      align='WORLD', 
-                                                      location=(0, 0, 0.15),
-                                                      scale=(1, 1, 1))
-            # add constraint to follow canvas rotation
-            bpy.ops.object.constraint_add(type='CHILD_OF')
-            bpy.context.object.constraints["Child Of"].target = \
-                bpy.data.objects["canvas"]
-            bpy.context.object.data.dimensions = '2D'
-            bpy.context.object.data.fill_mode = 'BOTH'
+        elif mytool.my_enum == 'OP3':
+            # Add a new bezier circle
+            bpy.ops.curve.primitive_bezier_circle_add(radius=0.25, enter_editmode=False, align='WORLD', location=(0, 0, 0.15), scale=(1, 1, 1))
+            new_obj = bpy.context.object
+            add_child_constraint(new_obj)
+            copy_material_to_new_object(new_obj)
+            new_obj.data.dimensions = '2D'
+            new_obj.data.fill_mode = 'BOTH'
             bpy.ops.object.editmode_toggle()
             bpy.ops.curve.handle_type_set(type='VECTOR')
             bpy.ops.transform.rotate(value=0.785398, orient_axis='Z')
+            bpy.ops.object.editmode_toggle()
             bpy.ops.wm.tool_set_by_id(name="builtin.select_box")
 
-        if mytool.my_enum == 'OP4':
-            # operators guts from draw circle
-            bpy.ops.curve.primitive_bezier_circle_add(radius=0.25,
-                                                      enter_editmode=False, 
-                                                      align='WORLD', 
-                                                      location=(0, 0, 0.15),
-                                                      scale=(1, 1, 1))
-            # add constraint to follow canvas rotation
-            bpy.ops.object.constraint_add(type='CHILD_OF')
-            bpy.context.object.constraints["Child Of"].target = \
-                bpy.data.objects["canvas"]
-            bpy.context.object.data.dimensions = '2D'
-            bpy.context.object.data.fill_mode = 'BOTH'
+        elif mytool.my_enum == 'OP4':
+            # Add a new bezier circle
+            bpy.ops.curve.primitive_bezier_circle_add(radius=0.25, enter_editmode=False, align='WORLD', location=(0, 0, 0.15), scale=(1, 1, 1))
+            new_obj = bpy.context.object
+            add_child_constraint(new_obj)
+            copy_material_to_new_object(new_obj)
+            new_obj.data.dimensions = '2D'
+            new_obj.data.fill_mode = 'BOTH'
             bpy.ops.object.editmode_toggle()
             bpy.ops.wm.tool_set_by_id(name="builtin.select_box")
 
