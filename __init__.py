@@ -18,7 +18,7 @@
 
 bl_info = {
     "name": "Draw2Paint",
-    "author": "CDMJ, Spirou4D, Lapineige, Bart Crouch",
+    "author": "CDMJ, Spirou4D, Lapineige, Bart Crouch, batFINGER",
     "version": (4, 0, 5),
     "blender": (4, 2, 0),
     "location": "UI > Draw2Paint",
