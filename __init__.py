@@ -18,8 +18,8 @@
 
 bl_info = {
     "name": "Draw2Paint",
-    "author": "CDMJ,Lapineige, Spirou4D, Bart Crouch",
-    "version": (4, 0, 3),
+    "author": "CDMJ, Spirou4D, Lapineige, Bart Crouch",
+    "version": (4, 0, 5),
     "blender": (4, 2, 0),
     "location": "UI > Draw2Paint",
     "description": "2D Paint in 3D View, Mask Manipulation, EZPaint Adoption",
@@ -202,8 +202,16 @@ def save_incremental_copy(image):
 ######### NEW OPERATORS FOR CANVAS AND CAMERA WORK
 
 class D2P_OT_CanvasAndCamera(bpy.types.Operator):
+    """Create Canvas and Camera from Active Image"""
+    bl_description = "Create Canvas and Camera from Active Image"
     bl_idname = "object.canvas_and_camera"
     bl_label = "Generate Image Plane and Matching Camera"
+    bl_options = {'REGISTER', 'UNDO'}
+    
+    @classmethod
+    def poll(cls, context):
+        # Check if 'subject_view' collection exists
+        return 'canvas_view' not in bpy.data.collections
 
     def execute(self, context):
         active_image = None
@@ -215,6 +223,7 @@ class D2P_OT_CanvasAndCamera(bpy.types.Operator):
         if not active_image:
             self.report({'WARNING'}, "No active image found.")
             return {'CANCELLED'}
+        
 
         image_name = active_image.name
         image_plane_obj, width, height = create_image_plane_from_image(active_image)
@@ -226,12 +235,31 @@ class D2P_OT_CanvasAndCamera(bpy.types.Operator):
         camera_obj.data.show_name = True
         
         switch_to_camera_view(camera_obj)
+        
+        # Move camera and image plane to 'canvas_view' collection
+        move_object_to_collection(image_plane_obj, 'canvas_view')
+        move_object_to_collection(camera_obj, 'canvas_view')
+        
+        bpy.context.space_data.shading.type = 'SOLID'
+        bpy.context.space_data.shading.light = 'FLAT'
+        bpy.context.space_data.shading.color_type = 'TEXTURE'
+
         return {'FINISHED'}
 
 class D2P_OT_CameraFromCanvas(bpy.types.Operator):
+    """New Camera from Selected Canvas"""
+    bl_description = "New Camera from Selected Canvas"
     bl_idname = "object.create_camera_from_selected_image_plane"
     bl_label = "Create Camera from Selected Image Plane"
-
+    bl_options = {'REGISTER', 'UNDO'}
+    
+    
+    @classmethod
+    def poll(cls, context):
+        # Check if 'subject_view' collection exists
+        return 'subject_view' not in bpy.data.collections
+    
+    
     def execute(self, context):
         selected_objects = context.selected_objects
         if not selected_objects:
@@ -251,15 +279,31 @@ class D2P_OT_CameraFromCanvas(bpy.types.Operator):
         camera_obj = create_matching_camera(image_plane_obj, width, height)
         camera_obj.data.show_name = True
         switch_to_camera_view(camera_obj)
+        
+        # Move camera and image plane to 'canvas_view' collection
+        move_object_to_collection(image_plane_obj, 'canvas_view')
+        move_object_to_collection(camera_obj, 'canvas_view')
+        
+        bpy.context.space_data.shading.type = 'SOLID'
+        bpy.context.space_data.shading.color_type = 'TEXTURE'
         return {'FINISHED'}
 
 
 
 
 class D2P_OT_SelectedToCanvasAndCamera(bpy.types.Operator):
+    """New Canvas and Camera from Selected Subject"""
+    bl_description = "New Canvas and Camera from Selected Subject"
     bl_idname = "object.canvas_and_camera_from_selected_object"
     bl_label = "Generate Image Plane and Camera from Selected Object"
-
+    bl_options = {'REGISTER', 'UNDO'}
+    
+    @classmethod
+    def poll(cls, context):
+        # Check if 'subject_view' collection exists
+        return 'subject_view' and 'canvas_view' not in bpy.data.collections
+    
+    
     def execute(self, context):
         selected_objects = context.selected_objects
         if not selected_objects:
@@ -271,9 +315,9 @@ class D2P_OT_SelectedToCanvasAndCamera(bpy.types.Operator):
         if not selected_object.data.uv_layers:
             self.report({'WARNING'}, "Please Create UV Layer")
             return {'CANCELLED'}
-
-        # Move object to 'object_view' collection
-        move_object_to_collection(selected_object, 'object_view')
+        
+        # Move object to 'subject_view' collection
+        move_object_to_collection(selected_object, 'subject_view')
 
         # Export UV layout
         uv_filepath = os.path.join("C:/tmp", selected_object.name + ".png")
@@ -305,8 +349,11 @@ class D2P_OT_SelectedToCanvasAndCamera(bpy.types.Operator):
         return {'FINISHED'}
 
 class D2P_OT_ImageEditorToCanvasAndCamera(bpy.types.Operator):
+    """Create Canvas and Camera from Active Image In Image Editor"""
+    bl_description = "Create Canvas and Camera from Active Image In Image Editor"
     bl_idname = "image.canvas_and_camera"
-    bl_label = "Generate Image Plane and Camera from Image Editor"
+    bl_label = "Generate Image Plane and Matching Camera from Image Editor"
+    bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
         active_image = None
@@ -328,20 +375,32 @@ class D2P_OT_ImageEditorToCanvasAndCamera(bpy.types.Operator):
             return {'CANCELLED'}
         
         camera_obj = create_matching_camera(image_plane_obj, width, height)
-        
-        #Blender refuses to switch to camera view here        
-        switch_to_camera_view(camera_obj)
-        #bpy.ops.view3d.object_as_camera()
-        
+        bpy.context.view_layer.objects.active = camera_obj
+                
         camera_obj.data.show_name = True
+        bpy.context.space_data.shading.type = 'SOLID'
+        bpy.context.space_data.shading.light = 'FLAT'
+        bpy.context.space_data.shading.color_type = 'TEXTURE'
+        if area.type == 'VIEW3D' :
+            #Blender refuses to switch to camera view here        
+            switch_to_camera_view(camera_obj)
+            
+        # Move camera and image plane to 'canvas_view' collection
+        move_object_to_collection(image_plane_obj, 'canvas_view')
+        move_object_to_collection(camera_obj, 'canvas_view')
+        
         
         bpy.context.area.ui_type = 'IMAGE_EDITOR'
 
         return {'FINISHED'}    
     
 class D2P_OT_ToggleUVInCamera(bpy.types.Operator):
+    """Toggle UV Image Visibility in Camera"""
+    bl_description = "Toggle UV Image Visibility in Camera"
     bl_idname = "object.toggle_uv_image_visibility"
-    bl_label = "Toggle UV Image Visibility"
+    bl_label = "Toggle UV Image Visibility in Camera"
+    bl_options = {'REGISTER', 'UNDO'}
+
 
     def execute(self, context):
         cam = context.scene.camera
@@ -355,27 +414,39 @@ class D2P_OT_ToggleUVInCamera(bpy.types.Operator):
             return {'CANCELLED'}
 
 class D2P_OT_ToggleCollectionView(bpy.types.Operator):
+    """Toggle 3D or 2D Collection"""
+    bl_description = "Toggle 3D or 2D Collection"
     bl_idname = "object.toggle_collection_visibility"
     bl_label = "Toggle Collection Visibility"
+    bl_options = {'REGISTER', 'UNDO'}
+    
+    
 
     def execute(self, context):
-        object_view = bpy.data.collections.get("object_view")
+        subject_view = bpy.data.collections.get("subject_view")
         canvas_view = bpy.data.collections.get("canvas_view")
 
-        if object_view and canvas_view:
-            if object_view.hide_viewport:
-                object_view.hide_viewport = False
+        if subject_view and canvas_view:
+            if subject_view.hide_viewport:
+                subject_view.hide_viewport = False
+                subject_view.hide_render = False
                 canvas_view.hide_viewport = True
+                canvas_view.hide_render = True
                 # Switch to front view
                 bpy.ops.view3d.view_axis(type='FRONT', align_active=True)
                 bpy.context.space_data.shading.type = 'MATERIAL'
-                bpy.context.space_data.shading.light = 'STUDIO'
+                #bpy.context.space_data.shading.light = 'FLAT'
                 
             else:
-                object_view.hide_viewport = True
+                subject_view.hide_viewport = True
+                subject_view.hide_render = True
                 canvas_view.hide_viewport = False
+                canvas_view.hide_render = False
                 # Switch to camera view
                 switch_to_camera_view(context.scene.camera)
+                bpy.context.space_data.shading.type = 'SOLID'
+                bpy.context.space_data.shading.light = 'FLAT'
+
             
             # Update the view layer to reflect visibility changes
             bpy.context.view_layer.update()
@@ -1004,20 +1075,15 @@ class D2P_OT_NewImage(bpy.types.Operator):
         scene = context.scene
         layer = bpy.context.view_layer
         layer.update()
-        # original_type = bpy.context.area.type
-        # bpy.context.area.type = 'IMAGE_EDITOR'
+        
         # Call user prefs window
         bpy.ops.screen.userpref_show('INVOKE_DEFAULT')
         #bpy.ops.wm.window_new()
+        
         # Change area type
         area = context.window_manager.windows[-1].screen.areas[0]
         area.type = 'IMAGE_EDITOR'
-
-        # new image
-        bpy.ops.image.new()
-
-        # bpy.context.area.type = original_type
-
+                
         return {'FINISHED'}
     
     
@@ -1080,6 +1146,39 @@ class D2P_OT_SaveIncrem(bpy.types.Operator):
             self.report({'ERROR'}, str(e))
         return {'FINISHED'}
 
+################# save all pack all
+
+class D2P_OT_SaveDirty(bpy.types.Operator):
+    """Save All Modified Images or Pack if Unsaved"""
+    bl_description = "Save all modified images or pack them if unsaved"
+    bl_idname = "d2p.save_dirty"
+    bl_label = "Save All Modified Images or Pack if Unsaved"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    @classmethod
+    def poll(cls, context):
+        obj = context.active_object
+        if obj is not None:
+            A = obj.type == 'MESH'
+            B = context.mode == 'PAINT_TEXTURE'
+            return A and B
+        return False
+
+    def execute(self, context):
+        # Save or pack all modified images
+        for image in bpy.data.images:
+            if image.is_dirty:
+                if image.filepath:
+                    try:
+                        image.save()
+                        self.report({'INFO'}, f"Saved image: {image.name}")
+                    except Exception as e:
+                        self.report({'ERROR'}, f"Failed to save image {image.name}: {str(e)}")
+                else:
+                    image.pack()
+                    self.report({'INFO'}, f"Packed image: {image.name}")
+
+        return {'FINISHED'}
 
 ################# already works GOOD
 # -----------------------------------reload image
@@ -1739,37 +1838,44 @@ class D2P_OT_NewGpencil(bpy.types.Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     @classmethod
-    def poll(self, context):
+    def poll(cls, context):
         obj = context.active_object
         if obj is not None:
-            A = obj.type == 'MESH' or 'CURVE'
-            B = context.mode == 'OBJECT' or 'PAINT_TEXTURE'
-            return A and B
+            is_mesh_or_curve = obj.type in {'MESH', 'CURVE'}
+            in_object_or_paint_texture_mode = context.mode in {'OBJECT', 'PAINT_TEXTURE'}
+            return is_mesh_or_curve and in_object_or_paint_texture_mode
+        return False
 
     def execute(self, context):
         scene = context.scene
+        active_obj = context.active_object
 
-        obj = context.active_object
-        canvas = bpy.data.objects['canvas'].material_slots[0].material
-        obj.data.materials.append(canvas)
-
-        bpy.context.space_data.shading.type = 'MATERIAL'
-
+        bpy.context.space_data.shading.type = 'SOLID'
         bpy.ops.paint.texture_paint_toggle()
-        bpy.ops.object.gpencil_add(align='WORLD', location=(0, 0, 0),
-                                   scale=(1, 1, 1), type='EMPTY')
+
+        # Create Grease Pencil Object
+        bpy.ops.object.gpencil_add(align='WORLD', location=(0, 0, 0), scale=(1, 1, 1), type='EMPTY')
+        gpencil_obj = context.object
+
+        # Find the parent object with suffix '_canvas'
+        suffix = '_canvas'
+        parent_object = next((obj for obj in scene.objects if obj.name.endswith(suffix)), None)
+
+        if not parent_object:
+            self.report({'WARNING'}, f"No object with suffix '{suffix}' found in the scene.")
+            return {'CANCELLED'}
+
+        # Parent the Grease Pencil Object directly
+        gpencil_obj.parent = parent_object
+        gpencil_obj.matrix_parent_inverse.identity()  # Clear parent inverse matrix
+
+        # Additional Setup
         bpy.ops.gpencil.paintmode_toggle()
-        bpy.context.object.data.layers["GP_Layer"].use_lights = False
-        
+        gpencil_obj.data.layers["GP_Layer"].use_lights = False
 
-
-        # parent
-        bpy.context.object.data.layers["GP_Layer"].parent = \
-            bpy.data.objects[object.name+"_canvas"]
-            
-        #make some setup shortuct
-        bpy.context.scene.tool_settings.gpencil_stroke_placement_view3d = 'SURFACE'
-        bpy.context.scene.tool_settings.gpencil_paint.color_mode = 'VERTEXCOLOR'
+        # Make some setup shortcuts
+        scene.tool_settings.gpencil_stroke_placement_view3d = 'SURFACE'
+        scene.tool_settings.gpencil_paint.color_mode = 'VERTEXCOLOR'
 
         return {'FINISHED'}
 
@@ -2308,7 +2414,6 @@ class D2P_OT_ProjectpaintPopup(bpy.types.Operator):
     """Slots ProjectPaint popup"""
     bl_idname = "view3d.projectpaint"
     bl_label = "Slots & VGroups"
-    COMPAT_ENGINES = {'EEVEE', 'CYCLES'}
     bl_options = {'REGISTER', 'UNDO'}
 
     def check(self, context):
@@ -2318,33 +2423,27 @@ class D2P_OT_ProjectpaintPopup(bpy.types.Operator):
     def poll(cls, context):
         brush = context.tool_settings.image_paint.brush
         ob = context.active_object
-        group = ob.vertex_groups.active
-        if (brush is not None and ob is not None):
+        if brush is not None and ob is not None:
             A = ob.type == 'MESH'
-             # -------------------------------
             B = context.space_data.type == 'VIEW_3D'
             if A:
-                C = context.mode in {'PAINT_TEXTURE','PAINT_VERTEX','PAINT_WEIGHT'}
+                C = context.mode in {'PAINT_TEXTURE', 'PAINT_VERTEX', 'PAINT_WEIGHT'}
                 D = context.mode == 'EDIT_MESH'
-            # -------------------------------
             E = context.space_data.type == 'IMAGE_EDITOR'
             if E:
                 F = context.mode == 'EDIT_MESH'
                 G = context.space_data.mode == 'PAINT'
-            # -------------------------------
             H = context.mode == 'WEIGHT_PAINT' and ob.vertex_groups and ob.data.use_paint_mask_vertex
-            return A and (( B and (C or  D)) or (E and (F or G) or H))
+            return A and ((B and (C or D)) or (E and (F or G) or H))
         return False
 
     def draw(self, context):
         settings = context.tool_settings.image_paint
         ob = context.active_object
 
-        Egne = bpy.context.scene.render.engine
-
         layout = self.layout
-        #-----------------------------------------------------------Vertex Paint
-        ob = context.object
+
+        # Vertex Paint
         group = ob.vertex_groups.active
         rows = 4 if group else 2
 
@@ -2355,7 +2454,6 @@ class D2P_OT_ProjectpaintPopup(bpy.types.Operator):
         col.operator("object.vertex_group_add", icon='ADD', text="")
         col.operator("object.vertex_group_remove", icon='REMOVE', text="").all = False
         col.menu("MESH_MT_vertex_group_specials", icon='DOWNARROW_HLT', text="")
-
 
         if group:
             col.separator()
@@ -2375,8 +2473,7 @@ class D2P_OT_ProjectpaintPopup(bpy.types.Operator):
 
             layout.prop(context.tool_settings, "vertex_group_weight", text="Weight")
 
-
-        #--------------------------------------------------------------Mat Paint
+        # Material Paint
         if context.mode == 'PAINT_TEXTURE':
             col = layout.column()
             col.label(text="Painting Mode")
@@ -2386,23 +2483,19 @@ class D2P_OT_ProjectpaintPopup(bpy.types.Operator):
             if settings.mode == 'MATERIAL':
                 if len(ob.material_slots) > 1:
                     col.label(text="Materials")
-                    col.template_list("MATERIAL_UL_matslots", "layers",
-                                      ob, "material_slots",
-                                      ob, "active_material_index", rows=2)
+                    col.template_list("MATERIAL_UL_matslots", "layers", ob, "material_slots", ob, "active_material_index", rows=4)
 
                 mat = ob.active_material
                 if mat:
                     col.label(text="Available Paint Slots")
-                    col.template_list("TEXTURE_UL_texpaintslots", "",
-                                      mat, "texture_paint_images",
-                                      mat, "paint_active_slot", rows=2)
+                    col.template_list("TEXTURE_UL_texpaintslots", "", mat, "texture_paint_images", mat, "paint_active_slot", rows=4)
 
                     if mat.texture_paint_slots:
                         slot = mat.texture_paint_slots[mat.paint_active_slot]
                     else:
                         slot = None
 
-                    if (not mat.use_nodes) and context.scene.render.engine in {'EEVEE', 'CYCLES'}:
+                    if not mat.use_nodes and context.scene.render.engine in {'BLENDER_EEVEE', 'CYCLES'}:
                         row = col.row(align=True)
                         row.operator_menu_enum("paint.add_texture_paint_slot", "type")
                         row.operator("paint.delete_texture_paint_slot", text="", icon='X')
@@ -2412,7 +2505,6 @@ class D2P_OT_ProjectpaintPopup(bpy.types.Operator):
                             col.separator()
 
                     if slot:
-                        #if slot and slot.index != -1:
                         col.label(text="UV Map")
                         col.prop_search(slot, "uv_layer", ob.data, "uv_textures", text="")
 
@@ -2426,13 +2518,13 @@ class D2P_OT_ProjectpaintPopup(bpy.types.Operator):
                 col.menu("VIEW3D_MT_tools_projectpaint_uvlayer", text=uv_text, translate=False)
 
             col.separator()
-            if Egne == 'CYCLES':
-                col.operator("paint.add_texture_paint_slot", text="Add Texture", icon="FACESEL_HLT").type="DIFFUSE_COLOR"
+            if bpy.context.scene.render.engine == 'CYCLES':
+                col.operator("paint.add_texture_paint_slot", text="Add Texture", icon="").type = "DIFFUSE_COLOR"
                 col.operator("object.save_ext_paint_texture", text="Save selected Slot")
             else:
                 col.operator("image.save_all_modified", text="Save All Images")
 
-    def invoke(self, context,event):
+    def invoke(self, context, event):
         return context.window_manager.invoke_props_dialog(self, width=240)
 
     def execute(self, context):
@@ -2717,6 +2809,8 @@ class D2P_PT_ImageState(bpy.types.Panel):
                       icon='FILE_IMAGE')
         row2.operator("d2p.save_increm", text="Save +1",
                       icon='FILE_IMAGE')
+        row = layout.row()
+        row.operator("d2p.save_dirty", text="Save All Pack All", icon='BORDERMOVE')
 
         '''row = layout.row()
         row = col.row(align=True)
@@ -2767,23 +2861,28 @@ class D2P_PT_2D_to_3D_Experimental(bpy.types.Panel):
         box = layout.box()
         col = box.column(align=True)
         col.label(text="Collections:")
-        col.label(text="3d: object view 2D:canvas view")
+        col.label(text="3d: subject view 2D:canvas view")
         row = col.row(align=True)
 
         row1 = row.split(align=True)
         row1.scale_x = 0.50
         row1.scale_y = 1.25
+        
         row1.operator("object.canvas_and_camera_from_selected_object",
                       text='Subject to Canvas',
                       icon='MESH_MONKEY')
+        
+        row = layout.row()
+        row = col.row(align=True)
+        
         row2 = row.split(align=True)
         row2.scale_x = 0.50
         row2.scale_y = 1.25
-        object_view = bpy.data.collections.get("object_view")
+        subject_view = bpy.data.collections.get("subject_view")
         canvas_view = bpy.data.collections.get("canvas_view")
         
-        if object_view and canvas_view:
-            if object_view.hide_viewport:
+        if subject_view and canvas_view:
+            if subject_view.hide_viewport:
                 row2.operator("object.toggle_collection_visibility", 
                             text="Show Subject", 
                             icon='MESH_UVSPHERE')
@@ -2799,12 +2898,16 @@ class D2P_PT_2D_to_3D_Experimental(bpy.types.Panel):
         row = col.row(align=True)
         row.scale_x = 0.50
         row.scale_y = 1.25
-        row2 = row.split(align=True)
-        row2.operator("object.toggle_uv_image_visibility",
+        row = row.split(align=True)
+        row.operator("object.toggle_uv_image_visibility",
                       text="Toggle UV in Camera",
                       icon='IMAGE_PLANE')
+        row = layout.row()
+        row = col.row(align=True)
+        row.scale_x = 0.50
+        row.scale_y = 1.25
         
-        row2.operator("d2p.frontof_paint",
+        row.operator("d2p.frontof_paint",
                       text="Align to Face",
                       icon='IMPORT')
 
@@ -2905,13 +3008,11 @@ class D2P_PT_FlipRotate(bpy.types.Panel):
         obj = context.object
 
         if obj and obj.type == 'MESH':
-            layout.label(text="Rotate Canvas")
-            layout.prop(obj, "rotation_euler", index=2, text="Z Rotation")
-    
-        row = layout.row()
-        row.operator("d2p.canvas_resetrot", text="Reset Rotation",
-                     icon='RECOVER_LAST')
-
+            #layout.label(text="Rotate Canvas")
+            row = layout.row()
+            row.prop(obj, "rotation_euler", index=2, text="Rotate Canvas")
+            row.operator("d2p.canvas_resetrot", text="",
+                         icon='RECOVER_LAST')
 
 class D2P_PT_GuideControls(bpy.types.Panel):
     """A custom panel in the viewport toolbar"""
@@ -2924,22 +3025,6 @@ class D2P_PT_GuideControls(bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
-        
-        tool_settings = context.tool_settings
-        ipaint = tool_settings.image_paint
-
-        split = layout.split()
-
-        col = split.column()
-        col.alignment = 'RIGHT'
-        col.label(text="Paint Symmetry")
-
-        col = split.column()
-
-        row = col.row(align=True)
-        row.prop(context.object, "use_mesh_mirror_x", text="X", toggle=True)
-        row.prop(context.object, "use_mesh_mirror_y", text="Y", toggle=True)
-        row.prop(context.object, "use_mesh_mirror_z", text="Z", toggle=True)
 
         box = layout.box()  # MACRO
         col = box.column(align=True)
@@ -2950,9 +3035,6 @@ class D2P_PT_GuideControls(bpy.types.Panel):
                      icon='ORIENTATION_CURSOR')
         row.operator("d2p.center_object", text="Recenter Guide",
                      icon='ORIENTATION_CURSOR')
-
-
-
 
 ############### masking
 class D2P_PT_MaskControl(bpy.types.Panel):
@@ -3020,39 +3102,29 @@ class D2P_PT_MaskControl(bpy.types.Panel):
         row2.scale_y = 1.25
         row1.operator("d2p.canvas_material", text='Copy Canvas',
                       icon='OUTLINER_OB_IMAGE')
-        # row2.operator("d2p.solidify_difference", text='Subtract Masks',
-        # icon='SELECT_SUBTRACT')
         row3 = row.split(align=True)
         row3.scale_x = 0.50
         row3.scale_y = 1.25
         row2.operator("d2p.add_holdout", text='Holdout', icon='GHOST_ENABLED')
-        # row3.operator("d2p.solidify_union", text='Join Masks',
-        # icon='SELECT_EXTEND')
-
-
+       
         layout = self.layout
-
         row = layout.row()
-
         row.label(text="Face Mask Groups")
         box = layout.box()  # HORIZONTAL ALIGN
         col = box.column(align=True)
         row = col.row(align=True)
         row1 = row.split(align=True)
-        # row = layout.row()
         row1.label(text="Generate FMG from Islands")
         row1.operator("d2p.getfacemaskgroups", text="FMG+", icon='SHADERFX')
 
         # def draw(self, context):
         layout = self.layout
-
         ob = context.object
         group = ob.vertex_groups.active
-
         rows = 2
         if group:
             rows = 4
-
+            
         row = layout.row()
         row.template_list("MESH_UL_vgroups", "", ob, "vertex_groups",
                           ob.vertex_groups, "active_index", rows=rows)
@@ -3074,13 +3146,12 @@ class D2P_PT_MaskControl(bpy.types.Panel):
         col = box.column(align=True)
         row = col.row(align=True)
         row1 = row.split(align=True)
-        # row = layout.row()
         row1.operator("d2p.select_vgroup", text="Sel", icon='RADIOBUT_ON')
-        # row1 = layout.row()
+        
         row1.operator("d2p.deselect_vgroup", text="Desel", icon='RADIOBUT_OFF')
-        # row = layout.row()
+        
         row1.operator("d2p.assign_vgroup", text="Set", icon='ADD')
-        # row = layout.row()
+        
         row1.operator("d2p.unassign_vgroup", text="Unset", icon='REMOVE')
 
 
@@ -3140,6 +3211,7 @@ classes = (
     D2P_OT_ImageReload,
     D2P_OT_CanvasResetrot,
     D2P_OT_SaveImage,
+    D2P_OT_SaveDirty,
     D2P_OT_EmptyGuides,
     D2P_OT_PixelsToBorder,
     D2P_OT_BorderToPixels,
