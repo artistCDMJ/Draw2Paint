@@ -6,6 +6,7 @@ import bmesh
 import bgl, blf, bpy, mathutils, time, copy, math, re
 
 from bpy.props import *
+from .utils import *
 from bpy.types import Operator, Menu, Panel, UIList
 from bpy_extras.io_utils import ImportHelper
 
