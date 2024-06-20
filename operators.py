@@ -7,7 +7,13 @@ import bmesh
 import bgl, blf, bpy, mathutils, time, copy, math, re
 
 from bpy.props import *
-from bpy.utils import *
+import bpy
+from bpy.types import Operator
+from .utils import (find_brush, create_image_plane_from_image, create_matching_camera,\
+                    switch_to_camera_view, get_image_from_selected_object, \
+                    move_object_to_collection, export_uv_layout, \
+                    set_camera_background_image, get_active_image_from_image_editor, \
+                    save_incremental_copy)
 
 from bpy.types import Operator, Menu, Panel, UIList
 from bpy_extras.io_utils import ImportHelper
