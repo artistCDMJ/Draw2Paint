@@ -1,4 +1,5 @@
 import os
+
 import bpy
 
 import bmesh
@@ -6,7 +7,6 @@ import bmesh
 import bgl, blf, bpy, mathutils, time, copy, math, re
 
 from bpy.props import *
-from .utils import *
 from bpy.types import Operator, Menu, Panel, UIList
 from bpy_extras.io_utils import ImportHelper
 
@@ -990,89 +990,87 @@ class D2P_OT_EmptyGuides(bpy.types.Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     @classmethod
-    def poll(self, context):
+    def poll(cls, context):
         obj = context.active_object
-        A = obj is not None
-        if A:
-            B = obj.type == 'MESH' or 'EMPTY'
-            return B
+        return obj is not None and (obj.type == 'MESH' or obj.type == 'EMPTY')
 
     def execute(self, context):
-
         scene = context.scene
         layer = bpy.context.view_layer
         layer.update()
 
-        # toggle texpaint and deselect
+        # Toggle texpaint and deselect
         obj = context.active_object
 
-        if obj == bpy.data.objects[obj.name+'_canvas']:
+        # Find the '_canvas' object
+        canvas_object = None
+        for ob in bpy.data.objects:
+            if ob.name.endswith('_canvas'):
+                canvas_object = ob
+                break
+
+        if not canvas_object:
+            self.report({'ERROR'}, "No '_canvas' object found.")
+            return {'CANCELLED'}
+
+        if obj == canvas_object:
             bpy.ops.paint.texture_paint_toggle()
             bpy.ops.object.select_all(action='DESELECT')
-            # need check here for ['Symmetry Guide']
 
+            # Check for existing 'Symmetry Guide'
+            symmetry_guide = None
             for ob in bpy.data.objects:
                 if ob.type == 'EMPTY' and ob.name == 'Symmetry Guide':
-                    # need to set the symmmetry empty as active
-                    bpy.ops.object.select_all(action='DESELECT')
-                    bpy.data.objects['Symmetry Guide'].select_set(True)
-                    # need to snap cursor to it
-                    bpy.ops.view3d.snap_cursor_to_selected()
-                    # need to set the canvas as active again
-                    bpy.data.objects['Symmetry Guide'].select_set(False)
-                    bpy.data.objects['canvas'].select_set(True)
+                    symmetry_guide = ob
+                    break
 
-                    pass
-                else:
-                    # add empty here
-                    bpy.ops.object.empty_add(type='SPHERE', location=(0, 0, 0),
-                                             radius=0.01)
-                    # add empty for reference and movement of origin
+            if symmetry_guide:
+                bpy.ops.object.select_all(action='DESELECT')
+                symmetry_guide.select_set(True)
+                bpy.context.view_layer.objects.active = symmetry_guide
+                bpy.ops.view3d.snap_cursor_to_selected()
+                bpy.ops.object.select_all(action='DESELECT')
+                symmetry_guide.select_set(False)
+                canvas_object.select_set(True)
+                bpy.context.view_layer.objects.active = canvas_object
+            else:
+                bpy.ops.object.empty_add(type='SPHERE', location=(0, 0, 0), radius=0.01)
+                new_empty = context.object
+                new_empty.name = "Symmetry Guide"
+                bpy.ops.transform.resize(value=(10, 10, 10))
+                new_empty.parent = canvas_object
+                bpy.ops.view3d.snap_cursor_to_selected()
+                bpy.ops.object.select_all(action='DESELECT')
+                canvas_object.select_set(True)
+                bpy.context.view_layer.objects.active = canvas_object
 
-                    # rename new empty to Symmetry Guide
-                    bpy.context.object.name = "Symmetry Guide"
+            bpy.ops.paint.texture_paint_toggle()
+            return {'FINISHED'}
 
-                    bpy.ops.transform.resize(value=(10, 10, 10))
-                    # scale up past the normal range of image plane
-                    # add constraint to follow canvas rotation
-                    bpy.ops.object.parent_set(type='OBJECT', keep_transform=False)
-                    
-                    # snap cursor to empty
-                    bpy.ops.view3d.snap_cursor_to_selected()
-
-                    bpy.ops.object.select_all(action='DESELECT')
-                    bpy.data.objects['Symmetry Guide'].select_set(False)
-                    bpy.data.objects['canvas'].select_set(True)
-                    bpy.context.view_layer.objects.active = \
-                        bpy.data.objects['canvas']
-
-                    bpy.ops.paint.texture_paint_toggle()
-
-                    return {'FINISHED'}
-
-
-
-        elif obj == bpy.data.objects['Symmetry Guide']:
-            # already have empty, will work for cursors :D
+        elif obj.name == 'Symmetry Guide':
             bpy.ops.view3d.snap_cursor_to_selected()
 
-            # here to set origin of canvas
+            # Set the canvas object as active and in object mode before running the operator
+            bpy.ops.object.mode_set(mode='OBJECT')
             bpy.ops.object.select_all(action='DESELECT')
-            bpy.data.objects['Symmetry Guide'].select_set(False)
-            bpy.data.objects['canvas'].select_set(True)
-            bpy.context.view_layer.objects.active = bpy.data.objects['canvas']
+            canvas_object.select_set(True)
+            bpy.context.view_layer.objects.active = canvas_object
+
+            # Set the origin of the canvas object to the cursor
             bpy.ops.object.origin_set(type='ORIGIN_CURSOR', center='MEDIAN')
-            # bpy.ops.object.select_all(action='DESELECT')
-            bpy.data.objects['canvas'].select_set(False)
-            bpy.data.objects['Symmetry Guide'].select_set(True)
 
-            # bpy.ops.paint.texture_paint_toggle()
+            # Deselect all and reselect the Symmetry Guide
+            obj.select_set(True)
+            bpy.context.view_layer.objects.active = obj
+
+            # Switch canvas object back to texture paint mode
+            bpy.ops.object.select_all(action='DESELECT')
+            canvas_object.select_set(True)
+            bpy.context.view_layer.objects.active = canvas_object
 
             return {'FINISHED'}
-        else:
-            return {'FINISHED'}
 
-        return {'FINISHED'}
+        return {'CANCELLED'}
 
 
 class D2P_OT_center_object(bpy.types.Operator):
