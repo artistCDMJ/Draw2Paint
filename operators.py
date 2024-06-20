@@ -1,5 +1,12 @@
 import bpy
-from .utils import *
+
+import bmesh
+
+import bgl, blf, bpy, mathutils, os, time, copy, math, re
+
+from bpy.props import *
+from bpy.types import Operator, Menu, Panel, UIList
+from bpy_extras.io_utils import ImportHelper
 
 # Define your operators here
 
