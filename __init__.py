@@ -27,7 +27,15 @@ bl_info = {
     "category": "Paint",
 }
 
+
 import bpy
+import bmesh
+
+import bgl, blf, bpy, mathutils, os, time, copy, math, re
+
+from bpy.props import *
+from bpy.types import Operator, Menu, Panel, UIList
+from bpy_extras.io_utils import ImportHelper
 
 # Ensure all modules and classes are imported correctly
 from .operators import (
