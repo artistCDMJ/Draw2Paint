@@ -7,23 +7,13 @@ import bmesh
 import bgl, blf, bpy, mathutils, time, copy, math, re
 
 from bpy.props import *
+from bpy.utils import *
 
 from bpy.types import Operator, Menu, Panel, UIList
 from bpy_extras.io_utils import ImportHelper
 
 # Define your operators here
 
-from .utils import find_brush
-from .utils import create_image_plane_from_image
-from .utils import create_matching_camera
-from .utils import switch_to_camera_view
-from .utils import get_image_from_selected_object
-from .utils import move_object_to_collection
-from .utils import export_uv_layout
-from .utils import set_camera_background_image
-from .utils import get_active_image_from_image_editor
-from .utils import increment_filename
-from .utils import save_incremental_copy
 
 ######### NEW OPERATORS FOR CANVAS AND CAMERA WORK
 
