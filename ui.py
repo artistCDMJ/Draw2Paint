@@ -1,5 +1,8 @@
 import bpy
 
+from bpy.types import Operator, Menu, Panel, UIList
+from bpy_extras.io_utils import ImportHelper
+
 ########################################
 ## panel draw for Draw2Paint
 class D2P_PT_ImageState(bpy.types.Panel):
