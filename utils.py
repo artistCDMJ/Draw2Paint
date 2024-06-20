@@ -1,5 +1,7 @@
 import bpy
 
+import bgl, blf, mathutils, os, time, copy, math, re
+
 def find_brush(context):                 # Trouver la brosse
     tool_settings = context.tool_settings
     if context.mode == 'SCULPT':
