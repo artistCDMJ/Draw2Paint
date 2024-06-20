@@ -1,8 +1,9 @@
+import os
 import bpy
 
 import bmesh
 
-import bgl, blf, bpy, mathutils, os, time, copy, math, re
+import bgl, blf, bpy, mathutils, time, copy, math, re
 
 from bpy.props import *
 from bpy.types import Operator, Menu, Panel, UIList
