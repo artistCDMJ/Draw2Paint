@@ -44,6 +44,7 @@ from . import keymaps, properties
 
 classes = (
     properties.D2P_Properties,
+    D2P_OT_SelectedToUVMask,
     D2P_OT_CanvasHoriz,
     D2P_OT_CanvasVertical,
     D2P_OT_ImageReload,
