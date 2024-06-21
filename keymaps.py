@@ -29,6 +29,9 @@ kmi_defs = (
 
 )
 
+
+
+
 def register():
     global addon_keymaps
     kc = bpy.context.window_manager.keyconfigs.addon
@@ -44,6 +47,10 @@ def register():
                 for prop, value in props:
                     setattr(kmi.properties, prop, value)
             addon_keymaps.append((km, kmi))
+                    # keymaps
+                    
+            #Register_Shortcuts()
+            
 
 def unregister():
     global addon_keymaps
