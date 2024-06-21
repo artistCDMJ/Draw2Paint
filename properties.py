@@ -19,6 +19,10 @@ bpy.types.Scene.y_max_pixels = bpy.props.IntProperty(min=0,
 class D2P_Properties(bpy.types.PropertyGroup):
     my_string: bpy.props.StringProperty(name="Enter Text")
 
+    # my_float_vector : bpy.props.FloatVectorProperty(name= "Scale", soft_min= 0,
+    # soft_max= 1000, default= (1,1,1))
+    my_float: bpy.props.FloatProperty(name="CVP Influence", min=0,
+                                      max=1.0, default=0.0)
 
     my_enum: bpy.props.EnumProperty(
         name="",
