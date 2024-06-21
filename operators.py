@@ -59,7 +59,7 @@ class D2P_OT_SelectedToUVMask(bpy.types.Operator):
             C.view_layer.objects.active = new_ob
             new_ob.select_set(True)
 
-            # Create mesh from given verts, faces.
+            # Create mesh from given verts, faces
             me.from_pydata(verts, [], faces)
             # Update mesh with new data
             me.update()
@@ -80,6 +80,9 @@ class D2P_OT_SelectedToUVMask(bpy.types.Operator):
         # Show wire on the new object
         new_obj.show_wire = True
 
+        # Deselect all objects
+        bpy.ops.object.select_all(action='DESELECT')
+
         # Find the canvas object by suffix
         canvas_obj = None
         for obj in bpy.data.objects:
@@ -88,8 +91,47 @@ class D2P_OT_SelectedToUVMask(bpy.types.Operator):
                 break
 
         if canvas_obj:
-            # Snap to lower left corner of canvas object and set as child
-            new_obj.location = canvas_obj.location
+            # Select the canvas object
+            canvas_obj.select_set(True)
+            context.view_layer.objects.active = canvas_obj
+
+            # Update the context to ensure the active object is set
+            bpy.context.view_layer.update()
+
+            # Use temp_override for mode switching
+            with bpy.context.temp_override(active_object=canvas_obj, selected_objects=[canvas_obj]):
+                # Enter Edit Mode for the canvas object
+                bpy.ops.object.mode_set(mode='EDIT')
+
+                # Get the active mesh
+                bm = bmesh.from_edit_mesh(canvas_obj.data)
+
+                # Ensure the lookup table is up to date
+                bm.verts.ensure_lookup_table()
+
+                # Identify the lower left vertex (default is Vertex 0)
+                lower_left_vertex = bm.verts[0]
+
+                # Switch to Object Mode temporarily
+                bpy.ops.object.mode_set(mode='OBJECT')
+
+                # Access the mesh vertices in Object Mode
+                verts = canvas_obj.data.vertices
+
+                # Get the coordinates of the lower left vertex (Vertex 0)
+                lower_left_vertex_co = verts[0].co
+
+                # Snap the cursor to this vertex
+                bpy.context.scene.cursor.location = lower_left_vertex_co
+
+                print(f"Cursor snapped to lower left vertex: {lower_left_vertex_co}")
+
+            # Select the new UV mask object
+            new_obj.select_set(True)
+            context.view_layer.objects.active = new_obj
+
+            # Move the new object to the cursor's location
+            new_obj.location = bpy.context.scene.cursor.location
             new_obj.location.z += 0.25  # Move up Z by 0.25
             new_obj.parent = canvas_obj  # Make it a child of canvas object
 
