@@ -20,7 +20,107 @@ from bpy.types import Operator, Menu, Panel, UIList
 from bpy_extras.io_utils import ImportHelper
 
 # Define your operators here
+class D2P_OT_SelectedToUVMask(bpy.types.Operator):
+    """New Mask Object from UV Map of Subject"""
+    bl_description = "New Mask Object from UV Map of Subject"
+    bl_idname = "object.uv_mask_from_selected_object"
+    bl_label = "Generate UV Mask Object from Selected Object"
+    bl_options = {'REGISTER', 'UNDO'}
 
+    @classmethod
+    def poll(cls, context):
+        # Ensure at least one object is selected
+        return context.selected_objects
+
+    def execute(self, context):
+        selected_objects = context.selected_objects
+        if not selected_objects:
+            self.report({'WARNING'}, "No selected objects found.")
+            return {'CANCELLED'}
+
+        selected_object = selected_objects[0]
+
+        if not selected_object.data.uv_layers:
+            self.report({'WARNING'}, "Please Create UV Layer")
+            return {'CANCELLED'}
+
+        C = bpy.context
+        ob = selected_object  # Use the selected object
+        size = 4.095675
+
+        def create_mesh_from_data(name, verts, faces):
+            # Create mesh and object
+            me = bpy.data.meshes.new(name + 'Mesh')
+            new_ob = bpy.data.objects.new(name, me)
+            new_ob.show_name = True
+
+            # Link object to scene and make active
+            C.view_layer.active_layer_collection.collection.objects.link(new_ob)
+            C.view_layer.objects.active = new_ob
+            new_ob.select_set(True)
+
+            # Create mesh from given verts, faces.
+            me.from_pydata(verts, [], faces)
+            # Update mesh with new data
+            me.update()
+            return new_ob
+
+        out_verts = []
+        out_faces = []
+        for face in ob.data.polygons:
+            oface = []
+            for vert, loop in zip(face.vertices, face.loop_indices):
+                uv = ob.data.uv_layers.active.data[loop].uv
+                out_verts.append((uv.x * size, uv.y * size, 0))
+                oface.append(loop)
+            out_faces.append(oface)
+
+        new_obj = create_mesh_from_data(ob.name + 'UVObj', out_verts, out_faces)
+
+        # Show wire on the new object
+        new_obj.show_wire = True
+
+        # Find the canvas object by suffix
+        canvas_obj = None
+        for obj in bpy.data.objects:
+            if obj.name.endswith('_canvas'):
+                canvas_obj = obj
+                break
+
+        if canvas_obj:
+            # Snap to lower left corner of canvas object and set as child
+            new_obj.location = canvas_obj.location
+            new_obj.location.z += 0.25  # Move up Z by 0.25
+            new_obj.parent = canvas_obj  # Make it a child of canvas object
+
+            # Adopt the material of the selected object
+            if selected_object.data.materials:
+                new_obj.data.materials.append(selected_object.data.materials[0])  # Copy material from selected object
+
+            # Ensure 'canvas_view' collection exists
+            if 'canvas_view' not in bpy.data.collections:
+                canvas_view_collection = bpy.data.collections.new('canvas_view')
+                bpy.context.scene.collection.children.link(canvas_view_collection)
+            else:
+                canvas_view_collection = bpy.data.collections['canvas_view']
+
+            # Ensure 'mask_objects' collection exists within 'canvas_view'
+            if 'mask_objects' not in bpy.data.collections:
+                mask_objects_collection = bpy.data.collections.new('mask_objects')
+                canvas_view_collection.children.link(mask_objects_collection)
+            else:
+                mask_objects_collection = bpy.data.collections['mask_objects']
+
+            # Add new object to 'mask_objects' collection
+            if new_obj.name not in mask_objects_collection.objects:
+                mask_objects_collection.objects.link(new_obj)
+                bpy.context.view_layer.active_layer_collection.collection.objects.unlink(new_obj)
+
+        else:
+            self.report({'WARNING'}, "Canvas object with suffix '_canvas' not found.")
+            return {'CANCELLED'}
+
+        return {'FINISHED'}
 
 class D2P_OT_CanvasAndCamera(bpy.types.Operator):
     """Create Canvas and Camera from Active Image"""
