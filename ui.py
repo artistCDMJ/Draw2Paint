@@ -280,7 +280,7 @@ class D2P_PT_MaskControl(bpy.types.Panel):
         layout = self.layout
         scene = context.scene
         mytool = scene.my_tool
-        
+
         layout = self.layout
         box = layout.box()
         col = box.column(align=True)
@@ -307,13 +307,15 @@ class D2P_PT_MaskControl(bpy.types.Panel):
         row2.scale_y = 1.25
         row2.operator("d2p.solidify_union", text='Join Masks',
                       icon='SELECT_EXTEND')
-        # ("d2p.remove_modifiers", text='Remove Mods', icon='UNLINKED')
+
         row = col.row(align=True)
         row = row.split(align=True)
         row.scale_x = 0.50
         row.scale_y = 1.25
         row.operator("d2p.remove_modifiers", text='Remove Mods',
                      icon='UNLINKED')
+        row = layout.row()
+        row.operator("object.uv_mask_from_selected_object", text='Create UV Mask', icon='MESH_MONKEY')
 
         layout = self.layout
         box = layout.box()
@@ -336,7 +338,7 @@ class D2P_PT_MaskControl(bpy.types.Panel):
         row3.scale_x = 0.50
         row3.scale_y = 1.25
         row2.operator("d2p.add_holdout", text='Holdout', icon='GHOST_ENABLED')
-       
+
         layout = self.layout
         row = layout.row()
         row.label(text="Face Mask Groups")
@@ -354,7 +356,7 @@ class D2P_PT_MaskControl(bpy.types.Panel):
         rows = 2
         if group:
             rows = 4
-            
+
         row = layout.row()
         row.template_list("MESH_UL_vgroups", "", ob, "vertex_groups",
                           ob.vertex_groups, "active_index", rows=rows)
@@ -377,11 +379,11 @@ class D2P_PT_MaskControl(bpy.types.Panel):
         row = col.row(align=True)
         row1 = row.split(align=True)
         row1.operator("d2p.select_vgroup", text="Sel", icon='RADIOBUT_ON')
-        
+
         row1.operator("d2p.deselect_vgroup", text="Desel", icon='RADIOBUT_OFF')
-        
+
         row1.operator("d2p.assign_vgroup", text="Set", icon='ADD')
-        
+
         row1.operator("d2p.unassign_vgroup", text="Unset", icon='REMOVE')
 
 
