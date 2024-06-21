@@ -80,6 +80,13 @@ class D2P_OT_SelectedToUVMask(bpy.types.Operator):
         # Show wire on the new object
         new_obj.show_wire = True
 
+        # Enter Edit Mode to remove duplicate vertices
+        with bpy.context.temp_override(active_object=new_obj, selected_objects=[new_obj]):
+            bpy.ops.object.mode_set(mode='EDIT')
+            bpy.ops.mesh.select_all(action='SELECT')
+            bpy.ops.mesh.remove_doubles()
+            bpy.ops.object.mode_set(mode='OBJECT')
+
         # Deselect all objects
         bpy.ops.object.select_all(action='DESELECT')
 
