@@ -3,8 +3,6 @@ import bpy
 from bpy.types import Operator, Menu, Panel, UIList
 from bpy_extras.io_utils import ImportHelper
 
-########################################
-## panel draw for Draw2Paint
 class D2P_PT_ImageState(bpy.types.Panel):
     """Image State Tools"""
     bl_label = "Image State Tools"
@@ -60,14 +58,6 @@ class D2P_PT_ImageState(bpy.types.Panel):
         row = layout.row()
         row.operator("d2p.save_dirty", text="Save All Pack All", icon='BORDERMOVE')
 
-        '''row = layout.row()
-        row = col.row(align=True)
-        row.scale_x = 0.50
-        row.scale_y = 1.25
-        row3 = row.split(align=True)
-        row3.operator("d2p.save_increm", text="Save Increment",
-                      icon='FILE_IMAGE')'''
-
 
 ################################## GPencil Future Home of Shortcuts
 class D2P_PT_GreasePencil(bpy.types.Panel):
@@ -88,9 +78,6 @@ class D2P_PT_GreasePencil(bpy.types.Panel):
 
         row.operator("d2p.grease_object", text="New GPencil",
                      icon='OUTLINER_DATA_GP_LAYER')
-
-
-################################ 3D to 2D Experimental Workflow Items
 
 ############# Scene Extras
 class D2P_PT_2D_to_3D_Experimental(bpy.types.Panel):
@@ -175,10 +162,6 @@ class D2P_PT_ImageCrop(bpy.types.Panel):
         scene = context.scene
         rd = context.scene.render
 
-        ##################### render.use_crop_to_border
-        # box = layout.box()
-        # col = box.column(align=True)
-        # col.label(text="Crop Tools PRBA")
         sub = layout.box()
         sub.prop(rd, "use_crop_to_border")
         if not scene.render.use_border:
@@ -214,7 +197,6 @@ class D2P_PT_ImageCrop(bpy.types.Panel):
         layout.label(icon="INFO", text="Don't forget to apply pixels values")
         row = layout.row()
         row.operator("d2p.pixelstoborder", text="Pixels -> Border")
-
 
 class D2P_PT_FlipRotate(bpy.types.Panel):
     """Flip and Rotate the Canvas"""
