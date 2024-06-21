@@ -1,23 +1,12 @@
 import bpy
+import os
+import re
 
-
-def find_brush(context):                 # Trouver la brosse
-    tool_settings = context.tool_settings
-    if context.mode == 'SCULPT':
-        return tool_settings.sculpt.brush
-    elif context.mode == 'PAINT_TEXTURE':
-        return tool_settings.image_paint.brush
-    elif context.mode == 'PAINT_VERTEX':
-        return tool_settings.vertex_paint.brush
-    else:
-        return None
-################# new def for cam work
 
 def create_image_plane_from_image(active_image, scale_factor=0.01):
-    
     width = active_image.size[0]
     height = active_image.size[1]
-    
+
     name = active_image.name + "_canvas"
     print(f"Active image dimensions: {width} x {height}")
 
@@ -42,8 +31,8 @@ def create_image_plane_from_image(active_image, scale_factor=0.01):
     tex_image.image = active_image
     mat.node_tree.links.new(bsdf.inputs['Base Color'], tex_image.outputs['Color'])
     obj.data.materials.append(mat)
-    
-     # Rename the UV map
+
+    # Rename the UV map
     uv_layer = obj.data.uv_layers.active
     uv_layer.name = name + "_uvmap"
 
@@ -52,14 +41,15 @@ def create_image_plane_from_image(active_image, scale_factor=0.01):
 
     return obj, width * scale_factor, height * scale_factor
 
+
 def create_matching_camera(image_plane_obj, width, height, distance=1):
-    im_name = image_plane_obj.name+ "_camera_view"
+    im_name = image_plane_obj.name + "_camera_view"
     cam_data = bpy.data.cameras.new(name=im_name)
     cam_data.type = 'ORTHO'
     cam_data.ortho_scale = max(width, height) / 5
-    
+
     cam_obj = bpy.data.objects.new(name=im_name, object_data=cam_data)
-    
+
     bpy.context.collection.objects.link(cam_obj)
 
     cam_obj.location = (0, 0, distance)
@@ -68,18 +58,20 @@ def create_matching_camera(image_plane_obj, width, height, distance=1):
     scene = bpy.context.scene
     scene.render.resolution_x = int(width / 0.01)  # Converting back to original resolution
     scene.render.resolution_y = int(height / 0.01)  # Converting back to original resolution
-    
+
     return cam_obj
+
 
 def switch_to_camera_view(camera_obj):
     for area in bpy.context.screen.areas:
         if area.type == 'VIEW_3D':
             space = area.spaces.active
             space.region_3d.view_perspective = 'CAMERA'
-            
+
             bpy.context.scene.camera = camera_obj
-                   
+
             break
+
 
 def get_image_from_selected_object(selected_object):
     if selected_object.type == 'MESH' and selected_object.active_material:
@@ -89,19 +81,21 @@ def get_image_from_selected_object(selected_object):
                 return node.image
     return None
 
+
 def move_object_to_collection(obj, collection_name):
     # Get the collection or create it if it doesn't exist
     collection = bpy.data.collections.get(collection_name)
     if not collection:
         collection = bpy.data.collections.new(collection_name)
         bpy.context.scene.collection.children.link(collection)
-    
+
     # Unlink the object from all its current collections
     for coll in obj.users_collection:
         coll.objects.unlink(obj)
-    
+
     # Link the object to the new collection
     collection.objects.link(obj)
+
 
 def export_uv_layout(obj, filepath):
     bpy.ops.object.mode_set(mode="EDIT")
@@ -109,17 +103,19 @@ def export_uv_layout(obj, filepath):
     bpy.ops.uv.export_layout(filepath=filepath, mode='PNG', opacity=0)
     bpy.ops.object.mode_set(mode='OBJECT')
 
+
 def set_camera_background_image(camera_obj, filepath):
     if not os.path.exists(filepath):
         raise FileNotFoundError(f"File not found: {filepath}")
-    
+
     img = bpy.data.images.load(filepath)
     camera_obj.data.show_background_images = True
     bg = camera_obj.data.background_images.new()
     bg.image = img
     bg.alpha = 1.0
     bg.display_depth = 'FRONT'
-    
+
+
 def get_active_image_from_image_editor():
     for area in bpy.context.screen.areas:
         if area.type == 'IMAGE_EDITOR':
@@ -129,12 +125,13 @@ def get_active_image_from_image_editor():
                         return space.image
     raise ValueError("No active image found in the Image Editor")
 
+
 def increment_filename(filepath):
     directory, filename = os.path.split(filepath)
     name, ext = os.path.splitext(filename)
 
     match = re.match(r"^(.*?)(\d+)$", name)
-    
+
     if match:
         base_name = match.group(1)
         number = int(match.group(2))
@@ -142,9 +139,9 @@ def increment_filename(filepath):
     else:
         base_name = name
         new_name = f"{base_name}_0001{ext}"
-        
+
     new_filepath = os.path.join(directory, new_name)
-    
+
     while os.path.exists(new_filepath):
         match = re.match(r"^(.*?)(\d+)$", base_name)
         if match:
@@ -155,19 +152,30 @@ def increment_filename(filepath):
             base_name = base_name + "_0001"
         new_name = f"{base_name}{ext}"
         new_filepath = os.path.join(directory, new_name)
-        
+
     return new_filepath
+
 
 def save_incremental_copy(image):
     if image.packed_file:
         print(f"Unpacking image {image.name}")
         image.unpack(method='USE_ORIGINAL')
-        
+
     filepath = bpy.path.abspath(image.filepath)
     new_filepath = increment_filename(filepath)
-    
+
     image.save_render(new_filepath)
-    
+
     print(f"Image saved as {new_filepath}")
 
 
+def find_brush(context):
+    tool_settings = context.tool_settings
+    if context.mode == 'SCULPT':
+        return tool_settings.sculpt.brush
+    elif context.mode == 'PAINT_TEXTURE':
+        return tool_settings.image_paint.brush
+    elif context.mode == 'PAINT_VERTEX':
+        return tool_settings.vertex_paint.brush
+    else:
+        return None
