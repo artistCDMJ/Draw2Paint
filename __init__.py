@@ -196,7 +196,7 @@ def register():
                                                                             default=100.0, min=0.0)
     if hasattr(keymaps, 'register'):
         keymaps.register()
-    #bpy.types.Scene.my_tool = bpy.props.PointerProperty(type=D2P_Properties)
+    bpy.types.Scene.my_tool = bpy.props.PointerProperty(type=D2P_Properties)
 
 def unregister():
     if hasattr(keymaps, 'unregister'):
