@@ -15,8 +15,8 @@
 
 bl_info = {
     "name": "Draw2Paint",
-    "author": "CDMJ, Spirou4D, Lapineige, Bart Crouch, batFINGER",
-    "version": (4, 0, 6),
+    "author": "CDMJ, Spirou4D, Lapineige, Bart Crouch, batFINGER, todashuta",
+    "version": (4, 0, 7),
     "blender": (4, 2, 0),
     "location": "UI > Draw2Paint",
     "description": "2D Paint in 3D View, Mask Manipulation, EZPaint Adoption",
@@ -102,6 +102,14 @@ classes = (
     D2P_PT_GuideControls,
     D2P_PT_MaskControl,
     D2P_PT_Sculpt2D,
+    IMAGE_RESIZE_OT_width_mul2,
+    IMAGE_RESIZE_OT_height_mul2,
+    IMAGE_RESIZE_OT_width_div2,
+    IMAGE_RESIZE_OT_height_div2,
+    IMAGE_RESIZE_OT_getcurrentsize,
+    IMAGE_RESIZE_OT_scale_percentage,
+    IMAGE_RESIZE_OT_main,
+    IMAGE_RESIZE_PT_panel,
     D2P_PT_ImagePlanePanel,
 )
 
@@ -111,12 +119,22 @@ def register():
             bpy.utils.unregister_class(cls)
         bpy.utils.register_class(cls)
     bpy.types.Scene.my_tool = bpy.props.PointerProperty(type=properties.D2P_Properties)
+    bpy.types.Scene.image_resize_addon_width = bpy.props.IntProperty(name="Width")
+    bpy.types.Scene.image_resize_addon_height = bpy.props.IntProperty(name="Height")
+    bpy.types.Scene.image_resize_addon_percentage = bpy.props.FloatProperty(name="Scale Percentage",\
+                                                                            default=100.0, min=0.0)
     if hasattr(keymaps, 'register'):
         keymaps.register()
 
 def unregister():
     if hasattr(keymaps, 'unregister'):
         keymaps.unregister()
+    if hasattr(bpy.types.Scene, "image_resize_addon_width"):
+        del bpy.types.Scene.image_resize_addon_width
+    if hasattr(bpy.types.Scene, "image_resize_addon_height"):
+        del bpy.types.Scene.image_resize_addon_height
+    if hasattr(bpy.types.Scene, "image_resize_addon_percentage"):
+        del bpy.types.Scene.image_resize_addon_percentage
     for cls in reversed(classes):
         if hasattr(bpy.types, cls.__name__):
             bpy.utils.unregister_class(cls)
