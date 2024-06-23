@@ -2523,3 +2523,175 @@ class D2P_OT_ModifyBrushTextures(bpy.types.Operator):
             self.report({'INFO'}, "No selected texture")
         return {'FINISHED'}
 
+class IMAGE_RESIZE_OT_width_mul2(bpy.types.Operator):
+    bl_idname = "image.resize_ex_width_mul2"
+    bl_label = "*2"
+    bl_description = "*2"
+
+    shift_key_down = False
+
+    @classmethod
+    def poll(cls, context):
+        if hasattr(context.space_data, "image"):
+            if context.space_data.image is not None:
+                return True
+        return False
+
+    def invoke(self, context, event):
+        self.shift_key_down = event.shift
+        return self.execute(context)
+
+    def execute(self, context):
+        scene = context.scene
+        if self.shift_key_down:
+            scene.image_resize_addon_width = next_power_of_2(scene.image_resize_addon_width)
+        else:
+            scene.image_resize_addon_width = scene.image_resize_addon_width * 2
+
+        return {"FINISHED"}
+
+class IMAGE_RESIZE_OT_height_mul2(bpy.types.Operator):
+    bl_idname = "image.resize_ex_height_mul2"
+    bl_label = "*2"
+    bl_description = "*2"
+
+    shift_key_down = False
+
+    @classmethod
+    def poll(cls, context):
+        if hasattr(context.space_data, "image"):
+            if context.space_data.image is not None:
+                return True
+        return False
+
+    def invoke(self, context, event):
+        self.shift_key_down = event.shift
+        return self.execute(context)
+
+    def execute(self, context):
+        scene = context.scene
+        if self.shift_key_down:
+            scene.image_resize_addon_height = next_power_of_2(scene.image_resize_addon_height)
+        else:
+            scene.image_resize_addon_height = scene.image_resize_addon_height * 2
+
+        return {"FINISHED"}
+
+class IMAGE_RESIZE_OT_width_div2(bpy.types.Operator):
+    bl_idname = "image.resize_ex_width_div2"
+    bl_label = "/2"
+    bl_description = "/2"
+
+    shift_key_down = False
+
+    @classmethod
+    def poll(cls, context):
+        if hasattr(context.space_data, "image"):
+            if context.space_data.image is not None:
+                return True
+        return False
+
+    def invoke(self, context, event):
+        self.shift_key_down = event.shift
+        return self.execute(context)
+
+    def execute(self, context):
+        scene = context.scene
+        if self.shift_key_down:
+            scene.image_resize_addon_width = previous_power_of_2(scene.image_resize_addon_width)
+        else:
+            scene.image_resize_addon_width = scene.image_resize_addon_width // 2
+
+        return {"FINISHED"}
+
+class IMAGE_RESIZE_OT_height_div2(bpy.types.Operator):
+    bl_idname = "image.resize_ex_height_div2"
+    bl_label = "/2"
+    bl_description = "/2"
+
+    shift_key_down = False
+
+    @classmethod
+    def poll(cls, context):
+        if hasattr(context.space_data, "image"):
+            if context.space_data.image is not None:
+                return True
+        return False
+
+    def invoke(self, context, event):
+        self.shift_key_down = event.shift
+        return self.execute(context)
+
+    def execute(self, context):
+        scene = context.scene
+        if self.shift_key_down:
+            scene.image_resize_addon_height = previous_power_of_2(scene.image_resize_addon_height)
+        else:
+            scene.image_resize_addon_height = scene.image_resize_addon_height // 2
+
+        return {"FINISHED"}
+
+class IMAGE_RESIZE_OT_getcurrentsize(bpy.types.Operator):
+    bl_idname = "image.resize_ex_getcurrentsize"
+    bl_label = "Get Current Size"
+    bl_description = "Get Current Size"
+
+    @classmethod
+    def poll(cls, context):
+        if hasattr(context.space_data, "image"):
+            if context.space_data.image is not None:
+                return True
+        return False
+
+    def execute(self, context):
+        scene = context.scene
+        image = context.space_data.image
+        scene.image_resize_addon_width, scene.image_resize_addon_height = image.size
+
+        return {"FINISHED"}
+
+class IMAGE_RESIZE_OT_scale_percentage(bpy.types.Operator):
+    bl_idname = "image.resize_ex_scale_percentage"
+    bl_label = "Scale by Percentage"
+    bl_description = "Scale Width and Height by Percentage"
+
+    @classmethod
+    def poll(cls, context):
+        return hasattr(context.space_data, "image") and context.space_data.image is not None
+
+    def execute(self, context):
+        scene = context.scene
+        percentage = scene.image_resize_addon_percentage / 100.0
+        scene.image_resize_addon_width = int(scene.image_resize_addon_width * percentage)
+        scene.image_resize_addon_height = int(scene.image_resize_addon_height * percentage)
+        return {"FINISHED"}
+
+class IMAGE_RESIZE_OT_main(bpy.types.Operator):
+    bl_idname = "image.resize_ex_main"
+    bl_label = "Resize Image"
+    bl_description = "Resize Image"
+
+    shift_key_down = False
+
+    @classmethod
+    def poll(cls, context):
+        if hasattr(context.space_data, "image"):
+            if context.space_data.image is not None:
+                return True
+        return False
+
+    def execute(self, context):
+        scene = context.scene
+        image = context.space_data.image
+        if self.shift_key_down:
+            image.reload()
+        width, height = scene.image_resize_addon_width, scene.image_resize_addon_height
+        image.scale(width, height)
+        bpy.ops.image.resize()
+
+        return {"FINISHED"}
+
+    def invoke(self, context, event):
+        self.shift_key_down = event.shift
+        return self.execute(context)
+
