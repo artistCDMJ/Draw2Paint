@@ -3,6 +3,9 @@ import bpy
 from bpy.types import Operator, Menu, Panel, UIList
 from bpy_extras.io_utils import ImportHelper
 
+
+########################################
+## panel draw for Draw2Paint
 class D2P_PT_ImageState(bpy.types.Panel):
     """Image State Tools"""
     bl_label = "Image State Tools"
@@ -40,9 +43,9 @@ class D2P_PT_ImageState(bpy.types.Panel):
         row2.operator("object.create_camera_from_selected_image_plane", text="Camera From Canvas",
                       icon='RENDER_RESULT')
         row3 = col.row(align=True)
-        row3.scale_x=0.50
-        row3.scale_y=1.25
-        row3.operator("d2p.display_active_slot", icon = 'WINDOW')
+        row3.scale_x = 0.50
+        row3.scale_y = 1.25
+        row3.operator("d2p.display_active_slot", icon='WINDOW')
 
         row = layout.row()
         row = col.row(align=True)
@@ -57,6 +60,14 @@ class D2P_PT_ImageState(bpy.types.Panel):
                       icon='FILE_IMAGE')
         row = layout.row()
         row.operator("d2p.save_dirty", text="Save All Pack All", icon='BORDERMOVE')
+
+        '''row = layout.row()
+        row = col.row(align=True)
+        row.scale_x = 0.50
+        row.scale_y = 1.25
+        row3 = row.split(align=True)
+        row3.operator("d2p.save_increm", text="Save Increment",
+                      icon='FILE_IMAGE')'''
 
 
 ################################## GPencil Future Home of Shortcuts
@@ -78,6 +89,9 @@ class D2P_PT_GreasePencil(bpy.types.Panel):
 
         row.operator("d2p.grease_object", text="New GPencil",
                      icon='OUTLINER_DATA_GP_LAYER')
+
+
+################################ 3D to 2D Experimental Workflow Items
 
 ############# Scene Extras
 class D2P_PT_2D_to_3D_Experimental(bpy.types.Panel):
@@ -102,29 +116,29 @@ class D2P_PT_2D_to_3D_Experimental(bpy.types.Panel):
         row1 = row.split(align=True)
         row1.scale_x = 0.50
         row1.scale_y = 1.25
-        
+
         row1.operator("object.canvas_and_camera_from_selected_object",
                       text='Subject to Canvas',
                       icon='MESH_MONKEY')
-        
+
         row = layout.row()
         row = col.row(align=True)
-        
+
         row2 = row.split(align=True)
         row2.scale_x = 0.50
         row2.scale_y = 1.25
         subject_view = bpy.data.collections.get("subject_view")
         canvas_view = bpy.data.collections.get("canvas_view")
-        
+
         if subject_view and canvas_view:
             if subject_view.hide_viewport:
-                row2.operator("object.toggle_collection_visibility", 
-                            text="Show Subject", 
-                            icon='MESH_UVSPHERE')
+                row2.operator("object.toggle_collection_visibility",
+                              text="Show Subject",
+                              icon='MESH_UVSPHERE')
             else:
-                row2.operator("object.toggle_collection_visibility", 
-                            text="Show Canvas", 
-                            icon='MESH_CIRCLE')
+                row2.operator("object.toggle_collection_visibility",
+                              text="Show Canvas",
+                              icon='MESH_CIRCLE')
         else:
             row2 = layout.row()
             row2.label(text="Collections not found")
@@ -135,16 +149,16 @@ class D2P_PT_2D_to_3D_Experimental(bpy.types.Panel):
         row.scale_y = 1.25
         row = row.split(align=True)
         row.operator("object.toggle_uv_image_visibility",
-                      text="Toggle UV in Camera",
-                      icon='IMAGE_PLANE')
+                     text="Toggle UV in Camera",
+                     icon='IMAGE_PLANE')
         row = layout.row()
         row = col.row(align=True)
         row.scale_x = 0.50
         row.scale_y = 1.25
-        
+
         row.operator("d2p.frontof_paint",
-                      text="Align to Face",
-                      icon='IMPORT')
+                     text="Align to Face",
+                     icon='IMPORT')
 
 
 class D2P_PT_ImageCrop(bpy.types.Panel):
@@ -162,6 +176,10 @@ class D2P_PT_ImageCrop(bpy.types.Panel):
         scene = context.scene
         rd = context.scene.render
 
+        ##################### render.use_crop_to_border
+        # box = layout.box()
+        # col = box.column(align=True)
+        # col.label(text="Crop Tools PRBA")
         sub = layout.box()
         sub.prop(rd, "use_crop_to_border")
         if not scene.render.use_border:
@@ -198,6 +216,7 @@ class D2P_PT_ImageCrop(bpy.types.Panel):
         row = layout.row()
         row.operator("d2p.pixelstoborder", text="Pixels -> Border")
 
+
 class D2P_PT_FlipRotate(bpy.types.Panel):
     """Flip and Rotate the Canvas"""
     bl_label = "Canvas Controls"
@@ -207,7 +226,7 @@ class D2P_PT_FlipRotate(bpy.types.Panel):
     bl_category = "Draw2Paint"
     bl_parent_id = 'D2P_PT_ImageState'
     bl_options = {'DEFAULT_CLOSED'}
-    
+
     @classmethod
     def poll(self, context):
         obj = context.active_object
@@ -219,7 +238,7 @@ class D2P_PT_FlipRotate(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         scene = context.scene
-        
+
         box = layout.box()
         col = box.column(align=True)
         col.label(text="Rotate and Flip Axis for Painting")
@@ -238,11 +257,12 @@ class D2P_PT_FlipRotate(bpy.types.Panel):
         obj = context.object
 
         if obj and obj.type == 'MESH':
-            #layout.label(text="Rotate Canvas")
+            # layout.label(text="Rotate Canvas")
             row = layout.row()
             row.prop(obj, "rotation_euler", index=2, text="Rotate Canvas")
             row.operator("d2p.canvas_resetrot", text="",
                          icon='RECOVER_LAST')
+
 
 class D2P_PT_GuideControls(bpy.types.Panel):
     """A custom panel in the viewport toolbar"""
@@ -265,6 +285,7 @@ class D2P_PT_GuideControls(bpy.types.Panel):
                      icon='ORIENTATION_CURSOR')
         row.operator("d2p.center_object", text="Recenter Guide",
                      icon='ORIENTATION_CURSOR')
+
 
 ############### masking
 class D2P_PT_MaskControl(bpy.types.Panel):
@@ -417,20 +438,23 @@ class D2P_PT_Sculpt2D(bpy.types.Panel):
         row2.scale_y = 1.25
         row2.operator("d2p.sculpt_liquid", text='Liquid Sculpt',
                       icon='MOD_FLUIDSIM')
-                      
-                      
+
+
 ############################### IMAGE EDITOR PANEL OPTION
 class D2P_PT_ImagePlanePanel(bpy.types.Panel):
     bl_label = "Image Plane and Camera"
     bl_idname = "D2P_PT_image_plane_panel"
     bl_space_type = 'IMAGE_EDITOR'
     bl_region_type = 'UI'
-    bl_category = 'Create'
+    bl_category = 'Image'
 
     def draw(self, context):
         layout = self.layout
         row = layout.row()
         row.operator("image.canvas_and_camera", text="Create Canvas and Camera")
+        scn = bpy.context.scene
+        image = bpy.context.space_data.image
+
 
 class IMAGE_RESIZE_PT_panel(bpy.types.Panel):
     bl_label = "Image Resize by todashuta"
@@ -453,4 +477,3 @@ class IMAGE_RESIZE_PT_panel(bpy.types.Panel):
         layout.prop(scene, "image_resize_addon_percentage", text="Scale Percentage")
         layout.operator(IMAGE_RESIZE_OT_scale_percentage.bl_idname)
         layout.operator(IMAGE_RESIZE_OT_main.bl_idname)
-
