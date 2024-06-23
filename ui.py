@@ -431,3 +431,26 @@ class D2P_PT_ImagePlanePanel(bpy.types.Panel):
         layout = self.layout
         row = layout.row()
         row.operator("image.canvas_and_camera", text="Create Canvas and Camera")
+
+class IMAGE_RESIZE_PT_panel(bpy.types.Panel):
+    bl_label = "Image Resize by todashuta"
+    bl_space_type = "IMAGE_EDITOR"
+    bl_region_type = "UI"
+    bl_category = "Image"
+
+    def draw(self, context):
+        scene = context.scene
+        layout = self.layout
+        layout.operator(IMAGE_RESIZE_OT_getcurrentsize.bl_idname)
+        split = layout.split(factor=0.6)
+        split.prop(scene, "image_resize_addon_width")
+        split.operator(IMAGE_RESIZE_OT_width_div2.bl_idname, text="/2")
+        split.operator(IMAGE_RESIZE_OT_width_mul2.bl_idname, text="*2")
+        split = layout.split(factor=0.6)
+        split.prop(scene, "image_resize_addon_height")
+        split.operator(IMAGE_RESIZE_OT_height_div2.bl_idname, text="/2")
+        split.operator(IMAGE_RESIZE_OT_height_mul2.bl_idname, text="*2")
+        layout.prop(scene, "image_resize_addon_percentage", text="Scale Percentage")
+        layout.operator(IMAGE_RESIZE_OT_scale_percentage.bl_idname)
+        layout.operator(IMAGE_RESIZE_OT_main.bl_idname)
+
