@@ -43,8 +43,8 @@ from .ui import *
 from . import keymaps, properties
 
 classes = (
-    properties.D2P_Properties,
-    D2P_OT_SelectedToUVMask,
+
+    D2P_Properties,
     D2P_OT_CanvasHoriz,
     D2P_OT_CanvasVertical,
     D2P_OT_ImageReload,
@@ -78,7 +78,6 @@ classes = (
     D2P_OT_D2PaintScene,
     D2P_OT_DisplayActivePaintSlot,
     D2P_OT_ModifyBrushTextures,
-    D2P_OT_InitPaintBlend,
     D2P_OT_ToggleAlphaMode,
     D2P_OT_ToggleColorSoftLightScreen,
     D2P_OT_ToggleAddMultiply,
@@ -99,6 +98,7 @@ classes = (
     D2P_PT_FlipRotate,
     D2P_PT_ImageCrop,
     D2P_PT_2D_to_3D_Experimental,
+    D2P_OT_SelectedToUVMask,
     D2P_PT_GuideControls,
     D2P_PT_MaskControl,
     D2P_PT_Sculpt2D,
@@ -110,7 +110,8 @@ classes = (
     IMAGE_RESIZE_OT_scale_percentage,
     IMAGE_RESIZE_OT_main,
     IMAGE_RESIZE_PT_panel,
-    D2P_PT_ImagePlanePanel,
+    D2P_PT_ImagePlanePanel
+
 )
 
 def register():
@@ -125,6 +126,7 @@ def register():
                                                                             default=100.0, min=0.0)
     if hasattr(keymaps, 'register'):
         keymaps.register()
+    bpy.types.Scene.my_tool = bpy.props.PointerProperty(type=D2P_Properties)
 
 def unregister():
     if hasattr(keymaps, 'unregister'):
