@@ -179,3 +179,9 @@ def find_brush(context):
         return tool_settings.vertex_paint.brush
     else:
         return None
+
+def next_power_of_2(x):
+    return 1 if x == 0 else 2**math.ceil(math.log2(x))
+
+def previous_power_of_2(x):
+    return 1 if x == 0 else 2**math.floor(math.log2(x))
