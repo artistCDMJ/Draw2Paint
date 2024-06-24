@@ -110,7 +110,7 @@ def register():
         if hasattr(bpy.types, cls.__name__):
             bpy.utils.unregister_class(cls)
         bpy.utils.register_class(cls)
-    #bpy.types.Scene.my_tool = bpy.props.PointerProperty(type=properties.D2P_Properties)
+    bpy.types.Scene.my_tool = bpy.props.PointerProperty(type=properties.D2P_Properties)
     if hasattr(keymaps, 'register'):
         keymaps.register()
 
