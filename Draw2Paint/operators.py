@@ -442,6 +442,7 @@ class D2P_OT_ToggleCollectionView(bpy.types.Operator):
             self.report({'WARNING'}, "One or both collections not found.")
             return {'CANCELLED'}
 
+
 class D2P_OT_D2PaintScene(bpy.types.Operator):
     """Create Draw2Paint Scene"""
     bl_description = "Create Scene for Working in Draw2Paint"
@@ -450,7 +451,7 @@ class D2P_OT_D2PaintScene(bpy.types.Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     @classmethod
-    def poll(self, context):
+    def poll(cls, context):
         for sc in bpy.data.scenes:
             if sc.name == "Draw2Paint":
                 return False
@@ -465,10 +466,15 @@ class D2P_OT_D2PaintScene(bpy.types.Operator):
         bpy.ops.scene.new(type='NEW')
         context.scene.name = _name
 
-        # set to top view
+        # Set to top view
         bpy.ops.view3d.view_axis(type='TOP', align_active=True)
-        # set to Eevee
-        bpy.context.scene.render.engine = 'BLENDER_EEVEE'
+
+        # Set the render engine based on Blender version
+        if bpy.app.version >= (4, 2, 0):
+            context.scene.render.engine = 'BLENDER_EEVEE_NEXT'
+        else:
+            context.scene.render.engine = 'BLENDER_EEVEE'
+
         paint_view_color_management_settings()
 
         return {'FINISHED'}
