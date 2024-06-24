@@ -15,8 +15,8 @@
 
 bl_info = {
     "name": "Draw2Paint",
-    "author": "CDMJ, Spirou4D, Lapineige, Bart Crouch, batFINGER, todashuta",
-    "version": (4, 0, 7),
+    "author": "CDMJ, Spirou4D, Lapineige, Bart Crouch, batFINGER",
+    "version": (4, 0, 6),
     "blender": (4, 2, 0),
     "location": "UI > Draw2Paint",
     "description": "2D Paint in 3D View, Mask Manipulation, EZPaint Adoption",
@@ -43,8 +43,8 @@ from .ui import *
 from . import keymaps, properties
 
 classes = (
-
-    D2P_Properties,
+    properties.D2P_Properties,
+    D2P_OT_SelectedToUVMask,
     D2P_OT_CanvasHoriz,
     D2P_OT_CanvasVertical,
     D2P_OT_ImageReload,
@@ -78,6 +78,7 @@ classes = (
     D2P_OT_D2PaintScene,
     D2P_OT_DisplayActivePaintSlot,
     D2P_OT_ModifyBrushTextures,
+    D2P_OT_InitPaintBlend,
     D2P_OT_ToggleAlphaMode,
     D2P_OT_ToggleColorSoftLightScreen,
     D2P_OT_ToggleAddMultiply,
@@ -98,115 +99,25 @@ classes = (
     D2P_PT_FlipRotate,
     D2P_PT_ImageCrop,
     D2P_PT_2D_to_3D_Experimental,
-    D2P_OT_SelectedToUVMask,
     D2P_PT_GuideControls,
     D2P_PT_MaskControl,
     D2P_PT_Sculpt2D,
-    IMAGE_RESIZE_OT_width_mul2,
-    IMAGE_RESIZE_OT_height_mul2,
-    IMAGE_RESIZE_OT_width_div2,
-    IMAGE_RESIZE_OT_height_div2,
-    IMAGE_RESIZE_OT_getcurrentsize,
-    IMAGE_RESIZE_OT_scale_percentage,
-    IMAGE_RESIZE_OT_main,
-    IMAGE_RESIZE_PT_panel,
-    D2P_PT_ImagePlanePanel
-
+    D2P_PT_ImagePlanePanel,
 )
-classes = (
 
-    D2P_Properties,
-    D2P_OT_CanvasHoriz,
-    D2P_OT_CanvasVertical,
-    D2P_OT_ImageReload,
-    D2P_OT_CanvasResetrot,
-    D2P_OT_SaveImage,
-    D2P_OT_SaveDirty,
-    D2P_OT_EmptyGuides,
-    D2P_OT_PixelsToBorder,
-    D2P_OT_BorderToPixels,
-    D2P_OT_BorderCrop,
-    D2P_OT_BorderUnCrop,
-    D2P_OT_SculptDuplicate,
-    D2P_OT_SculptLiquid,
-    D2P_OT_ReprojectMask,
-    D2P_OT_CanvasMaterial,
-    D2P_OT_SolidifyDifference,
-    D2P_OT_SolidifyUnion,
-    D2P_OT_RemoveMods,
-    D2P_OT_BorderCropToggle,
-    D2P_OT_FrontOfPaint,
-    D2P_OT_getFaceMaskGroups,
-    D2P_OT_UnassignVertgroup,
-    D2P_OT_AssignVertgroup,
-    D2P_OT_DeselectVertgroup,
-    D2P_OT_SelectVertgroup,
-    D2P_OT_holdout_shader,
-    D2P_OT_center_object,
-    D2P_OT_my_enum_shapes,
-    D2P_OT_NewGpencil,
-    D2P_OT_NewImage,
-    D2P_OT_D2PaintScene,
-    D2P_OT_DisplayActivePaintSlot,
-    D2P_OT_ModifyBrushTextures,
-    D2P_OT_ToggleAlphaMode,
-    D2P_OT_ToggleColorSoftLightScreen,
-    D2P_OT_ToggleAddMultiply,
-    D2P_OT_MakeBrushImageTextureMask,
-    D2P_OT_MakeBrushImageTexture,
-    D2P_OT_ProjectpaintPopup,
-    D2P_OT_TexturePopup,
-    D2P_OT_BrushPopup,
-    D2P_OT_CanvasAndCamera,
-    D2P_OT_CameraFromCanvas,
-    D2P_OT_SelectedToCanvasAndCamera,
-    D2P_OT_ImageEditorToCanvasAndCamera,
-    D2P_OT_ToggleUVInCamera,
-    D2P_OT_ToggleCollectionView,
-    D2P_OT_SaveIncrem,
-    D2P_PT_ImageState,
-    D2P_PT_GreasePencil,
-    D2P_PT_FlipRotate,
-    D2P_PT_ImageCrop,
-    D2P_PT_2D_to_3D_Experimental,
-    D2P_OT_SelectedToUVMask,
-    D2P_PT_GuideControls,
-    D2P_PT_MaskControl,
-    D2P_PT_Sculpt2D,
-    IMAGE_RESIZE_OT_width_mul2,
-    IMAGE_RESIZE_OT_height_mul2,
-    IMAGE_RESIZE_OT_width_div2,
-    IMAGE_RESIZE_OT_height_div2,
-    IMAGE_RESIZE_OT_getcurrentsize,
-    IMAGE_RESIZE_OT_scale_percentage,
-    IMAGE_RESIZE_OT_main,
-    IMAGE_RESIZE_PT_panel,
-    D2P_PT_ImagePlanePanel
-
-)
 def register():
     for cls in classes:
         if hasattr(bpy.types, cls.__name__):
             bpy.utils.unregister_class(cls)
         bpy.utils.register_class(cls)
-    bpy.types.Scene.my_tool = bpy.props.PointerProperty(type=properties.D2P_Properties)
-    bpy.types.Scene.image_resize_addon_width = bpy.props.IntProperty(name="Width")
-    bpy.types.Scene.image_resize_addon_height = bpy.props.IntProperty(name="Height")
-    bpy.types.Scene.image_resize_addon_percentage = bpy.props.FloatProperty(name="Scale Percentage",\
-                                                                            default=100.0, min=0.0)
+    #bpy.types.Scene.my_tool = bpy.props.PointerProperty(type=properties.D2P_Properties)
     if hasattr(keymaps, 'register'):
         keymaps.register()
-    bpy.types.Scene.my_tool = bpy.props.PointerProperty(type=D2P_Properties)
+
 
 def unregister():
     if hasattr(keymaps, 'unregister'):
         keymaps.unregister()
-    if hasattr(bpy.types.Scene, "image_resize_addon_width"):
-        del bpy.types.Scene.image_resize_addon_width
-    if hasattr(bpy.types.Scene, "image_resize_addon_height"):
-        del bpy.types.Scene.image_resize_addon_height
-    if hasattr(bpy.types.Scene, "image_resize_addon_percentage"):
-        del bpy.types.Scene.image_resize_addon_percentage
     for cls in reversed(classes):
         if hasattr(bpy.types, cls.__name__):
             bpy.utils.unregister_class(cls)
