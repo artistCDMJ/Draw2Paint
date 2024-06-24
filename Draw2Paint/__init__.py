@@ -102,6 +102,8 @@ classes = (
     D2P_PT_GuideControls,
     D2P_PT_MaskControl,
     D2P_PT_Sculpt2D,
+    D2P_OT_SetMultiTexturePaintView,
+    D2P_OT_SetSingleTexturePaintView,
     D2P_PT_ImagePlanePanel,
     IMAGE_RESIZE_OT_width_mul2,
     IMAGE_RESIZE_OT_height_mul2,
@@ -123,6 +125,15 @@ def register():
     bpy.types.Scene.image_resize_addon_height = bpy.props.IntProperty(name="Height")
     bpy.types.Scene.image_resize_addon_percentage = bpy.props.FloatProperty(name="Scale Percentage", default=100.0,
                                                                             min=0.0)
+    bpy.types.Scene.view_mode = bpy.props.EnumProperty(
+        name="View Mode",
+        description="Current view mode",
+        items=[
+            ('SINGLE', "Single Texture", "Single Texture Paint View"),
+            ('MULTI', "Multi Texture", "Multi Texture Paint View"),
+        ],
+        default='SINGLE'
+    )
     if hasattr(keymaps, 'register'):
         keymaps.register()
 
@@ -137,6 +148,7 @@ def unregister():
     del bpy.types.Scene.image_resize_addon_width
     del bpy.types.Scene.image_resize_addon_height
     del bpy.types.Scene.image_resize_addon_percentage
+    del bpy.types.Scene.view_mode
 
 if __name__ == "__main__":
     register()

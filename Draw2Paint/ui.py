@@ -37,6 +37,15 @@ class D2P_PT_ImageState(bpy.types.Panel):
         row1.scale_x = 0.50
         row1.scale_y = 1.25
         row1.operator("d2p.create_d2p_scene", text="+Scene", icon='PREFERENCES')
+
+        row = col.row(align=True)
+        row.scale_x = 0.50
+        row.scale_y = 1.25
+        if scene.view_mode == 'SINGLE':
+            row.operator("view3d.set_multi_texture_paint_view", text="Set Multi Layer View")
+        else:
+            row.operator("view3d.set_single_texture_paint_view", text="Set Single Texture View")
+
         row = col.row(align=True)
         row1 = row.split(align=True)
         row1.scale_x = 0.50

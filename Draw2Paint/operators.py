@@ -16,12 +16,33 @@ from .utils import (find_brush, create_image_plane_from_image, create_matching_c
                     switch_to_camera_view, get_image_from_selected_object, \
                     move_object_to_collection, export_uv_layout, \
                     set_camera_background_image, get_active_image_from_image_editor, \
-                    save_incremental_copy)
+                    save_incremental_copy,paint_view_color_management_settings, \
+                    multi_texture_paint_view,single_texture_paint_view)
 
 from bpy.types import Operator, Menu, Panel, UIList
 from bpy_extras.io_utils import ImportHelper
 
 # Define your operators here
+# Operator to set single texture paint view
+class D2P_OT_SetSingleTexturePaintView(bpy.types.Operator):
+    bl_idname = "view3d.set_single_texture_paint_view"
+    bl_label = "Set Single Texture Paint View"
+
+    def execute(self, context):
+        single_texture_paint_view()
+        context.scene.view_mode = 'SINGLE'
+        return {'FINISHED'}
+
+
+# Operator to set multi texture paint view
+class D2P_OT_SetMultiTexturePaintView(bpy.types.Operator):
+    bl_idname = "view3d.set_multi_texture_paint_view"
+    bl_label = "Set Multi Texture Paint View"
+
+    def execute(self, context):
+        multi_texture_paint_view()
+        context.scene.view_mode = 'MULTI'
+        return {'FINISHED'}
 class D2P_OT_SelectedToUVMask(bpy.types.Operator):
     """New Mask Object from UV Map of Subject"""
     bl_description = "New Mask Object from UV Map of Subject"
@@ -448,6 +469,7 @@ class D2P_OT_D2PaintScene(bpy.types.Operator):
         bpy.ops.view3d.view_axis(type='TOP', align_active=True)
         # set to Eevee
         bpy.context.scene.render.engine = 'BLENDER_EEVEE'
+        paint_view_color_management_settings()
 
         return {'FINISHED'}
 

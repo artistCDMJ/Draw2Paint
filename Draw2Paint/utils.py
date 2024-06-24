@@ -4,6 +4,52 @@ import re
 
 import math
 
+# Function to set up single texture paint view
+def single_texture_paint_view():
+    # Iterate through all areas in the current screen context
+    for area in bpy.context.screen.areas:
+        # Check if the area is a 3D Viewport
+        if area.type == 'VIEW_3D':
+            space = area.spaces.active
+            # Check if the active space is a 3D Viewport
+            if space.type == 'VIEW_3D':
+                # Set shading type to Solid
+                space.shading.type = 'SOLID'
+                # Set lighting to Flat
+                space.shading.light = 'FLAT'
+                # Set color type to Texture
+                space.shading.color_type = 'TEXTURE'
+
+# Function to set up multi texture paint view
+def multi_texture_paint_view():
+    # Iterate through all areas in the current screen context
+    for area in bpy.context.screen.areas:
+        # Check if the area is a 3D Viewport
+        if area.type == 'VIEW_3D':
+            space = area.spaces.active
+            # Check if the active space is a 3D Viewport
+            if space.type == 'VIEW_3D':
+                # Set shading type to Material
+                space.shading.type = 'MATERIAL'
+
+# Function to set color management settings for painting
+def paint_view_color_management_settings():
+    scene = bpy.context.scene
+    # Set the display device to sRGB
+    scene.display_settings.display_device = 'sRGB'
+    # Set the view transform to Standard
+    scene.view_settings.view_transform = 'Standard'
+    # Set the look to Medium High Contrast
+    scene.view_settings.look = 'Medium Contrast'
+    # Set the exposure to 0
+    scene.view_settings.exposure = 0
+    # Set the gamma to 1
+    scene.view_settings.gamma = 1
+
+
+
+
+
 def next_power_of_2(x):
     return 1 if x == 0 else 2**math.ceil(math.log2(x))
 

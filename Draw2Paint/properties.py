@@ -41,6 +41,15 @@ def register():
     bpy.types.Scene.image_resize_addon_height = bpy.props.IntProperty(name="Height")
     bpy.types.Scene.image_resize_addon_percentage = bpy.props.FloatProperty(name="Scale Percentage", default=100.0,
                                                                             min=0.0)
+    bpy.types.Scene.view_mode = bpy.props.EnumProperty(
+        name="View Mode",
+        description="Current view mode",
+        items=[
+            ('SINGLE', "Single Texture", "Single Texture Paint View"),
+            ('MULTI', "Multi Texture", "Multi Texture Paint View"),
+        ],
+        default='SINGLE'
+    )
 
 def unregister():
     del bpy.types.Scene.d2p_properties
@@ -48,5 +57,6 @@ def unregister():
     del bpy.types.Scene.image_resize_addon_width
     del bpy.types.Scene.image_resize_addon_height
     del bpy.types.Scene.image_resize_addon_percentage
+    del bpy.types.Scene.view_mode
 
 
