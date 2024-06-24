@@ -187,7 +187,7 @@ D toggles Multiply and Add
 
 Alt-D returns to Mix mode
 
-zShift D toggles Screen, Color, and Soft Light. 
+Shift D toggles Screen, Color, and Soft Light. 
 Have Fun.
 
 ![new_d2p_061924](https://github.com/artistCDMJ/Draw2Paint/assets/16747273/37fe194c-ee59-49c3-842b-a6c356a48130)
