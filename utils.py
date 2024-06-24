@@ -169,17 +169,7 @@ def save_incremental_copy(image):
     print(f"Image saved as {new_filepath}")
 
 
-# def parent_image_plane_to_camera(image_plane_obj, camera_obj):
-# image_plane_obj.parent = camera_obj
-
-def next_power_of_2(x):
-    return 1 if x == 0 else 2 ** math.ceil(math.log2(x))
-
-
-def previous_power_of_2(x):
-    return 1 if x == 0 else 2 ** math.floor(math.log2(x))
-
-def find_brush(context):                 # Trouver la brosse
+def find_brush(context):
     tool_settings = context.tool_settings
     if context.mode == 'SCULPT':
         return tool_settings.sculpt.brush
@@ -189,5 +179,3 @@ def find_brush(context):                 # Trouver la brosse
         return tool_settings.vertex_paint.brush
     else:
         return None
-
-
