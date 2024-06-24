@@ -29,23 +29,24 @@ kmi_defs = (
 
 )
 
-def Register_Shortcuts():
-    addon_keymaps.clear()
+
+
+
+def register():
+    global addon_keymaps
     kc = bpy.context.window_manager.keyconfigs.addon
     if kc:
-        # for each kmi_def:
         for (spacetype, identifier, key, action, CTRL, SHIFT, ALT, OS_KEY, props, nicename) in kmi_defs:
             if spacetype[0] in bpy.context.window_manager.keyconfigs.addon.keymaps.keys():
                 if spacetype[1] in kc.keymaps[spacetype[0]].space_type:
                     km = kc.keymaps[spacetype[0]]
             else:
-                km = kc.keymaps.new(name = spacetype[0], space_type = spacetype[1])
+                km = kc.keymaps.new(name=spacetype[0], space_type=spacetype[1])
             kmi = km.keymap_items.new(identifier, key, action, ctrl=CTRL, shift=SHIFT, alt=ALT, oskey=OS_KEY)
             if props:
                 for prop, value in props:
                     setattr(kmi.properties, prop, value)
             addon_keymaps.append((km, kmi))
-
                     # keymaps
                     
             #Register_Shortcuts()
@@ -53,7 +54,6 @@ def Register_Shortcuts():
 
 def unregister():
     global addon_keymaps
-        # keymaps
     for km, kmi in addon_keymaps:
         km.keymap_items.remove(kmi)
     addon_keymaps.clear()
