@@ -2,7 +2,7 @@ import bpy
 
 import bgl, blf, mathutils, os, time, copy, math, re
 
-########PBRA Adopted
+########PBRA Adopted Lapineiges (Snow Bunnies)
 
 bpy.types.Scene.x_min_pixels = bpy.props.IntProperty(min=0,
                  description="Minimum X value (in pixel) for the render border")

@@ -12,9 +12,10 @@ from .operators import (
     IMAGE_RESIZE_OT_main,
 )
 
+
 class D2P_PT_ImageState(bpy.types.Panel):
     """Image State Tools"""
-    bl_label = "Image State Tools"
+    bl_label = "Image Creation"
     bl_idname = "D2P_PT_ImageState"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"

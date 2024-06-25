@@ -1,6 +1,5 @@
 import bpy
 
-#############
 
 addon_keymaps = []
 
