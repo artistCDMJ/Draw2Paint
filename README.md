@@ -191,9 +191,8 @@ Alt-D returns to Mix mode
 Shift D toggles Screen, Color, and Soft Light. 
 Have Fun.
 
-![new_d2p_061924](https://github.com/artistCDMJ/Draw2Paint/assets/16747273/37fe194c-ee59-49c3-842b-a6c356a48130)
-
-
+<img height="888" src="D:\Pycharm GIT Projects\screen shots for D2P\suzanne_painted_up.png" title="D2P Painting on Suzanne" width="1502"/>
+<img height="888" src="D:\Pycharm GIT Projects\screen shots for D2P\suzanne_painted_up3.png" title="Suzanne in 2D in 3D View" width="1502"/>
 
 
 
