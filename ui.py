@@ -472,3 +472,11 @@ class IMAGE_RESIZE_PT_panel(bpy.types.Panel):
         layout.prop(scene, "image_resize_addon_percentage", text="Scale Percentage")
         layout.operator(IMAGE_RESIZE_OT_scale_percentage.bl_idname)
         layout.operator(IMAGE_RESIZE_OT_main.bl_idname)
+
+def draw_node_editor_button(self, context):
+    layout = self.layout
+    layout.operator("node.new_texture_node", text="New Texture Node from Active Texture")
+
+def draw_image_editor_button(self, context):
+    layout = self.layout
+    layout.operator("image.get_image_size", text="New Image from Active Image Size")

@@ -104,6 +104,8 @@ classes = (
     D2P_PT_Sculpt2D,
     D2P_OT_SetMultiTexturePaintView,
     D2P_OT_SetSingleTexturePaintView,
+    D2P_OT_GetImageSizeOperator,
+    D2P_OT_NewTextureNode,
     D2P_PT_ImagePlanePanel,
     IMAGE_RESIZE_OT_width_mul2,
     IMAGE_RESIZE_OT_height_mul2,
@@ -120,6 +122,8 @@ def register():
         if hasattr(bpy.types, cls.__name__):
             bpy.utils.unregister_class(cls)
         bpy.utils.register_class(cls)
+    bpy.types.IMAGE_MT_image.append(draw_image_editor_button)
+    bpy.types.NODE_MT_node.append(draw_node_editor_button)
     bpy.types.Scene.my_tool = bpy.props.PointerProperty(type=properties.D2P_Properties)
     bpy.types.Scene.image_resize_addon_width = bpy.props.IntProperty(name="Width")
     bpy.types.Scene.image_resize_addon_height = bpy.props.IntProperty(name="Height")
@@ -144,6 +148,8 @@ def unregister():
     for cls in reversed(classes):
         if hasattr(bpy.types, cls.__name__):
             bpy.utils.unregister_class(cls)
+    bpy.types.IMAGE_MT_image.remove(draw_image_editor_button)
+    bpy.types.NODE_MT_node.remove(draw_node_editor_button)
     del bpy.types.Scene.my_tool
     del bpy.types.Scene.image_resize_addon_width
     del bpy.types.Scene.image_resize_addon_height

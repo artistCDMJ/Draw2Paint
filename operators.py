@@ -16,12 +16,57 @@ from .utils import (find_brush, create_image_plane_from_image, create_matching_c
                     move_object_to_collection, export_uv_layout, \
                     set_camera_background_image, get_active_image_from_image_editor, \
                     save_incremental_copy,paint_view_color_management_settings, \
-                    multi_texture_paint_view,single_texture_paint_view)
+                    multi_texture_paint_view,single_texture_paint_view, get_active_image_size, \
+                    get_active_texture_node_image_size,create_new_texture_node_with_size)
 
 from bpy.types import Operator, Menu, Panel, UIList
 from bpy_extras.io_utils import ImportHelper
 
 # Define your operators here
+
+# new image texture node sized to same as active
+class D2P_OT_NewTextureNode(bpy.types.Operator):
+    bl_idname = "node.new_texture_node"
+    bl_label = "New Texture Node from Active Texture"
+
+    def execute(self, context):
+        width, height = get_active_texture_node_image_size()
+        if width and height:
+            create_new_texture_node_with_size(width, height)
+            return {'FINISHED'}
+        else:
+            self.report({'WARNING'}, "No active texture node with an image found")
+            return {'CANCELLED'}
+
+
+# new image dialog autofilled with size from active image in image editor
+class D2P_OT_GetImageSizeOperator(bpy.types.Operator):
+    bl_idname = "image.get_image_size"
+    bl_label = "New Image from Active Image Size"
+
+    width: bpy.props.IntProperty()
+    height: bpy.props.IntProperty()
+
+    def invoke(self, context, event):
+        width, height = get_active_image_size()
+        if width and height:
+            self.width = width
+            self.height = height
+            context.window_manager.invoke_props_dialog(self)
+            return {'RUNNING_MODAL'}
+        else:
+            self.report({'WARNING'}, "No active image found")
+            return {'CANCELLED'}
+
+    def draw(self, context):
+        layout = self.layout
+        layout.prop(self, "width")
+        layout.prop(self, "height")
+
+    def execute(self, context):
+        bpy.ops.image.new(name="New Image", width=self.width, height=self.height)
+        return {'FINISHED'}
+
 # Operator to set single texture paint view
 class D2P_OT_SetSingleTexturePaintView(bpy.types.Operator):
     bl_idname = "view3d.set_single_texture_paint_view"

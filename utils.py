@@ -4,6 +4,47 @@ import re
 
 import math
 
+
+# Get the active texture node and its size
+def get_active_texture_node_image_size():
+    if bpy.context.space_data.type == 'NODE_EDITOR':
+        node_tree = bpy.context.space_data.node_tree
+        if node_tree:
+            active_node = node_tree.nodes.active
+            if active_node and active_node.type == 'TEX_IMAGE' and active_node.image:
+                width = active_node.image.size[0]
+                height = active_node.image.size[1]
+                return width, height
+    return None, None
+
+
+# Get size of image in image editor
+def get_active_image_size():
+    if bpy.context.space_data.type == 'IMAGE_EDITOR':
+        active_image = bpy.context.space_data.image
+        if active_image:
+            width = int(active_image.size[0])
+            height = int(active_image.size[1])
+            return width, height
+    return None, None
+
+
+# Create a new texture node based on the active node size
+def create_new_texture_node_with_size(width, height):
+    image_name = f"Texture_{width}x{height}"
+    new_image = bpy.data.images.new(name=image_name, width=width, height=height)
+
+    if bpy.context.space_data.type == 'NODE_EDITOR':
+        node_tree = bpy.context.space_data.node_tree
+        if node_tree:
+            new_texture_node = node_tree.nodes.new(type='ShaderNodeTexImage')
+            new_texture_node.image = new_image
+            new_texture_node.label = image_name
+
+            active_node = node_tree.nodes.active
+            if active_node:
+                new_texture_node.location = (active_node.location.x, active_node.location.y - 260)
+
 # Function to set up single texture paint view
 def single_texture_paint_view():
     # Iterate through all areas in the current screen context
