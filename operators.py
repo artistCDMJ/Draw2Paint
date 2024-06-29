@@ -87,6 +87,8 @@ class D2P_OT_SetMultiTexturePaintView(bpy.types.Operator):
         multi_texture_paint_view()
         context.scene.view_mode = 'MULTI'
         return {'FINISHED'}
+
+
 class D2P_OT_SelectedToUVMask(bpy.types.Operator):
     """New Mask Object from UV Map of Subject"""
     bl_description = "New Mask Object from UV Map of Subject"
@@ -96,8 +98,24 @@ class D2P_OT_SelectedToUVMask(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        # Ensure at least one object is selected
-        return context.selected_objects
+        selected_objects = context.selected_objects
+        if not selected_objects:
+            return False
+
+        selected_object = selected_objects[0]
+
+        # Check if 'subject_view' collection exists
+        if 'subject_view' not in bpy.data.collections:
+            return False
+
+        # Check if the object with the same name and suffix '_UVObj' already exists in 'mask_objects' collection
+        object_name_with_suffix = selected_object.name + '_UVObj'
+        if 'mask_objects' in bpy.data.collections:
+            mask_objects_collection = bpy.data.collections['mask_objects']
+            if object_name_with_suffix in mask_objects_collection.objects:
+                return False
+
+        return True
 
     def execute(self, context):
         selected_objects = context.selected_objects
@@ -142,7 +160,7 @@ class D2P_OT_SelectedToUVMask(bpy.types.Operator):
                 oface.append(loop)
             out_faces.append(oface)
 
-        new_obj = create_mesh_from_data(ob.name + 'UVObj', out_verts, out_faces)
+        new_obj = create_mesh_from_data(ob.name + '_UVObj', out_verts, out_faces)
 
         # Show wire on the new object
         new_obj.show_wire = True
