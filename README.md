@@ -189,6 +189,11 @@ D toggles Multiply and Add
 Alt-D returns to Mix mode
 
 Shift D toggles Screen, Color, and Soft Light. 
+
+**Color Families**
+Now we have a button in the Header to the right that will generate a set of color palettes based on the current brush \
+color, and they are named by the Hex number of the original color. Easier way to choose relational colors in palettes \
+automatically. These are also present in vertex Paint mode.
 Have Fun.
 ![suzanne_painted_up](https://github.com/artistCDMJ/Draw2Paint/assets/16747273/d8841895-66e9-41b5-9868-890b606465ca)
 
