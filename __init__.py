@@ -16,7 +16,7 @@
 bl_info = {
     "name": "Draw2Paint",
     "author": "CDMJ, Spirou4D, Lapineige, Bart Crouch, batFINGER, stacker, todashuta",
-    "version": (4, 0, 7),
+    "version": (4, 0, 8),
     "blender": (4, 2, 0),
     "location": "UI > Draw2Paint",
     "description": "2D Paint in 3D View, Mask Manipulation, EZPaint Adoption",
@@ -29,6 +29,7 @@ bl_info = {
 import os
 import bpy
 import bmesh
+import colorsys
 
 import bgl, blf, bpy, mathutils, time, copy, math, re
 
@@ -114,7 +115,8 @@ classes = (
     IMAGE_RESIZE_OT_getcurrentsize,
     IMAGE_RESIZE_OT_scale_percentage,
     IMAGE_RESIZE_OT_main,
-    IMAGE_RESIZE_PT_panel
+    IMAGE_RESIZE_PT_panel,
+    OBJECT_OT_set_complementary_brush_color
 )
 
 def register():
@@ -138,6 +140,7 @@ def register():
         ],
         default='SINGLE'
     )
+    bpy.types.VIEW3D_HT_header.append(draw_func)
     if hasattr(keymaps, 'register'):
         keymaps.register()
 
@@ -150,11 +153,13 @@ def unregister():
             bpy.utils.unregister_class(cls)
     bpy.types.IMAGE_MT_image.remove(draw_image_editor_button)
     bpy.types.NODE_MT_node.remove(draw_node_editor_button)
+    bpy.types.VIEW3D_HT_header.remove(draw_func)
     del bpy.types.Scene.my_tool
     del bpy.types.Scene.image_resize_addon_width
     del bpy.types.Scene.image_resize_addon_height
     del bpy.types.Scene.image_resize_addon_percentage
     del bpy.types.Scene.view_mode
+
 
 if __name__ == "__main__":
     register()

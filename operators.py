@@ -17,7 +17,10 @@ from .utils import (find_brush, create_image_plane_from_image, create_matching_c
                     set_camera_background_image, get_active_image_from_image_editor, \
                     save_incremental_copy,paint_view_color_management_settings, \
                     multi_texture_paint_view,single_texture_paint_view, get_active_image_size, \
-                    get_active_texture_node_image_size,create_new_texture_node_with_size)
+                    get_active_texture_node_image_size,create_new_texture_node_with_size, \
+                    rgb_to_hex, complementary_color, split_complementary_colors,\
+                    triadic_colors, tetradic_colors, analogous_colors, create_palette, \
+                    )
 
 from bpy.types import Operator, Menu, Panel, UIList
 from bpy_extras.io_utils import ImportHelper
@@ -2763,5 +2766,55 @@ class IMAGE_RESIZE_OT_main(bpy.types.Operator):
     def invoke(self, context, event):
         self.shift_key_down = event.shift
         return self.execute(context)
+
+### Color Families Palette Generator
+class OBJECT_OT_set_complementary_brush_color(bpy.types.Operator):
+    """Set Complementary Brush Color and Create Color Palettes"""
+    bl_idname = "object.set_complementary_brush_color"
+    bl_label = "Generate Color Families"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        # Access the active brush depending on the current mode
+        settings = bpy.context.tool_settings
+
+        if context.mode == 'PAINT_TEXTURE':
+            brush = settings.image_paint.brush
+        elif context.mode == 'PAINT_VERTEX':
+            brush = settings.vertex_paint.brush
+        elif context.mode == 'PAINT_WEIGHT':
+            brush = settings.weight_paint.brush
+        else:
+            self.report({'WARNING'}, "Active mode does not support brush color")
+            return {'CANCELLED'}
+
+        # Get the current brush color
+        primary_color = brush.color
+        primary_color_hex = rgb_to_hex(primary_color)
+
+        # Calculate the complementary color
+        comp_color = complementary_color(primary_color)
+
+        # Set the complementary color as the secondary color
+        brush.secondary_color = comp_color
+
+        # Set the brush name to the primary color hex code
+        brush.name = f"Brush Color {primary_color_hex}"
+
+        # Calculate split complementary, triadic, tetradic, and analogous colors
+        split_comps = split_complementary_colors(primary_color)
+        triads = triadic_colors(primary_color)
+        tetrads = tetradic_colors(primary_color)
+        analogous = analogous_colors(primary_color)
+
+        # Create color palettes
+        create_palette(f"Complementary Colors {primary_color_hex}", [primary_color, comp_color])
+        create_palette(f"Split Complementary Colors {primary_color_hex}", [primary_color] + list(split_comps))
+        create_palette(f"Triadic Colors {primary_color_hex}", [primary_color] + list(triads))
+        create_palette(f"Tetradic Colors {primary_color_hex}", [primary_color] + list(tetrads))
+        create_palette(f"Analogous Colors {primary_color_hex}", [primary_color] + list(analogous))
+
+        self.report({'INFO'}, "Brush Colors and Palettes Set")
+        return {'FINISHED'}
 
 

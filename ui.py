@@ -10,6 +10,7 @@ from .operators import (
     IMAGE_RESIZE_OT_height_mul2,
     IMAGE_RESIZE_OT_scale_percentage,
     IMAGE_RESIZE_OT_main,
+    OBJECT_OT_set_complementary_brush_color
 )
 
 
@@ -480,3 +481,8 @@ def draw_node_editor_button(self, context):
 def draw_image_editor_button(self, context):
     layout = self.layout
     layout.operator("image.get_image_size", text="New Image from Active Image Size")
+
+### Color Families Palette generation
+def draw_func(self, context):
+    layout = self.layout
+    layout.operator(OBJECT_OT_set_complementary_brush_color.bl_idname)

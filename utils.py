@@ -1,6 +1,7 @@
 import bpy
 import os
 import re
+import colorsys
 
 import math
 
@@ -274,3 +275,61 @@ def find_brush(context):
         return tool_settings.vertex_paint.brush
     else:
         return None
+
+### color calculations for palettes of color families
+def rgb_to_hex(color):
+    return "#{:02x}{:02x}{:02x}".format(int(color[0] * 255), int(color[1] * 255), int(color[2] * 255))
+
+
+def complementary_color(color):
+    return 1.0 - color[0], 1.0 - color[1], 1.0 - color[2]
+
+
+def split_complementary_colors(color):
+    h, s, v = colorsys.rgb_to_hsv(color[0], color[1], color[2])
+    split1 = (h + 150.0 / 360.0) % 1.0
+    split2 = (h - 150.0 / 360.0) % 1.0
+    rgb1 = colorsys.hsv_to_rgb(split1, s, v)
+    rgb2 = colorsys.hsv_to_rgb(split2, s, v)
+    return rgb1, rgb2
+
+
+def triadic_colors(color):
+    h, s, v = colorsys.rgb_to_hsv(color[0], color[1], color[2])
+    triad1 = (h + 120.0 / 360.0) % 1.0
+    triad2 = (h - 120.0 / 360.0) % 1.0
+    rgb1 = colorsys.hsv_to_rgb(triad1, s, v)
+    rgb2 = colorsys.hsv_to_rgb(triad2, s, v)
+    return rgb1, rgb2
+
+
+def tetradic_colors(color):
+    h, s, v = colorsys.rgb_to_hsv(color[0], color[1], color[2])
+    tetrad1 = (h + 90.0 / 360.0) % 1.0
+    tetrad2 = (h + 180.0 / 360.0) % 1.0
+    tetrad3 = (h - 90.0 / 360.0) % 1.0
+    rgb1 = colorsys.hsv_to_rgb(tetrad1, s, v)
+    rgb2 = colorsys.hsv_to_rgb(tetrad2, s, v)
+    rgb3 = colorsys.hsv_to_rgb(tetrad3, s, v)
+    return rgb1, rgb2, rgb3
+
+
+def analogous_colors(color):
+    h, s, v = colorsys.rgb_to_hsv(color[0], color[1], color[2])
+    ana1 = (h + 30.0 / 360.0) % 1.0
+    ana2 = (h - 30.0 / 360.0) % 1.0
+    rgb1 = colorsys.hsv_to_rgb(ana1, s, v)
+    rgb2 = colorsys.hsv_to_rgb(ana2, s, v)
+    return rgb1, rgb2
+
+
+def create_palette(name, colors):
+    if name in bpy.data.palettes:
+        palette = bpy.data.palettes[name]
+        palette.colors.clear()
+    else:
+        palette = bpy.data.palettes.new(name=name)
+
+    for color in colors:
+        palette_color = palette.colors.new()
+        palette_color.color = color
