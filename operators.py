@@ -1107,9 +1107,11 @@ class D2P_OT_ImageReload(bpy.types.Operator):
         original_type = context.area.ui_type
         context.area.ui_type = 'IMAGE_EDITOR'
 
-        obdat = context.active_object.data
-        ima = obdat.materials[0].texture_paint_images[0]
-        context.space_data.image = ima
+        #obdat = context.active_object.data
+        #ima = obdat.materials[0].texture_paint_images[0]
+        mat = bpy.context.object.active_material
+        image = mat.texture_paint_images[mat.paint_active_slot]
+        context.space_data.image = image
         bpy.ops.image.reload()  # return image to last saved state
 
         context.area.ui_type = original_type

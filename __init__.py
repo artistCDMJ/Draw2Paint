@@ -140,9 +140,10 @@ def register():
         ],
         default='SINGLE'
     )
-    bpy.types.VIEW3D_HT_header.append(draw_func)
+
     if hasattr(keymaps, 'register'):
         keymaps.register()
+    bpy.types.VIEW3D_HT_header.append(draw_func)
 
 
 def unregister():
@@ -153,12 +154,13 @@ def unregister():
             bpy.utils.unregister_class(cls)
     bpy.types.IMAGE_MT_image.remove(draw_image_editor_button)
     bpy.types.NODE_MT_node.remove(draw_node_editor_button)
-    bpy.types.VIEW3D_HT_header.remove(draw_func)
+
     del bpy.types.Scene.my_tool
     del bpy.types.Scene.image_resize_addon_width
     del bpy.types.Scene.image_resize_addon_height
     del bpy.types.Scene.image_resize_addon_percentage
     del bpy.types.Scene.view_mode
+    bpy.types.VIEW3D_HT_header.remove(draw_func)
 
 
 if __name__ == "__main__":
