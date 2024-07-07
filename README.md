@@ -199,8 +199,8 @@ Have Fun.
 
 
 ![suzanne_painted_up2](https://github.com/artistCDMJ/Draw2Paint/assets/16747273/8c62bc34-3e85-416a-a080-94af5e6d0ef4)
-<img height="734" src="C:\Users\artis\Desktop\D2P Examples\image_editor_d2p.png" width="1632"/>
 
+![](C:\Users\artis\Desktop\D2P Examples\image_editor_d2p.png)
 
 
 
