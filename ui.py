@@ -30,15 +30,15 @@ class D2P_PT_ImageState(bpy.types.Panel):
 
         box = layout.box()
         col = box.column(align=True)
-        col.label(text="Painting Starts Here")
+        col.label(text="Image2Camera")
         row = col.row(align=True)
         row.scale_x = 0.50
         row.scale_y = 1.25
-        row.operator("d2p.new_image", text="New Image", icon='TEXTURE')
+        row.operator("d2p.create_d2p_scene", text="D2P Scene", icon='PREFERENCES')
         row1 = row.split(align=True)
         row1.scale_x = 0.50
         row1.scale_y = 1.25
-        row1.operator("d2p.create_d2p_scene", text="+Scene", icon='PREFERENCES')
+        row1.operator("d2p.new_image", text="New Image", icon='TEXTURE')
 
         row = col.row(align=True)
         row.scale_x = 0.50
@@ -62,7 +62,7 @@ class D2P_PT_ImageState(bpy.types.Panel):
         row3 = col.row(align=True)
         row3.scale_x=0.50
         row3.scale_y=1.25
-        row3.operator("d2p.display_active_slot", icon = 'WINDOW')
+        row3.operator("d2p.display_active_slot", text= "Slot2Display", icon = 'WINDOW')
 
         row = layout.row()
         row = col.row(align=True)
@@ -93,7 +93,7 @@ class D2P_PT_GreasePencil(bpy.types.Panel):
 
         box = layout.box()  # MACRO
         col = box.column(align=True)
-        col.label(text="GPencil for D2P Session")
+        col.label(text="GPencil2Canvas")
         row = col.row(align=True)
 
         row.operator("d2p.grease_object", text="New GPencil",
@@ -124,7 +124,7 @@ class D2P_PT_2D_to_3D_Experimental(bpy.types.Panel):
         row1.scale_y = 1.25
         
         row1.operator("object.canvas_and_camera_from_selected_object",
-                      text='Subject to Canvas',
+                      text='Subject2Canvas',
                       icon='MESH_MONKEY')
         
         row = layout.row()
@@ -155,7 +155,7 @@ class D2P_PT_2D_to_3D_Experimental(bpy.types.Panel):
         row.scale_y = 1.25
         row = row.split(align=True)
         row.operator("object.toggle_uv_image_visibility",
-                      text="Toggle UV in Camera",
+                      text="Toggle UV2Camera",
                       icon='IMAGE_PLANE')
         row = layout.row()
         row = col.row(align=True)
@@ -169,7 +169,7 @@ class D2P_PT_2D_to_3D_Experimental(bpy.types.Panel):
 
 class D2P_PT_ImageCrop(bpy.types.Panel):
     """Image Crop Tools - PRBA"""
-    bl_label = "Crop PRBA"
+    bl_label = "Crop2Camera"
     bl_idname = "D2P_PT_imagecrop"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
@@ -266,7 +266,7 @@ class D2P_PT_FlipRotate(bpy.types.Panel):
 
 class D2P_PT_GuideControls(bpy.types.Panel):
     """A custom panel in the viewport toolbar"""
-    bl_label = "Guide Controls"
+    bl_label = "Symmetry2Guide"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_category = "Draw2Paint"
@@ -304,7 +304,7 @@ class D2P_PT_MaskControl(bpy.types.Panel):
         layout = self.layout
         box = layout.box()
         col = box.column(align=True)
-        col.label(text="Draw and Modify Masks")
+        col.label(text="Curve2Mask")
         row = col.row(align=True)
 
         row1 = row.split(align=True)
@@ -335,7 +335,7 @@ class D2P_PT_MaskControl(bpy.types.Panel):
         row.operator("d2p.remove_modifiers", text='Remove Mods',
                      icon='UNLINKED')
         row = layout.row()
-        row.operator("object.uv_mask_from_selected_object", text='Create UV Mask', icon='MESH_MONKEY')
+        row.operator("object.uv_mask_from_selected_object", text='UV2Mask', icon='MESH_MONKEY')
 
         layout = self.layout
         box = layout.box()
@@ -441,7 +441,7 @@ class D2P_PT_Sculpt2D(bpy.types.Panel):
                       
 ############################### IMAGE EDITOR PANEL OPTION
 class D2P_PT_ImagePlanePanel(bpy.types.Panel):
-    bl_label = "Image Plane and Camera"
+    bl_label = "Image2Canvas+"
     bl_idname = "D2P_PT_image_plane_panel"
     bl_space_type = 'IMAGE_EDITOR'
     bl_region_type = 'UI'

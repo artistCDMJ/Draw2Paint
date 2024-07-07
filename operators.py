@@ -646,50 +646,42 @@ class D2P_OT_SculptDuplicate(bpy.types.Operator):
         scene = context.scene
 
         bpy.ops.paint.texture_paint_toggle()
-        #all this was pulled to the left for pep-8, need to test if ok
-        bpy.ops.object.duplicate_move(OBJECT_OT_duplicate={"linked":
-                                   False, "mode": 'TRANSLATION'},
-          TRANSFORM_OT_translate={"value": (0, 0, 0), "orient_axis_ortho": 'X',
-                                  "orient_type": 'GLOBAL',
-                                  "orient_matrix": ((0, 0, 0), (0, 0, 0),
-                                                    (0, 0, 0)),
-                                  "orient_matrix_type": 'GLOBAL',
-                                  "constraint_axis": (False, False, False),
-                                  "mirror": False,
-                                  "use_proportional_edit": False,
-                                  "proportional_edit_falloff": 'SMOOTH',
-                                  "proportional_size": 1,
-                                  "use_proportional_connected": False,
-                                  "use_proportional_projected": False, "snap":
-                                      False,
-                                  "snap_target": 'CLOSEST', "snap_point":
-                                      (0, 0, 0),
-                                  "snap_align": False, "snap_normal": (0, 0, 0),
-                                  "gpencil_strokes": False, "cursor_transform":
-                                      False,
-                                  "texture_space": False, "remove_on_cancel":
-                                      False,
-                                  "view2d_edge_pan": False, "release_confirm":
-                                      False,
-                                  "use_accurate": False,
-                                  "use_automerge_and_split": False})
+        bpy.ops.object.duplicate_move(OBJECT_OT_duplicate={"linked": False, "mode": 'TRANSLATION'},
+                                      TRANSFORM_OT_translate={"value": (0, 0, 0),
+                                                              "orient_type": 'GLOBAL',
+                                                              "orient_matrix": ((1, 0, 0), (0, 1, 0), (0, 0, 1)),
+                                                              "orient_matrix_type": 'GLOBAL',
+                                                              "constraint_axis": (False, False, False),
+                                                              "mirror": False,
+                                                              "use_proportional_edit": False,
+                                                              "proportional_edit_falloff": 'SMOOTH',
+                                                              "proportional_size": 1,
+                                                              "use_proportional_connected": False,
+                                                              "use_proportional_projected": False,
+                                                              "snap": False,
+                                                              "snap_target": 'CLOSEST',
+                                                              "snap_point": (0, 0, 0),
+                                                              "snap_align": False,
+                                                              "snap_normal": (0, 0, 0),
+                                                              "gpencil_strokes": False,
+                                                              "cursor_transform": False,
+                                                              "texture_space": False,
+                                                              "remove_on_cancel": False,
+                                                              "view2d_edge_pan": False,
+                                                              "release_confirm": False,
+                                                              "use_accurate": False,
+                                                              "use_automerge_and_split": False})
         bpy.ops.transform.translate(value=(0, 0, 0.1))
-        # context.object.active_material.use_shadeless = True
-        # context.object.active_material.use_transparency = True
-        # context.object.active_material.transparency_method = 'Z_TRANSPARENCY'
         bpy.ops.view3d.localview()
         bpy.ops.paint.texture_paint_toggle()
 
-        # make ERASER brush or use exisitng
+        # make ERASER brush or use existing
         try:
             context.tool_settings.image_paint.brush = bpy.data.brushes["Eraser"]
-            pass
-        except:
+        except KeyError:
             context.tool_settings.image_paint.brush = bpy.data.brushes["TexDraw"]
             bpy.ops.brush.add()
             bpy.data.brushes["TexDraw.001"].name = "Eraser"
-            # context.scene.tool_settings.unified_\
-                          #paint_settings.use_pressure_size = False
             bpy.data.brushes["Eraser"].use_pressure_strength = False
             bpy.data.brushes["Eraser"].blend = 'ERASE_ALPHA'
 
