@@ -2762,7 +2762,7 @@ class IMAGE_RESIZE_OT_main(bpy.types.Operator):
         return self.execute(context)
 
 ### Color Families Palette Generator
-class OBJECT_OT_set_complementary_brush_color(bpy.types.Operator):
+class D2P_OT_SetColorFamilies(bpy.types.Operator):
     """Set Complementary Brush Color and Create Color Palettes"""
     bl_idname = "object.set_complementary_brush_color"
     bl_label = "Generate Color Families"

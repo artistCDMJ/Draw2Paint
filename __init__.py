@@ -116,7 +116,7 @@ classes = (
     IMAGE_RESIZE_OT_scale_percentage,
     IMAGE_RESIZE_OT_main,
     IMAGE_RESIZE_PT_panel,
-    OBJECT_OT_set_complementary_brush_color
+    D2P_OT_SetColorFamilies
 )
 
 def register():
@@ -143,7 +143,7 @@ def register():
 
     if hasattr(keymaps, 'register'):
         keymaps.register()
-    bpy.types.VIEW3D_HT_header.append(draw_func)
+    bpy.types.VIEW3D_PT_tools_brush_color.append(draw_func)
 
 
 def unregister():
@@ -160,7 +160,7 @@ def unregister():
     del bpy.types.Scene.image_resize_addon_height
     del bpy.types.Scene.image_resize_addon_percentage
     del bpy.types.Scene.view_mode
-    bpy.types.VIEW3D_HT_header.remove(draw_func)
+    bpy.types.VIEW3D_PT_tools_brush_color.remove(draw_func)
 
 
 if __name__ == "__main__":

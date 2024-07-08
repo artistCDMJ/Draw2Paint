@@ -10,7 +10,7 @@ from .operators import (
     IMAGE_RESIZE_OT_height_mul2,
     IMAGE_RESIZE_OT_scale_percentage,
     IMAGE_RESIZE_OT_main,
-    OBJECT_OT_set_complementary_brush_color
+    D2P_OT_SetColorFamilies
 )
 
 
@@ -485,4 +485,14 @@ def draw_image_editor_button(self, context):
 ### Color Families Palette generation
 def draw_func(self, context):
     layout = self.layout
-    layout.operator(OBJECT_OT_set_complementary_brush_color.bl_idname)
+    settings = None
+
+    if context.mode == 'PAINT_TEXTURE':
+        settings = context.tool_settings.image_paint
+    elif context.mode == 'PAINT_VERTEX':
+        settings = context.tool_settings.vertex_paint
+    elif context.mode == 'PAINT_WEIGHT':
+        settings = context.tool_settings.weight_paint
+
+    if settings and settings.palette:
+        layout.operator(D2P_OT_SetColorFamilies.bl_idname)

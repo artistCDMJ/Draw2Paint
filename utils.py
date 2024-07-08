@@ -330,6 +330,13 @@ def create_palette(name, colors):
     else:
         palette = bpy.data.palettes.new(name=name)
 
+    # Add white and black to the palette
+    white = (1.0, 1.0, 1.0)
+    black = (0.0, 0.0, 0.0)
+
+    # Add the primary colors
+    colors = [white, black] + colors
+
     for color in colors:
         palette_color = palette.colors.new()
         palette_color.color = color
