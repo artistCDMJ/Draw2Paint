@@ -116,7 +116,8 @@ classes = (
     IMAGE_RESIZE_OT_scale_percentage,
     IMAGE_RESIZE_OT_main,
     IMAGE_RESIZE_PT_panel,
-    D2P_OT_SetColorFamilies
+    D2P_OT_SetColorFamilies,
+    D2P_OT_Trace2Curve
 )
 
 def register():

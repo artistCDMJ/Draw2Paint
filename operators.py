@@ -20,12 +20,28 @@ from .utils import (find_brush, create_image_plane_from_image, create_matching_c
                     get_active_texture_node_image_size,create_new_texture_node_with_size, \
                     rgb_to_hex, complementary_color, split_complementary_colors,\
                     triadic_colors, tetradic_colors, analogous_colors, create_palette, \
-                    )
+                    new_convert_curve_object,convert_gpencil_to_curve,move_trace_objects_to_collection, \
+                    convert_image_plane_to_curve )
 
 from bpy.types import Operator, Menu, Panel, UIList
 from bpy_extras.io_utils import ImportHelper
 
 # Define your operators here
+#new Trace2Curve makes the leap from image plane to gpencil to curve
+class D2P_OT_Trace2Curve(bpy.types.Operator):
+    """Convert B&W Image Plane to Curve"""
+    bl_idname = "d2p.trace2curve"
+    bl_label = "Convert Image Plane to Curve"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        selected_objects = context.selected_objects
+        if selected_objects:
+            convert_image_plane_to_curve(selected_objects[0])
+            return {'FINISHED'}
+        else:
+            self.report({'WARNING'}, "No object selected.")
+            return {'CANCELLED'}
 
 # new image texture node sized to same as active
 class D2P_OT_NewTextureNode(bpy.types.Operator):

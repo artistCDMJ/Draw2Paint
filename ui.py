@@ -10,7 +10,8 @@ from .operators import (
     IMAGE_RESIZE_OT_height_mul2,
     IMAGE_RESIZE_OT_scale_percentage,
     IMAGE_RESIZE_OT_main,
-    D2P_OT_SetColorFamilies
+    D2P_OT_SetColorFamilies,
+    #D2P_OT_Trace2Curve
 )
 
 
@@ -336,6 +337,7 @@ class D2P_PT_MaskControl(bpy.types.Panel):
                      icon='UNLINKED')
         row = layout.row()
         row.operator("object.uv_mask_from_selected_object", text='UV2Mask', icon='MESH_MONKEY')
+        row.operator("d2p.trace2curve", text='Trace2Curve', icon='OUTLINER_DATA_CURVE')
 
         layout = self.layout
         box = layout.box()

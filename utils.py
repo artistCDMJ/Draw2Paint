@@ -5,6 +5,130 @@ import colorsys
 
 import math
 
+# workup functions for Trace2Curve to work
+def new_convert_curve_object(collection, name):
+    curve = bpy.data.curves.new(name=name, type="CURVE")
+    curve.dimensions = "2D"
+    convert_object = bpy.data.objects.new(name=name, object_data=curve)
+    collection.objects.link(convert_object)
+    return convert_object
+
+
+def convert_gpencil_to_curve(gpencil_object, flatten_layers=True):
+    gp_col = gpencil_object.users_collection[0]
+    gp = gpencil_object.data
+    if flatten_layers:
+        obj = new_convert_curve_object(gp_col, gpencil_object.name + "_curve")
+    for layer in gp.layers:
+        if not flatten_layers:
+            obj = new_convert_curve_object(gp_col, f"{gpencil_object.name}_curve_layer_{layer.info}")
+        for frame in layer.frames:
+            for stroke in frame.strokes:
+                spline = obj.data.splines.new(type="POLY")
+                spline.points.add(len(stroke.points) - 1)  # Spline starts with 1 point
+                for i, point in enumerate(stroke.points):
+                    # Adjust the point coordinate to match the original GPencil position
+                    co = gpencil_object.matrix_world @ point.co
+                    spline.points[i].co = [co.x, co.y, co.z, 1]
+    return obj
+
+
+def move_trace_objects_to_collection(objects, collection_name):
+    # Create a new collection if it doesn't exist
+    if collection_name not in bpy.data.collections:
+        new_collection = bpy.data.collections.new(collection_name)
+        bpy.context.scene.collection.children.link(new_collection)
+    else:
+        new_collection = bpy.data.collections[collection_name]
+
+    for obj in objects:
+        if obj.name not in new_collection.objects:
+            new_collection.objects.link(obj)
+        for coll in obj.users_collection:
+            if coll.name != collection_name:
+                coll.objects.unlink(obj)
+
+
+def convert_image_plane_to_curve(plane_obj):
+    # Ensure the object is of type 'MESH'
+    if plane_obj.type != 'MESH':
+        print(f"Selected object {plane_obj.name} is not a mesh.")
+        return
+
+    # Retrieve the image from the plane's material
+    material = plane_obj.active_material
+    if not material or not material.use_nodes:
+        print(f"No material with nodes found on {plane_obj.name}.")
+        return
+
+    # Find the image texture node
+    texture_node = None
+    for node in material.node_tree.nodes:
+        if node.type == 'TEX_IMAGE':
+            texture_node = node
+            break
+
+    if not texture_node:
+        print(f"No image texture node found in the material of {plane_obj.name}.")
+        return
+
+    # Get the image from the texture node
+    image = texture_node.image
+    if not image:
+        print(f"No image found in the texture node of {plane_obj.name}.")
+        return
+
+    # Get the size of the plane
+    scale_x = plane_obj.dimensions.x
+    scale_y = plane_obj.dimensions.y
+
+    # Create a new empty object
+    bpy.ops.object.empty_add(type='IMAGE', location=plane_obj.location)
+    empty_obj = bpy.context.object
+    empty_obj.name = plane_obj.name + "_Empty"
+
+    # Assign the image to the empty
+    empty_obj.data = image
+
+    # Make the image data single user
+    bpy.ops.object.make_single_user(object=True, obdata=True, material=True, animation=False)
+
+    # Set the scale of the empty to match the plane
+    empty_obj.scale = (scale_x, scale_y, 1)
+
+    # Apply the scale to the empty
+    bpy.context.view_layer.objects.active = empty_obj
+    bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
+
+    print(f"Converted {plane_obj.name} to {empty_obj.name}.")
+
+    # Convert the Image Empty to Grease Pencil using Trace Image to Grease Pencil
+    bpy.context.view_layer.objects.active = empty_obj
+    bpy.ops.gpencil.trace_image()
+
+    # Ensure the created object is a GPencil object before conversion
+    gpencil_objs = [obj for obj in bpy.context.view_layer.objects if obj.type == 'GPENCIL']
+    if gpencil_objs:
+        gpencil_obj = gpencil_objs[-1]  # Get the most recently created GPencil object
+        gpencil_obj.name = empty_obj.name + "_GPencil"
+
+        # Convert the Grease Pencil to a Curve
+        curve_obj = convert_gpencil_to_curve(gpencil_obj, flatten_layers=True)
+
+        # Match the orientation and scaling of the original plane
+        curve_obj.location = plane_obj.location
+        curve_obj.rotation_euler = plane_obj.rotation_euler
+        curve_obj.scale = plane_obj.scale
+
+        print(f"Converted {gpencil_obj.name} to {curve_obj.name}.")
+
+        # Move the original plane, image empty, and GPencil objects to the new collection
+        collection_name = 'autotrace_objects_' + plane_obj.name
+        move_trace_objects_to_collection([plane_obj, empty_obj, gpencil_obj], collection_name)
+
+    else:
+        print("The converted object is not a Grease Pencil object.")
+
 
 # Get the active texture node and its size
 def get_active_texture_node_image_size():
