@@ -39,7 +39,7 @@ class D2P_PT_ImageState(bpy.types.Panel):
         row1 = row.split(align=True)
         row1.scale_x = 0.50
         row1.scale_y = 1.25
-        row1.operator("d2p.new_image", text="New Image", icon='TEXTURE')
+        row1.operator("d2p.new_image", text="Image2Canvas", icon='TEXTURE')
 
         row = col.row(align=True)
         row.scale_x = 0.50
@@ -53,12 +53,12 @@ class D2P_PT_ImageState(bpy.types.Panel):
         row1 = row.split(align=True)
         row1.scale_x = 0.50
         row1.scale_y = 1.25
-        row1.operator("object.canvas_and_camera", text="Canvas and Camera",
+        row1.operator("object.canvas_and_camera", text="Canvas2Camera",
                       icon='IMAGE_PLANE')
         row2 = row.split(align=True)
         row2.scale_x = 0.50
         row2.scale_y = 1.25
-        row2.operator("object.create_camera_from_selected_image_plane", text="Camera From Canvas",
+        row2.operator("object.create_camera_from_selected_image_plane", text="Camera2Canvas",
                       icon='RENDER_RESULT')
         row3 = col.row(align=True)
         row3.scale_x=0.50
@@ -97,7 +97,7 @@ class D2P_PT_GreasePencil(bpy.types.Panel):
         col.label(text="GPencil2Canvas")
         row = col.row(align=True)
 
-        row.operator("d2p.grease_object", text="New GPencil",
+        row.operator("d2p.grease_object", text="GPencil2Canvas",
                      icon='OUTLINER_DATA_GP_LAYER')
 
 ############# Scene Extras
@@ -116,7 +116,7 @@ class D2P_PT_2D_to_3D_Experimental(bpy.types.Panel):
 
         box = layout.box()
         col = box.column(align=True)
-        col.label(text="Collections:")
+        col.label(text="Create Collections for Toggle:")
         col.label(text="3d: subject view 2D:canvas view")
         row = col.row(align=True)
 
@@ -140,11 +140,11 @@ class D2P_PT_2D_to_3D_Experimental(bpy.types.Panel):
         if subject_view and canvas_view:
             if subject_view.hide_viewport:
                 row2.operator("object.toggle_collection_visibility", 
-                            text="Show Subject", 
+                            text="Subject2View", 
                             icon='MESH_UVSPHERE')
             else:
                 row2.operator("object.toggle_collection_visibility", 
-                            text="Show Canvas", 
+                            text="Canvas2View", 
                             icon='MESH_CIRCLE')
         else:
             row2 = layout.row()
@@ -164,7 +164,7 @@ class D2P_PT_2D_to_3D_Experimental(bpy.types.Panel):
         row.scale_y = 1.25
         
         row.operator("d2p.frontof_paint",
-                      text="Align to Face",
+                      text="Align2Face",
                       icon='IMPORT')
 
 
@@ -282,9 +282,9 @@ class D2P_PT_GuideControls(bpy.types.Panel):
         col.label(text="Use for Setting Up Symmetry Guide")
         row = col.row(align=True)
 
-        row.operator("d2p.empty_guides", text="Guide",
+        row.operator("d2p.empty_guides", text="Guide2Canvas",
                      icon='ORIENTATION_CURSOR')
-        row.operator("d2p.center_object", text="Recenter Guide",
+        row.operator("d2p.center_object", text="Recenter",
                      icon='ORIENTATION_CURSOR')
 
 ############### masking
@@ -425,13 +425,13 @@ class D2P_PT_Sculpt2D(bpy.types.Panel):
 
         box = layout.box()
         col = box.column(align=True)
-        col.label(text="Copy, Erase and Liquid Sculpt")
+        col.label(text="Sculpt to Modify Canvas")
         row = col.row(align=True)
 
         row1 = row.split(align=True)
         row1.scale_x = 0.50
         row1.scale_y = 1.25
-        row1.operator("d2p.sculpt_duplicate", text='Copy and Erase',
+        row1.operator("d2p.sculpt_duplicate", text='Copy2Eraser',
                       icon='NODE_TEXTURE')
 
         row2 = row.split(align=True)
