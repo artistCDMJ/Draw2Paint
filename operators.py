@@ -108,7 +108,7 @@ class D2P_OT_SetMultiTexturePaintView(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class D2P_OT_SelectedToUVMask(bpy.types.Operator):
+class D2P_OT_UV2Mask(bpy.types.Operator):
     """New Mask Object from UV Map of Subject"""
     bl_description = "New Mask Object from UV Map of Subject"
     bl_idname = "object.uv_mask_from_selected_object"
@@ -275,7 +275,7 @@ class D2P_OT_SelectedToUVMask(bpy.types.Operator):
 
         return {'FINISHED'}
 
-class D2P_OT_CanvasAndCamera(bpy.types.Operator):
+class D2P_OT_Canvas2Camera(bpy.types.Operator):
     """Create Canvas and Camera from Active Image"""
     bl_description = "Create Canvas and Camera from Active Image"
     bl_idname = "object.canvas_and_camera"
@@ -320,7 +320,7 @@ class D2P_OT_CanvasAndCamera(bpy.types.Operator):
 
         return {'FINISHED'}
 
-class D2P_OT_CameraFromCanvas(bpy.types.Operator):
+class D2P_OT_Camera2Canvas(bpy.types.Operator):
     """New Camera from Selected Canvas"""
     bl_description = "New Camera from Selected Canvas"
     bl_idname = "object.create_camera_from_selected_image_plane"
@@ -362,7 +362,7 @@ class D2P_OT_CameraFromCanvas(bpy.types.Operator):
         bpy.context.space_data.shading.color_type = 'TEXTURE'
         return {'FINISHED'}
 
-class D2P_OT_SelectedToCanvasAndCamera(bpy.types.Operator):
+class D2P_OT_Subject2Canvas(bpy.types.Operator):
     """New Canvas and Camera from Selected Subject"""
     bl_description = "New Canvas and Camera from Selected Subject"
     bl_idname = "object.canvas_and_camera_from_selected_object"
@@ -419,7 +419,7 @@ class D2P_OT_SelectedToCanvasAndCamera(bpy.types.Operator):
         switch_to_camera_view(camera_obj)
         return {'FINISHED'}
 
-class D2P_OT_ImageEditorToCanvasAndCamera(bpy.types.Operator):
+class D2P_OT_Image2CanvasPlus(bpy.types.Operator):
     """Create Canvas and Camera from Active Image In Image Editor"""
     bl_description = "Create Canvas and Camera from Active Image In Image Editor"
     bl_idname = "image.canvas_and_camera"
@@ -465,7 +465,7 @@ class D2P_OT_ImageEditorToCanvasAndCamera(bpy.types.Operator):
 
         return {'FINISHED'}    
     
-class D2P_OT_ToggleUVInCamera(bpy.types.Operator):
+class D2P_OT_ToggleUV2Camera(bpy.types.Operator):
     """Toggle UV Image Visibility in Camera"""
     bl_description = "Toggle UV Image Visibility in Camera"
     bl_idname = "object.toggle_uv_image_visibility"
@@ -652,7 +652,7 @@ class D2P_OT_CanvasMaterial(bpy.types.Operator):
         
         return {'FINISHED'}
     
-class D2P_OT_SculptDuplicate(bpy.types.Operator):
+class D2P_OT_Copy2Eraser(bpy.types.Operator):
     """Duplicate Selected Image Plane, Single User for Eraser Paint"""
     bl_idname = "d2p.sculpt_duplicate"
     bl_label = "Sculpt Liquid Duplicate"
@@ -713,7 +713,7 @@ class D2P_OT_SculptDuplicate(bpy.types.Operator):
 
         return {'FINISHED'}
 
-class D2P_OT_SculptLiquid(bpy.types.Operator):
+class D2P_OT_LiquidSculpt(bpy.types.Operator):
     """Convert to Subdivided Plane & Sculpt Liquid"""
     bl_idname = "d2p.sculpt_liquid"
     bl_label = "Sculpt like Liquid"
@@ -743,7 +743,7 @@ class D2P_OT_SculptLiquid(bpy.types.Operator):
 
         return {'FINISHED'}
 
-class D2P_OT_CanvasHoriz(bpy.types.Operator):
+class D2P_OT_CanvasX(bpy.types.Operator):
     """Flip the Canvas Left/Right"""
     bl_idname = "d2p.canvas_horizontal"
     bl_label = "Canvas Horizontal"
@@ -806,7 +806,7 @@ class D2P_OT_CanvasHoriz(bpy.types.Operator):
 
         return {'FINISHED'}
 
-class D2P_OT_CanvasVertical(bpy.types.Operator):
+class D2P_OT_CanvasY(bpy.types.Operator):
     """Flip the Canvas Top/Bottom"""
     bl_idname = "d2p.canvas_vertical"
     bl_label = "Canvas Vertical"
@@ -869,7 +869,7 @@ class D2P_OT_CanvasVertical(bpy.types.Operator):
 
         return {'FINISHED'}
 
-class D2P_OT_CanvasResetrot(bpy.types.Operator):
+class D2P_OT_CanvasReset(bpy.types.Operator):
     """Reset Canvas Rotation"""
     bl_idname = "d2p.canvas_resetrot"
     bl_label = "Canvas Reset Rotation"
@@ -1000,7 +1000,7 @@ class D2P_OT_BorderCropToggle(bpy.types.Operator):
                 scene.bordercrop_is_activated = True
         return {'FINISHED'}
 
-class D2P_OT_NewImage(bpy.types.Operator):
+class D2P_OT_Image2Scene(bpy.types.Operator):
     """IMAGE EDITOR FOR CREATING NEW BLANK CANVAS IMAGE"""
     bl_idname = "d2p.new_image"
     bl_label = "New Image"
@@ -1133,7 +1133,7 @@ class D2P_OT_ImageReload(bpy.types.Operator):
         context.area.ui_type = original_type
         return {'FINISHED'}
 
-class D2P_OT_EmptyGuides(bpy.types.Operator):
+class D2P_OT_Guide2Canvas(bpy.types.Operator):
     """Create new empty guide or selected guide relocate origin"""
     bl_idname = "d2p.empty_guides"
     bl_label = "Empty Guides Constrained"
@@ -1223,7 +1223,7 @@ class D2P_OT_EmptyGuides(bpy.types.Operator):
         return {'CANCELLED'}
 
 
-class D2P_OT_center_object(bpy.types.Operator):
+class D2P_OT_Recenter(bpy.types.Operator):
     """Snaps cursor and Selected Object to World Center"""
     bl_idname = "d2p.center_object"
     bl_label = "Center Object to World"
@@ -1242,7 +1242,7 @@ class D2P_OT_center_object(bpy.types.Operator):
         
         return {'FINISHED'}
 
-class D2P_OT_FrontOfPaint(bpy.types.Operator):
+class D2P_OT_Align2Face(bpy.types.Operator):
     """fast front of face view paint"""
     bl_description = ""
     bl_idname = "d2p.frontof_paint"
@@ -1705,7 +1705,7 @@ class D2P_OT_getFaceMaskGroups(bpy.types.Operator):
 
         return {'FINISHED'}
 
-class D2P_OT_NewGpencil(bpy.types.Operator):
+class D2P_OT_GPencil2Canvas(bpy.types.Operator):
     """Add Grease Pencil Object to Paint"""
     bl_idname = "d2p.grease_object"
     bl_label = "Must Render F12 to capture GPencil in Canvas Project"
@@ -1753,7 +1753,7 @@ class D2P_OT_NewGpencil(bpy.types.Operator):
 
         return {'FINISHED'}
 
-class D2P_OT_DisplayActivePaintSlot(bpy.types.Operator):
+class D2P_OT_Slot2Display(bpy.types.Operator):
     '''Display selected paint slot in new window'''
     bl_label = "Display active Slot"
     bl_idname = "d2p.display_active_slot"
@@ -2490,17 +2490,7 @@ class D2P_OT_ToggleAddMultiply(bpy.types.Operator):
         else:
             brush.blend = 'ADD'
 
-        wm = context.window_manager
-        if "tpp_toolmode_on_screen" in wm:
-            init_temp_props()
-            co2d = (event.mouse_region_x, event.mouse_region_y)
-            wm["tpp_toolmode_brushloc"] = co2d
-            args = (self, context)
-            self._handle = bpy.types.SpaceView3D.draw_handler_add(\
-                                                        toolmode_draw_callback,
-                                                        args,
-                                                        'WINDOW',
-                                                        'POST_PIXEL')
+
         return {"FINISHED"}
 
 
@@ -2522,17 +2512,7 @@ class D2P_OT_ToggleColorSoftLightScreen(bpy.types.Operator):
         elif brush.blend == 'SOFTLIGHT':
             brush.blend = 'SCREEN'
 
-        wm = context.window_manager
-        if "tpp_toolmode_on_screen" in wm:
-            init_temp_props()
-            co2d = (event.mouse_region_x, event.mouse_region_y)
-            wm["tpp_toolmode_brushloc"] = co2d
-            args = (self, context)
-            self._handle = bpy.types.SpaceView3D.draw_handler_add(\
-                                                        toolmode_draw_callback,
-                                                        args,
-                                                        'WINDOW',
-                                                        'POST_PIXEL')
+
         return{'FINISHED'}
 
 class D2P_OT_InitPaintBlend(Operator):
@@ -2548,18 +2528,9 @@ class D2P_OT_InitPaintBlend(Operator):
         brush = context.tool_settings.image_paint.brush
         brush.blend = 'MIX'
 
-        wm = context.window_manager
-        if "tpp_toolmode_on_screen" in wm:
-            init_temp_props()
-            co2d = (event.mouse_region_x, event.mouse_region_y)
-            wm["tpp_toolmode_brushloc"] = co2d
-            args = (self, context)
-            self._handle = bpy.types.SpaceView3D.draw_handler_add(\
-                                                        toolmode_draw_callback,
-                                                        args,
-                                                        'WINDOW',
-                                                        'POST_PIXEL')
+
         return{'FINISHED'}
+    
 class D2P_OT_ToggleAlphaMode(bpy.types.Operator):
     '''Toggle between Add Alpha and Erase Alpha blend modes'''
     bl_idname = "paint.toggle_alpha_mode"
@@ -2577,17 +2548,6 @@ class D2P_OT_ToggleAlphaMode(bpy.types.Operator):
         else:
             brush.blend = 'ADD_ALPHA'
 
-        wm = context.window_manager
-        if "tpp_toolmode_on_screen" in wm:
-            init_temp_props()
-            co2d = (event.mouse_region_x, event.mouse_region_y)
-            wm["tpp_toolmode_brushloc"] = co2d
-            args = (self, context)
-            self._handle = bpy.types.SpaceView3D.draw_handler_add(\
-                                                        toolmode_draw_callback,
-                                                        args,
-                                                        'WINDOW',
-                                                        'POST_PIXEL')
         return{'FINISHED'}
 
 class D2P_OT_ModifyBrushTextures(bpy.types.Operator):

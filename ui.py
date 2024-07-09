@@ -10,15 +10,14 @@ from .operators import (
     IMAGE_RESIZE_OT_height_mul2,
     IMAGE_RESIZE_OT_scale_percentage,
     IMAGE_RESIZE_OT_main,
-    D2P_OT_SetColorFamilies,
-    #D2P_OT_Trace2Curve
+    D2P_OT_SetColorFamilies
 )
 
 
-class D2P_PT_ImageState(bpy.types.Panel):
+class D2P_PT_ImageCreation(bpy.types.Panel):
     """Image State Tools"""
     bl_label = "Image Creation"
-    bl_idname = "D2P_PT_ImageState"
+    bl_idname = "D2P_PT_ImageCreation"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_category = "Draw2Paint"
@@ -39,7 +38,7 @@ class D2P_PT_ImageState(bpy.types.Panel):
         row1 = row.split(align=True)
         row1.scale_x = 0.50
         row1.scale_y = 1.25
-        row1.operator("d2p.new_image", text="Image2Canvas", icon='TEXTURE')
+        row1.operator("d2p.new_image", text="Image2Scene", icon='TEXTURE')
 
         row = col.row(align=True)
         row.scale_x = 0.50
@@ -83,7 +82,7 @@ class D2P_PT_ImageState(bpy.types.Panel):
 ################################## GPencil Future Home of Shortcuts
 class D2P_PT_GreasePencil(bpy.types.Panel):
     """Panel for D2P GPencil"""
-    bl_label = "Grease Pencil Shorts"
+    bl_label = "Grease Pencil Tools"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_category = "Draw2Paint"
@@ -101,14 +100,14 @@ class D2P_PT_GreasePencil(bpy.types.Panel):
                      icon='OUTLINER_DATA_GP_LAYER')
 
 ############# Scene Extras
-class D2P_PT_2D_to_3D_Experimental(bpy.types.Panel):
+class D2P_PT_3dImageEditor(bpy.types.Panel):
     """3D-2D Image Editor"""
-    bl_label = "3d Image Editor Work"
+    bl_label = "3D-2D Image Editor"
     bl_idname = "D2P_PT_2dto3d_experiment"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_category = "Draw2Paint"
-    bl_parent_id = 'D2P_PT_ImageState'
+    bl_parent_id = 'D2P_PT_ImageCreation'
     bl_options = {'DEFAULT_CLOSED'}
 
     def draw(self, context):
@@ -168,14 +167,14 @@ class D2P_PT_2D_to_3D_Experimental(bpy.types.Panel):
                       icon='IMPORT')
 
 
-class D2P_PT_ImageCrop(bpy.types.Panel):
+class D2P_PT_Crop2Camera(bpy.types.Panel):
     """Image Crop Tools - PRBA"""
     bl_label = "Crop2Camera"
     bl_idname = "D2P_PT_imagecrop"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_category = "Draw2Paint"
-    bl_parent_id = 'D2P_PT_ImageState'
+    bl_parent_id = 'D2P_PT_ImageCreation'
     bl_options = {'DEFAULT_CLOSED'}
 
     def draw(self, context):
@@ -226,7 +225,7 @@ class D2P_PT_FlipRotate(bpy.types.Panel):
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_category = "Draw2Paint"
-    bl_parent_id = 'D2P_PT_ImageState'
+    bl_parent_id = 'D2P_PT_ImageCreation'
     bl_options = {'DEFAULT_CLOSED'}
     
     @classmethod
@@ -265,13 +264,13 @@ class D2P_PT_FlipRotate(bpy.types.Panel):
             row.operator("d2p.canvas_resetrot", text="",
                          icon='RECOVER_LAST')
 
-class D2P_PT_GuideControls(bpy.types.Panel):
+class D2P_PT_Symmetry2Guide(bpy.types.Panel):
     """A custom panel in the viewport toolbar"""
     bl_label = "Symmetry2Guide"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_category = "Draw2Paint"
-    bl_parent_id = 'D2P_PT_ImageState'
+    bl_parent_id = 'D2P_PT_ImageCreation'
     bl_options = {'DEFAULT_CLOSED'}
 
     def draw(self, context):
@@ -288,9 +287,9 @@ class D2P_PT_GuideControls(bpy.types.Panel):
                      icon='ORIENTATION_CURSOR')
 
 ############### masking
-class D2P_PT_MaskControl(bpy.types.Panel):
-    """Align selected Objects in Camera View"""
-    bl_label = "Mask Controls"
+class D2P_PT_MaskTools(bpy.types.Panel):
+    """Create Mask Objects for Canvas Session"""
+    bl_label = "Mask Creation"
     bl_idname = "D2P_PT_AlignMask"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
@@ -412,12 +411,12 @@ class D2P_PT_MaskControl(bpy.types.Panel):
 ############# liquid sculpt
 class D2P_PT_Sculpt2D(bpy.types.Panel):
     """Liquid Sculpt on a Copy of the Canvas"""
-    bl_label = "Sculpt 2D Controls"
+    bl_label = "Sculpt Canvas Copy"
     bl_idname = "D2P_PT_Sculpt2D"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_category = "Draw2Paint"
-    bl_parent_id = 'D2P_PT_ImageState'
+    bl_parent_id = 'D2P_PT_ImageCreation'
     bl_options = {'DEFAULT_CLOSED'}
 
     def draw(self, context):
@@ -442,7 +441,7 @@ class D2P_PT_Sculpt2D(bpy.types.Panel):
                       
                       
 ############################### IMAGE EDITOR PANEL OPTION
-class D2P_PT_ImagePlanePanel(bpy.types.Panel):
+class D2P_PT_Image2CanvasPlus(bpy.types.Panel):
     bl_label = "Image2Canvas+"
     bl_idname = "D2P_PT_image_plane_panel"
     bl_space_type = 'IMAGE_EDITOR'
