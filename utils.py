@@ -5,6 +5,14 @@ import colorsys
 
 import math
 
+
+
+#define function for check if mesh and _canvas in name
+def is_canvas_mesh(obj):
+    return obj and obj.type == 'MESH' and '_canvas' in obj.name
+def is_subject_mesh(obj):
+    return obj and obj.type == 'MESH' and '_subject' in obj.name
+
 # workup functions for Trace2Curve to work
 def new_convert_curve_object(collection, name):
     curve = bpy.data.curves.new(name=name, type="CURVE")

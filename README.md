@@ -1,8 +1,15 @@
-# Draw2Paint Macros
+# Draw2Paint Addon:
+**3D-Space Image Editing for Blender**
 
-This is an add-on for 4.2 series Blender to enable manipulation of images.
+This is an add-on for 4.2 series Blender to enable manipulation of images. Lots of this spawned from curiosity after \
+watching a tutorial on making a custom tool panel by CG Cookie on their youtube channel. Early work was labeled as the \
+Artist Paint Panel. then later converted to EZDraw Panel by Spirou4D, and then after the 2.8 series I started from \
+scratch to get it working for the 3.x series of Blender. At that time, I came up with the idea of 'Draw2Paint' because \
+of the label of the TexDraw Brush had changed to a Draw Tool, and so to paint anything the first step is to  'Press \
+DRAW to PAINT', and it stuck. You will probably get tired of seeing the 'this2that' naming but it works well to \
+explain the actions the operators are for.
+
 The panel can be found in the N panel once installed.
-New Version Here!
 
 **Image Creation**
 
@@ -71,12 +78,12 @@ saved to disk, saving then keeps the changes in the packed images.
 
 **Flip X/ Flip Y** 
 
-These flip the canvas image on UV scaled to X or Y for checking composition - useful when uncertain if forms are aligned
+These flip the Canvas image on UV scaled to X or Y for checking composition - useful when uncertain if forms are aligned
 
 **Rotate Canvas**
 
-Rotates the canvas on the Z xis while still in Texture Paint Mode, and the icon to the right will reset rotation.
-TODO: need to set it to ONLY work on the object with suffix '_canvas'
+Rotates the Canvas on the Z xis while still in Texture Paint Mode, and the icon to the right will reset rotation.
+
 
 **Crop2Camera** 
 
@@ -87,7 +94,7 @@ A panel of crop controls for the image in the camera view, shamelessly stolen fr
 **Subject2Canvas** 
 
 Select your model to be texture painted, and press this to add a new Canvas and Camera linked to share the Subject's \
-material, UV Map is sent to the Camera foreground
+material, UV Map is sent to the Camera foreground and object is renamed (obj.name+_subject)
 
 **Canvas2View/Subject2View** 
 

@@ -21,7 +21,7 @@ from .utils import (find_brush, create_image_plane_from_image, create_matching_c
                     rgb_to_hex, complementary_color, split_complementary_colors,\
                     triadic_colors, tetradic_colors, analogous_colors, create_palette, \
                     new_convert_curve_object,convert_gpencil_to_curve,move_trace_objects_to_collection, \
-                    convert_image_plane_to_curve )
+                    convert_image_plane_to_curve, is_canvas_mesh )
 
 from bpy.types import Operator, Menu, Panel, UIList
 from bpy_extras.io_utils import ImportHelper
@@ -386,6 +386,8 @@ class D2P_OT_Subject2Canvas(bpy.types.Operator):
         if not selected_object.data.uv_layers:
             self.report({'WARNING'}, "Please Create UV Layer")
             return {'CANCELLED'}
+        #Rename object with suffix _subject
+        selected_object.name += '_subject'
         
         # Move object to 'subject_view' collection
         move_object_to_collection(selected_object, 'subject_view')
@@ -472,6 +474,9 @@ class D2P_OT_ToggleUV2Camera(bpy.types.Operator):
     bl_label = "Toggle UV Image Visibility in Camera"
     bl_options = {'REGISTER', 'UNDO'}
 
+    @classmethod
+    def poll (clas, context):
+        return is_canvas_mesh(context.object)
     def execute(self, context):
         cam = context.scene.camera
         if cam and cam.data.background_images:
@@ -658,6 +663,10 @@ class D2P_OT_Copy2Eraser(bpy.types.Operator):
     bl_label = "Sculpt Liquid Duplicate"
     bl_options = {'REGISTER', 'UNDO'}
 
+    @classmethod
+    def poll(cls, context):
+        return is_canvas_mesh(context.object)
+
     def execute(self, context):
         scene = context.scene
 
@@ -720,14 +729,8 @@ class D2P_OT_LiquidSculpt(bpy.types.Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     @classmethod
-    def poll(self, context):
-        obj = context.active_object
-        # main_canvas = obj.name
-
-        if obj is not None:
-            A = context.active_object.type == 'MESH'
-            # B = context.active_object.name == obj.name[0]+ '.001'
-            return A  # and B
+    def poll(cls, context):
+        return is_canvas_mesh(context.object)
 
     def execute(self, context):
         scene = context.scene
@@ -750,12 +753,14 @@ class D2P_OT_CanvasX(bpy.types.Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     @classmethod
-    def poll(self, context):
-        obj = context.active_object
+    def poll(cls, context):
+        return is_canvas_mesh(context.object)
+
+        '''obj = context.active_object
         if obj is not None:
             A = obj.type == 'MESH'
             B = context.mode == 'PAINT_TEXTURE'
-            return A and B
+            return A and B'''
 
     def execute(self, context):
         scene = context.scene
@@ -813,12 +818,14 @@ class D2P_OT_CanvasY(bpy.types.Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     @classmethod
-    def poll(self, context):
+    def poll(cls, context):
+        return is_canvas_mesh(context.object)
+    '''def poll(self, context):
         obj = context.active_object
         if obj is not None:
             A = obj.type == 'MESH'
             B = context.mode == 'PAINT_TEXTURE'
-            return A and B
+            return A and B'''
 
     def execute(self, context):
         scene = context.scene

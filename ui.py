@@ -161,10 +161,12 @@ class D2P_PT_3dImageEditor(bpy.types.Panel):
         row = col.row(align=True)
         row.scale_x = 0.50
         row.scale_y = 1.25
-        
-        row.operator("d2p.frontof_paint",
-                      text="Align2Face",
-                      icon='IMPORT')
+        obj = context.object
+        if obj and obj.type == 'MESH':
+            if '_subject' in obj.name:
+                row.operator("d2p.frontof_paint",
+                              text="Align2Face",
+                              icon='IMPORT')
 
 
 class D2P_PT_Crop2Camera(bpy.types.Panel):
@@ -229,16 +231,11 @@ class D2P_PT_FlipRotate(bpy.types.Panel):
     bl_options = {'DEFAULT_CLOSED'}
     
     @classmethod
-    def poll(self, context):
-        obj = context.active_object
-        if obj is not None:
-            A = obj.type == 'MESH'
-            B = context.mode == 'PAINT_TEXTURE'
-            return A and B
-
+    def poll(cls, context):
+        return is_canvas_mesh(context.object)
     def draw(self, context):
         layout = self.layout
-        scene = context.scene
+
         
         box = layout.box()
         col = box.column(align=True)
@@ -256,13 +253,12 @@ class D2P_PT_FlipRotate(bpy.types.Panel):
 
         layout = self.layout
         obj = context.object
-
         if obj and obj.type == 'MESH':
-            #layout.label(text="Rotate Canvas")
-            row = layout.row()
-            row.prop(obj, "rotation_euler", index=2, text="Rotate Canvas")
-            row.operator("d2p.canvas_resetrot", text="",
-                         icon='RECOVER_LAST')
+            if '_canvas' in obj.name:
+                row = layout.row()
+                row.prop(obj, "rotation_euler", index=2, text="Rotate Canvas")
+                row.operator("d2p.canvas_resetrot", text="",
+                             icon='RECOVER_LAST')
 
 class D2P_PT_Symmetry2Guide(bpy.types.Panel):
     """A custom panel in the viewport toolbar"""
@@ -273,6 +269,9 @@ class D2P_PT_Symmetry2Guide(bpy.types.Panel):
     bl_parent_id = 'D2P_PT_ImageCreation'
     bl_options = {'DEFAULT_CLOSED'}
 
+    @classmethod
+    def poll(cls, context):
+        return is_canvas_mesh(context.object)
     def draw(self, context):
         layout = self.layout
 
@@ -360,52 +359,55 @@ class D2P_PT_MaskTools(bpy.types.Panel):
         row3.scale_y = 1.25
         row2.operator("d2p.add_holdout", text='Holdout', icon='GHOST_ENABLED')
 
-        layout = self.layout
-        row = layout.row()
-        row.label(text="Face Mask Groups")
-        box = layout.box()  # HORIZONTAL ALIGN
-        col = box.column(align=True)
-        row = col.row(align=True)
-        row1 = row.split(align=True)
-        row1.label(text="Generate FMG from Islands")
-        row1.operator("d2p.getfacemaskgroups", text="FMG+", icon='SHADERFX')
+        obj = context.object
+        if obj and obj.type == 'MESH':
+            if '_subject' in obj.name:
+                layout = self.layout
+                row = layout.row()
+                row.label(text="Face Mask Groups")
+                box = layout.box()  # HORIZONTAL ALIGN
+                col = box.column(align=True)
+                row = col.row(align=True)
+                row1 = row.split(align=True)
+                row1.label(text="Generate FMG from Islands")
+                row1.operator("d2p.getfacemaskgroups", text="FMG+", icon='SHADERFX')
 
-        # def draw(self, context):
-        layout = self.layout
-        ob = context.object
-        group = ob.vertex_groups.active
-        rows = 2
-        if group:
-            rows = 4
+                # def draw(self, context):
+                layout = self.layout
+                ob = context.object
+                group = ob.vertex_groups.active
+                rows = 2
+                if group:
+                    rows = 4
 
-        row = layout.row()
-        row.template_list("MESH_UL_vgroups", "", ob, "vertex_groups",
-                          ob.vertex_groups, "active_index", rows=rows)
+                row = layout.row()
+                row.template_list("MESH_UL_vgroups", "", ob, "vertex_groups",
+                                  ob.vertex_groups, "active_index", rows=rows)
 
-        col = row.column(align=True)
-        col.operator("object.vertex_group_add", icon='ADD', text="")
-        col.operator("object.vertex_group_remove", icon='REMOVE',
-                     text="").all = False
-        col.menu("MESH_MT_vertex_group_context_menu",
-                 icon='DOWNARROW_HLT', text="")
-        if group:
-            col.separator()
-            col.operator("object.vertex_group_move",
-                         icon='TRIA_UP', text="").direction = 'UP'
-            col.operator("object.vertex_group_move",
-                         icon='TRIA_DOWN', text="").direction = 'DOWN'
+                col = row.column(align=True)
+                col.operator("object.vertex_group_add", icon='ADD', text="")
+                col.operator("object.vertex_group_remove", icon='REMOVE',
+                             text="").all = False
+                col.menu("MESH_MT_vertex_group_context_menu",
+                         icon='DOWNARROW_HLT', text="")
+                if group:
+                    col.separator()
+                    col.operator("object.vertex_group_move",
+                                 icon='TRIA_UP', text="").direction = 'UP'
+                    col.operator("object.vertex_group_move",
+                                 icon='TRIA_DOWN', text="").direction = 'DOWN'
 
-        box = layout.box()
-        col = box.column(align=True)
-        row = col.row(align=True)
-        row1 = row.split(align=True)
-        row1.operator("d2p.select_vgroup", text="Sel", icon='RADIOBUT_ON')
+                box = layout.box()
+                col = box.column(align=True)
+                row = col.row(align=True)
+                row1 = row.split(align=True)
+                row1.operator("d2p.select_vgroup", text="Sel", icon='RADIOBUT_ON')
 
-        row1.operator("d2p.deselect_vgroup", text="Desel", icon='RADIOBUT_OFF')
+                row1.operator("d2p.deselect_vgroup", text="Desel", icon='RADIOBUT_OFF')
 
-        row1.operator("d2p.assign_vgroup", text="Set", icon='ADD')
+                row1.operator("d2p.assign_vgroup", text="Set", icon='ADD')
 
-        row1.operator("d2p.unassign_vgroup", text="Unset", icon='REMOVE')
+                row1.operator("d2p.unassign_vgroup", text="Unset", icon='REMOVE')
 
 
 ############# liquid sculpt
@@ -418,6 +420,10 @@ class D2P_PT_Sculpt2D(bpy.types.Panel):
     bl_category = "Draw2Paint"
     bl_parent_id = 'D2P_PT_ImageCreation'
     bl_options = {'DEFAULT_CLOSED'}
+
+    @classmethod
+    def poll(cls, context):
+        return is_canvas_mesh(context.object)
 
     def draw(self, context):
         layout = self.layout
