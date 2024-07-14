@@ -21,7 +21,8 @@ from .utils import (find_brush, create_image_plane_from_image, create_matching_c
                     rgb_to_hex, complementary_color, split_complementary_colors,\
                     triadic_colors, tetradic_colors, analogous_colors, create_palette, \
                     new_convert_curve_object,convert_gpencil_to_curve,move_trace_objects_to_collection, \
-                    convert_image_plane_to_curve, is_canvas_mesh )
+                    convert_image_plane_to_curve, is_canvas_mesh, create_compositor_node_tree,\
+                    render_and_extract_image )
 
 from bpy.types import Operator, Menu, Panel, UIList
 from bpy_extras.io_utils import ImportHelper
@@ -2792,6 +2793,103 @@ class D2P_OT_SetColorFamilies(bpy.types.Operator):
         create_palette(f"Analogous Colors {primary_color_hex}", [primary_color] + list(analogous))
 
         self.report({'INFO'}, "Brush Colors and Palettes Set")
+        return {'FINISHED'}
+
+####nodes selected to compositor and back as one node
+class NODE_OT_flatten_images(bpy.types.Operator):
+    bl_idname = "node.flatten_images"
+    bl_label = "Flatten Images"
+    bl_description = "Flatten selected image nodes using a mix node and create a composite image"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        # Ensure we are in the Shader Editor
+        if context.area.type != 'NODE_EDITOR' or context.space_data.tree_type != 'ShaderNodeTree':
+            self.report({'ERROR'}, "This operator must be run in the Shader Editor")
+            return {'CANCELLED'}
+
+        obj = context.active_object
+        if not obj:
+            self.report({'ERROR'}, "No active object")
+            return {'CANCELLED'}
+
+        material = obj.active_material
+        if not material:
+            self.report({'ERROR'}, "Active object has no active material")
+            return {'CANCELLED'}
+
+        if not material.use_nodes:
+            self.report({'ERROR'}, "Active material does not use nodes")
+            return {'CANCELLED'}
+
+        node_tree = material.node_tree
+        nodes = node_tree.nodes
+
+        # Get selected nodes from the node tree
+        selected_nodes = [node for node in nodes if node.select]
+
+        # Debug print to verify selected nodes
+        print("Selected nodes:", [(node.name, node.type) for node in selected_nodes])
+
+        image_nodes = [node for node in selected_nodes if node.type == 'TEX_IMAGE']
+        mix_nodes = [node for node in selected_nodes if node.type == 'MIX']
+
+        # Debug print to verify filtered nodes
+        print("Selected image nodes:", [node.name for node in image_nodes])
+        print("Selected mix nodes:", [node.name for node in mix_nodes])
+
+        # Debug print the actual types of all selected nodes to diagnose the issue
+        for node in selected_nodes:
+            print(f"Node {node.name} has type {node.type}")
+
+        if len(image_nodes) != 2 or len(mix_nodes) != 1:
+            self.report({'ERROR'}, "Select exactly two image nodes and one mix node")
+            return {'CANCELLED'}
+
+        image_node1, image_node2 = image_nodes
+        mix_node = mix_nodes[0]
+
+        blend_mode = mix_node.blend_type
+
+        image1 = image_node1.image
+        image2 = image_node2.image
+
+        if not image1.has_data or not image2.has_data:
+            self.report({'ERROR'}, "One or both images are not loaded")
+            return {'CANCELLED'}
+
+        width1, height1 = image1.size
+        width2, height2 = image2.size
+
+        if (width1, height1) != (width2, height2):
+            self.report({'ERROR'}, "Images must be the same size")
+            return {'CANCELLED'}
+
+        render_width, render_height = width1, height1
+        create_compositor_node_tree(image1, image2, blend_mode)
+        combined_image = render_and_extract_image("CombinedImage", render_width, render_height)
+
+        bpy.context.area.ui_type = 'ShaderNodeTree'
+
+        # Create a group from the selected nodes
+        bpy.ops.node.group_make()
+
+        # Find the newly created group node
+        group_node = None
+        for node in nodes:
+            if node.type == 'GROUP' and node.name not in [n.name for n in selected_nodes]:
+                group_node = node
+                break
+
+        if group_node:
+            group_node.label = "Flatten Input"
+
+        # Add the new image texture node
+        new_image_node = nodes.new('ShaderNodeTexImage')
+        new_image_node.image = combined_image
+        new_image_node.label = "Flatten result"
+        new_image_node.location = group_node.location.x + 300, group_node.location.y
+
         return {'FINISHED'}
 
 

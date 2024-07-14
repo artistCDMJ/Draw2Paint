@@ -43,6 +43,9 @@ from .operators import *
 from .ui import *
 from . import keymaps, properties
 
+
+
+
 classes = (
     properties.D2P_Properties,
     D2P_OT_UV2Mask,
@@ -116,6 +119,8 @@ classes = (
     IMAGE_RESIZE_OT_scale_percentage,
     IMAGE_RESIZE_OT_main,
     IMAGE_RESIZE_PT_panel,
+    NODE_PT_flattener_panel,
+    NODE_OT_flatten_images,
     D2P_OT_SetColorFamilies,
     D2P_OT_Trace2Curve
 )

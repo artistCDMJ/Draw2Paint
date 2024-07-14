@@ -6,6 +6,51 @@ import colorsys
 import math
 
 
+### nodes to compositor and back
+def create_compositor_node_tree(image1, image2, blend_mode):
+    bpy.context.scene.use_nodes = True
+    tree = bpy.context.scene.node_tree
+
+    # Clear existing nodes
+    for node in tree.nodes:
+        tree.nodes.remove(node)
+
+    # Create image input nodes
+    image_node1 = tree.nodes.new(type='CompositorNodeImage')
+    image_node1.image = image1
+    image_node1.location = -300, 200
+
+    image_node2 = tree.nodes.new(type='CompositorNodeImage')
+    image_node2.image = image2
+    image_node2.location = -300, -200
+
+    # Create a Mix node
+    mix_node = tree.nodes.new(type='CompositorNodeMixRGB')
+    mix_node.blend_type = blend_mode
+    mix_node.location = 200, 0
+    mix_node.use_alpha = True  # Enable the use_alpha property
+
+    # Connect image nodes to the Mix node
+    tree.links.new(image_node1.outputs['Image'], mix_node.inputs[1])
+    tree.links.new(image_node2.outputs['Image'], mix_node.inputs[2])
+
+    # Connect the alpha output of the second image to the factor input of the Mix node
+    tree.links.new(image_node2.outputs['Alpha'], mix_node.inputs[0])
+
+    # Add a Composite node to output the result
+    composite_node = tree.nodes.new(type='CompositorNodeComposite')
+    composite_node.location = 400, 0
+
+    tree.links.new(mix_node.outputs['Image'], composite_node.inputs['Image'])
+
+def render_and_extract_image(output_name, width, height):
+    bpy.context.scene.render.resolution_x = width
+    bpy.context.scene.render.resolution_y = height
+    bpy.context.scene.render.image_settings.file_format = 'PNG'
+    bpy.context.scene.render.filepath = f'/tmp/{output_name}.png'
+    bpy.ops.render.render(write_still=True)
+    combined_image = bpy.data.images.load(bpy.context.scene.render.filepath)
+    return combined_image
 
 #define function for check if mesh and _canvas in name
 def is_canvas_mesh(obj):

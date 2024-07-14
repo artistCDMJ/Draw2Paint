@@ -12,7 +12,10 @@ from .operators import (
     IMAGE_RESIZE_OT_main,
     D2P_OT_SetColorFamilies
 )
-
+from .utils import (
+    is_canvas_mesh,
+    is_subject_mesh
+)
 
 class D2P_PT_ImageCreation(bpy.types.Panel):
     """Image State Tools"""
@@ -503,3 +506,19 @@ def draw_func(self, context):
 
     if settings and settings.palette:
         layout.operator(D2P_OT_SetColorFamilies.bl_idname)
+
+#### nodes selected to compositor and back
+class NODE_PT_flattener_panel(bpy.types.Panel):
+    bl_label = "Flattener"
+    bl_idname = "NODE_PT_flattener_panel"
+    bl_space_type = 'NODE_EDITOR'
+    bl_region_type = 'UI'
+    bl_category = 'Tool'
+
+    @classmethod
+    def poll(cls, context):
+        return context.space_data.tree_type == 'ShaderNodeTree'
+
+    def draw(self, context):
+        layout = self.layout
+        layout.operator("node.flatten_images")
