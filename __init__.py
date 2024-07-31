@@ -122,7 +122,9 @@ classes = (
     NODE_PT_flattener_panel,
     NODE_OT_flatten_images,
     D2P_OT_SetColorFamilies,
-    D2P_OT_Trace2Curve
+    D2P_OT_Trace2Curve,
+    D2P_OT_Copy2Lasso,
+    D2P_OT_Lasso2Mask
 )
 
 def register():

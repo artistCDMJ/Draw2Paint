@@ -2892,4 +2892,149 @@ class NODE_OT_flatten_images(bpy.types.Operator):
 
         return {'FINISHED'}
 
+### new code for lasso ops
+class D2P_OT_Copy2Lasso(bpy.types.Operator):
+    """Duplicate Subject and set Lasso to Draw"""
+    bl_idname = "d2p.copy_lasso"
+    bl_label = "Duplicate to Lasso Curve Draw"
+    bl_options = {'REGISTER', 'UNDO'}
 
+    @classmethod
+    def poll(cls, context):
+        # Ensure an object is selected and the mode is Texture Paint
+        return (context.object is not None and
+                context.object.type == 'MESH' and
+                context.mode == 'PAINT_TEXTURE')
+
+    def execute(self, context):
+        selected_objects = context.selected_objects
+        if not selected_objects:
+            self.report({'WARNING'}, "No selected objects found.")
+            return {'CANCELLED'}
+
+        selected_object = selected_objects[0]
+
+        # Ensure we're in object mode before duplicating
+        bpy.ops.object.mode_set(mode='OBJECT')
+
+        # Duplicate the object
+        bpy.ops.object.duplicate()
+        new_object = context.object  # The duplicated object becomes the active object
+
+        # Rename the duplicated object
+        new_object.name = selected_object.name + '_lasso_copy'
+
+        # Create a new collection and link the duplicated object to it
+        collection_name = 'copy2lasso'
+        if collection_name not in bpy.data.collections:
+            new_collection = bpy.data.collections.new(collection_name)
+            bpy.context.scene.collection.children.link(new_collection)
+        else:
+            new_collection = bpy.data.collections[collection_name]
+
+        # Unlink from current collection and link to new collection
+        for collection in new_object.users_collection:
+            collection.objects.unlink(new_object)
+        new_collection.objects.link(new_object)
+
+        # Convert to mesh (if necessary)
+        bpy.ops.object.convert(target='MESH')
+
+        # Add subdivision surface modifier and apply it
+        #bpy.ops.object.modifier_add(type='SUBSURF')
+        #new_object.modifiers["Subdivision"].subdivision_type = 'SIMPLE'
+        #new_object.modifiers["Subdivision"].levels = 1
+
+        # bpy.ops.object.convert(target='MESH')
+
+        # Create new Bezier curve and delete its control points
+        bpy.ops.curve.primitive_bezier_curve_add(radius=1, enter_editmode=False, align='WORLD', location=(0, 0, 0.15),
+                                                 scale=(1, 1, 1))
+
+        # Name curve and add to collection
+        curve_object = context.object
+        curve_object.name = selected_object.name + '_lasso_selection'
+
+        # Unlink from current collection and link to new collection
+        for collection in curve_object.users_collection:
+            collection.objects.unlink(curve_object)
+        new_collection.objects.link(curve_object)
+
+        bpy.ops.object.editmode_toggle()
+        bpy.ops.curve.delete(type='VERT')
+        # bpy.ops.object.editmode_toggle()
+
+        # Set the tool to draw and adjust settings
+        bpy.ops.wm.tool_set_by_id(name="builtin.draw")
+        bpy.context.scene.tool_settings.curve_paint_settings.depth_mode = 'SURFACE'
+
+        return {'FINISHED'}
+
+
+# conversion of curve to mesh for boolean and return for paint result
+class D2P_OT_Lasso2Mask(bpy.types.Operator):
+    """Convert Drawn Curve to Lasso Selection for Boolean Mask"""
+    bl_idname = "d2p.lasso_mask"
+    bl_label = "Convert drawn curve to 3d bool mask"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    @classmethod
+    def poll(cls, context):
+        obj = context.active_object
+        return obj is not None and (obj.type == 'CURVE' or obj.type == 'MESH')
+
+    def execute(self, context):
+        obj = context.active_object
+
+        # Ensure we're in object mode before converting
+        if obj.mode == 'EDIT':
+            bpy.ops.object.mode_set(mode='OBJECT')
+
+        if obj.type == 'CURVE':
+            # Convert curve to mesh
+            bpy.ops.object.convert(target='MESH')
+
+            # Edit mode operations in one go
+            bpy.ops.object.mode_set(mode='EDIT')
+            bpy.ops.mesh.select_all(action='SELECT')
+            bpy.ops.mesh.edge_face_add()
+            bpy.ops.mesh.normals_make_consistent(inside=False)
+            bpy.ops.object.mode_set(mode='OBJECT')
+
+            # Add and configure the solidify modifier
+            solidify_modifier = obj.modifiers.new(name="Solidify", type='SOLIDIFY')
+            solidify_modifier.thickness = 1.75
+            solidify_modifier.offset = -0.5
+
+        # Select _lasso_copy object
+        lasso_copy_name = obj.name.replace('_lasso_selection', '_lasso_copy')
+        lasso_copy = bpy.data.objects.get(lasso_copy_name)
+
+        if lasso_copy is None:
+            self.report({'WARNING'}, f"{lasso_copy_name} not found.")
+            return {'CANCELLED'}
+
+        # Change display settings of _lasso_selection to Bounds
+        obj.display_type = 'BOUNDS'
+
+        # Deselect all and select the two objects
+        bpy.ops.object.select_all(action='DESELECT')
+        obj.select_set(True)
+        lasso_copy.select_set(True)
+        context.view_layer.objects.active = lasso_copy
+
+        # Perform boolean intersect
+        boolean_modifier = lasso_copy.modifiers.new(name="Boolean", type='BOOLEAN')
+        boolean_modifier.operation = 'INTERSECT'
+        boolean_modifier.use_self = True
+        boolean_modifier.object = obj
+
+        # DO NOT Apply the boolean modifier
+        # bpy.context.view_layer.objects.active = lasso_copy
+        # bpy.ops.object.modifier_apply(modifier=boolean_modifier.name)
+
+        # Switch to Texture Paint mode
+        bpy.ops.paint.texture_paint_toggle()
+
+        bpy.ops.view3d.localview()
+        return {'FINISHED'}

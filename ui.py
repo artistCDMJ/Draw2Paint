@@ -336,6 +336,15 @@ class D2P_PT_MaskTools(bpy.types.Panel):
         row.scale_y = 1.25
         row.operator("d2p.remove_modifiers", text='Remove Mods',
                      icon='UNLINKED')
+
+        row = col.row(align=True)
+        row1 = row.split(align=True)
+        row1.scale_x = 0.50
+        row1.scale_y = 1.25
+        row1.operator("d2p.copy_lasso", text='Copy2Lasso', icon='CURVE_BEZCURVE')
+        row1.operator("d2p.lasso_mask", text='Lasso2Mask', icon='SURFACE_NCIRCLE')
+
+
         row = layout.row()
         row.operator("object.uv_mask_from_selected_object", text='UV2Mask', icon='MESH_MONKEY')
         row.operator("d2p.trace2curve", text='Trace2Curve', icon='OUTLINER_DATA_CURVE')
