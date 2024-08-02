@@ -203,6 +203,10 @@ Mask objects or anything else will need to be arranged with the Align addon that
 Import Images as Planes is no longer necessary here for using Draw2Paint, as this uses a much simpler and direct \
 approach.
 
+**Copy2lasso and Lasso2Mask** 
+This pair will set a new copy of the Subject to a collection and will allow to draw a curve as selection for a \
+Solidify and Boolean Mask object to paint to as a 3d mask object. Experimental, not as flexible and repeatable as \
+the Mask Tool and Stencil Image workflow, but this is a good example of why we don't have an image-level lasso select.
 **EZPaint Additions** 
 
 Press W for the Brush Pop-up, Alt-W for the Texture and Mask Popup, and Shift-W brings up a \
@@ -215,6 +219,8 @@ Alt-D returns to Mix mode
 Shift D toggles Screen, Color, and Soft Light. 
 
 A toggles Erase Alpha/Add Alpha when the Face Select Masking is OFF. If ON, then A defaults to select tool.
+
+'K' Flips Brush Gradient in the active Brush 
 
 **Color Families**
 Now we have a button in the Header to the right that will generate a set of color palettes based on the current brush \

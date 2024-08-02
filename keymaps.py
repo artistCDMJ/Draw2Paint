@@ -24,7 +24,9 @@ kmi_defs = (
     # Toggle Alpha modes [Image Paint] with: A.
     (('Image Paint', 'EMPTY'), "paint.toggle_alpha_mode", 'A', 'PRESS', False, False, False, False, None, "Toggle Alpha modes"),
     # Re-init Mix mode [Image Paint] with: Alt + D.
-    (('Image Paint', 'EMPTY'), "paint.init_blend_mode", 'D', 'PRESS', False, False, True, False, None, "Re-init Mix mode")
+    (('Image Paint', 'EMPTY'), "paint.init_blend_mode", 'D', 'PRESS', False, False, True, False, None, "Re-init Mix mode"),
+    # Flip Brush Gradient in Brush [Image Paint] with: ,
+    (('Image Paint', 'EMPTY'), "brush.flip_gradient", 'K', 'PRESS', False, False, False, False, None, "Flip Brush Gradient")
 
 )
 

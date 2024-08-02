@@ -124,7 +124,8 @@ classes = (
     D2P_OT_SetColorFamilies,
     D2P_OT_Trace2Curve,
     D2P_OT_Copy2Lasso,
-    D2P_OT_Lasso2Mask
+    D2P_OT_Lasso2Mask,
+    D2P_OT_flip_gradient
 )
 
 def register():
