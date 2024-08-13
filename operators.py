@@ -1421,6 +1421,7 @@ class D2P_OT_my_enum_shapes(bpy.types.Operator):
             copy_material_to_new_object(new_obj)
             new_obj.data.dimensions = '2D'
             new_obj.data.fill_mode = 'BOTH'
+            bpy.ops.object.editmode_toggle()
             bpy.ops.wm.tool_set_by_id(name="builtin.draw")
 
         elif mytool.my_enum == 'OP2':
