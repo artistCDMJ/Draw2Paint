@@ -79,6 +79,7 @@ class D2P_PT_ImageCreation(bpy.types.Panel):
         row2.operator("d2p.save_increm", text="Save +1",
                       icon='FILE_IMAGE')
         row = layout.row()
+        row.operator("d2p.reload_all", text= "Reload ALL", icon='FILE_REFRESH')
         row.operator("d2p.save_dirty", text="Save All Pack All", icon='BORDERMOVE')
 
 

@@ -52,6 +52,7 @@ classes = (
     D2P_OT_CanvasX,
     D2P_OT_CanvasY,
     D2P_OT_ImageReload,
+    D2P_OT_ReloadAll,
     D2P_OT_CanvasReset,
     D2P_OT_SaveImage,
     D2P_OT_SaveDirty,

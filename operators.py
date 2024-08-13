@@ -552,6 +552,8 @@ class D2P_OT_D2PaintScene(bpy.types.Operator):
 
         bpy.ops.scene.new(type='NEW')
         context.scene.name = _name
+        #unlock selection for multiple objects
+        bpy.context.scene.tool_settings.lock_object_mode = False
 
         # Set to top view
         bpy.ops.view3d.view_axis(type='TOP', align_active=True)
@@ -1112,6 +1114,25 @@ class D2P_OT_SaveDirty(bpy.types.Operator):
                     self.report({'INFO'}, f"Packed image: {image.name}")
 
         return {'FINISHED'}
+class D2P_OT_ReloadAll(bpy.types.Operator):
+    '''Reload ALL IMAGES to last Saved State'''
+    bl_idname = "d2p.reload_all"
+    bl_label = "Reload ALL IMAGES"
+    bl_options = {'REGISTER','UNDO'}
+
+
+    @classmethod
+    def poll(self, context):
+        obj = context.active_object
+        if obj is not None:
+            A = obj.type == 'MESH'
+            B = context.mode == 'PAINT_TEXTURE'
+            return A and B
+    def execute(self, context):
+        for image in bpy.data.images:
+            image.reload()
+        return {'FINISHED'}
+
 
 class D2P_OT_ImageReload(bpy.types.Operator):
     """Reload Image Last Saved State"""
