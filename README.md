@@ -107,6 +107,10 @@ TBD: maybe add all secondary objects to Canvas View collection with a button, as
 
 Toggle on and off the UV Map in the Camera view over the Canvas
 
+**Calculate Texel Density**
+
+With object scale applied, this will examine surface area and suggest a power of 2 image texture size
+
 **Symmetry2Guide**
 
 **Guide2Canvas** 
