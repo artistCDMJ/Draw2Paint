@@ -126,7 +126,8 @@ classes = (
     D2P_OT_Trace2Curve,
     D2P_OT_Copy2Lasso,
     D2P_OT_Lasso2Mask,
-    D2P_OT_flip_gradient
+    D2P_OT_flip_gradient,
+    D2P_OT_CalculateTexelDensity
 )
 
 def register():
@@ -141,6 +142,7 @@ def register():
     bpy.types.Scene.image_resize_addon_height = bpy.props.IntProperty(name="Height")
     bpy.types.Scene.image_resize_addon_percentage = bpy.props.FloatProperty(name="Scale Percentage", default=100.0,
                                                                             min=0.0)
+    bpy.types.Scene.texel_density_result = bpy.props.StringProperty(name="Texel Density Result", default="")
     bpy.types.Scene.view_mode = bpy.props.EnumProperty(
         name="View Mode",
         description="Current view mode",
@@ -154,6 +156,7 @@ def register():
     if hasattr(keymaps, 'register'):
         keymaps.register()
     bpy.types.VIEW3D_PT_tools_brush_color.append(draw_func)
+
 
 
 def unregister():
@@ -170,6 +173,7 @@ def unregister():
     del bpy.types.Scene.image_resize_addon_height
     del bpy.types.Scene.image_resize_addon_percentage
     del bpy.types.Scene.view_mode
+    del bpy.types.Scene.texel_density_result
     bpy.types.VIEW3D_PT_tools_brush_color.remove(draw_func)
 
 

@@ -123,6 +123,12 @@ class D2P_PT_3dImageEditor(bpy.types.Panel):
         col.label(text="3d: subject view 2D:canvas view")
         row = col.row(align=True)
 
+
+        layout.operator("object.calculate_texel_density", icon='TEXTURE')
+        if context.scene.get("texel_density_result"):
+            layout.label(text=context.scene["texel_density_result"])
+
+        row = layout.row()
         row1 = row.split(align=True)
         row1.scale_x = 0.50
         row1.scale_y = 1.25

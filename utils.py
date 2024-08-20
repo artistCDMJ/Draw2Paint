@@ -4,7 +4,19 @@ import re
 import colorsys
 
 import math
+### texel density calculation
+def calculate_texel_density(obj, desired_texel_density):
+    # Calculate the surface area of the object
+    obj_surface_area = sum(p.area for p in obj.data.polygons)
 
+    # Calculate the required number of pixels (texels)
+    required_texels = desired_texel_density * math.sqrt(obj_surface_area)
+
+    # Determine the appropriate texture resolution
+    # We assume square textures and round to the nearest power of two
+    texture_size = 2 ** math.ceil(math.log2(required_texels))
+
+    return texture_size
 
 ### nodes to compositor and back
 def create_compositor_node_tree(image1, image2, blend_mode):

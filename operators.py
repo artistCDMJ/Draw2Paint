@@ -22,7 +22,7 @@ from .utils import (find_brush, create_image_plane_from_image, create_matching_c
                     triadic_colors, tetradic_colors, analogous_colors, create_palette, \
                     new_convert_curve_object,convert_gpencil_to_curve,move_trace_objects_to_collection, \
                     convert_image_plane_to_curve, is_canvas_mesh, create_compositor_node_tree,\
-                    render_and_extract_image )
+                    render_and_extract_image,calculate_texel_density )
 
 from bpy.types import Operator, Menu, Panel, UIList
 from bpy_extras.io_utils import ImportHelper
@@ -3106,3 +3106,32 @@ class D2P_OT_flip_gradient(bpy.types.Operator):
         for i in range(n):
             elements[i].position = 1.0 - positions[n - 1 - i]
             elements[i].color = colors[n - 1 - i]
+
+
+class D2P_OT_CalculateTexelDensity(Operator):
+    """Selected Object is Examined for Surface Area and Suggests Power of 2 Texture Size"""
+    bl_idname = "object.calculate_texel_density"
+    bl_label = "Calculate Texel Density"
+
+    result: bpy.props.StringProperty(name="Result", default="")
+
+    def execute(self, context):
+        obj = context.active_object
+
+        # Ensure object has valid data
+        if not obj or obj.type != 'MESH':
+            self.result = "Please select a valid mesh object."
+            return {'FINISHED'}
+
+        # Desired texel density (texels per meter)
+        desired_texel_density = 1024  # Modify this value as needed
+
+        # Calculate ideal texture size
+        texture_size = calculate_texel_density(obj, desired_texel_density)
+
+        self.result = f"Suggested Texture Size: {texture_size}x{texture_size}"
+
+        # Store the result in the context scene to display in the panel
+        context.scene.texel_density_result = self.result
+
+        return {'FINISHED'}
