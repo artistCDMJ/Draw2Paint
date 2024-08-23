@@ -121,13 +121,16 @@ classes = (
     IMAGE_RESIZE_OT_main,
     IMAGE_RESIZE_PT_panel,
     NODE_PT_flattener_panel,
+    VIEWER_PT_Panel,
     NODE_OT_flatten_images,
     D2P_OT_SetColorFamilies,
     D2P_OT_Trace2Curve,
     D2P_OT_Copy2Lasso,
     D2P_OT_Lasso2Mask,
     D2P_OT_flip_gradient,
-    D2P_OT_CalculateTexelDensity
+    D2P_OT_CalculateTexelDensity,
+    D2P_OT_Shader2ViewerNode,
+    D2P_OT_Viewer2Image
 )
 
 def register():

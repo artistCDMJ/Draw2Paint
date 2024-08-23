@@ -3135,3 +3135,169 @@ class D2P_OT_CalculateTexelDensity(Operator):
         context.scene.texel_density_result = self.result
 
         return {'FINISHED'}
+
+### Viewer Node to Shader Node and Shader Node to Viewer Node experiments here
+class D2P_OT_Shader2ViewerNode(bpy.types.Operator):
+    bl_idname = "viewer.shader2viewer"
+    bl_label = "Shader to Viewer"
+    bl_description = "Copy the active image node from the shader to a new image node connected to the Viewer Node in the compositor"
+
+    def execute(self, context):
+        obj = context.active_object
+
+        # Ensure an object is selected and it has a material
+        if obj is None or obj.type != 'MESH':
+            self.report({'ERROR'}, "No active mesh object found")
+            return {'CANCELLED'}
+
+        mat = obj.active_material
+        if mat is None or not mat.use_nodes:
+            self.report({'ERROR'}, "No active material with nodes found")
+            return {'CANCELLED'}
+
+        # Find the active image texture node
+        shader_tree = mat.node_tree
+        active_node = shader_tree.nodes.active
+
+        if not isinstance(active_node, bpy.types.ShaderNodeTexImage):
+            self.report({'ERROR'}, "Active node is not an image texture node")
+            return {'CANCELLED'}
+
+        image = active_node.image
+        if image is None:
+            self.report({'ERROR'}, "No image found in the active image texture node")
+            return {'CANCELLED'}
+
+        # Ensure the compositor is enabled
+        scene = context.scene
+        if not scene.use_nodes:
+            scene.use_nodes = True
+
+        comp_node_tree = scene.node_tree
+
+        # Check if there is already a Viewer Node, if not create one
+        viewer_node = None
+        for node in comp_node_tree.nodes:
+            if node.type == 'VIEWER':
+                viewer_node = node
+                break
+
+        if viewer_node is None:
+            viewer_node = comp_node_tree.nodes.new(type='CompositorNodeViewer')
+            viewer_node.location = (300, 200)
+
+        # Create a new Image node and set the image
+        image_node = comp_node_tree.nodes.new(type='CompositorNodeImage')
+        image_node.image = image
+        image_node.location = (100, 200)
+
+        # Connect the image node to the Viewer Node
+        comp_node_tree.links.new(image_node.outputs['Image'], viewer_node.inputs['Image'])
+
+        self.report({'INFO'}, f"Image '{image.name}' copied to a new viewer node in the compositor")
+        return {'FINISHED'}
+
+
+class D2P_OT_Viewer2Image(bpy.types.Operator):
+    bl_idname = "viewer.viewer2image"
+    bl_label = "Save Viewer Image"
+    bl_description = "Save the Viewer Node result to a unique image file and update the shader tree if necessary"
+
+    def execute(self, context):
+        # Ensure the context is correct
+        if not context.scene.use_nodes:
+            self.report({'ERROR'}, "Compositing nodes are not enabled")
+            return {'CANCELLED'}
+
+        node_tree = context.scene.node_tree
+        viewer_node = None
+        image_name = "viewer_image"
+
+        # Find the Viewer Node and trace back to find the image source node name
+        for node in node_tree.nodes:
+            if node.type == 'VIEWER':
+                viewer_node = node
+                break
+
+        if not viewer_node:
+            self.report({'ERROR'}, "No Viewer Node found in the Compositor")
+            return {'CANCELLED'}
+
+        # Trace the inputs to find an image name if possible
+        def get_image_name_from_node(node):
+            if node.type == 'IMAGE' and node.image:
+                return bpy.path.clean_name(node.image.name)
+            if node.type == 'RENDER_LAYERS':
+                return "render_layer"
+            for input_socket in node.inputs:
+                if input_socket.is_linked:
+                    linked_node = input_socket.links[0].from_node
+                    return get_image_name_from_node(linked_node)
+            return None
+
+        traced_image_name = get_image_name_from_node(viewer_node)
+        if traced_image_name:
+            image_name = traced_image_name
+
+        # Ensure that Viewer Node has a valid image buffer
+        if not bpy.data.images.get('Viewer Node'):
+            self.report({'ERROR'}, "Viewer Node has no image data available")
+            return {'CANCELLED'}
+
+        viewer_image = bpy.data.images['Viewer Node']
+
+        # Generate a unique filename based on the number of existing files
+        temp_dir = bpy.app.tempdir
+        existing_files = [f for f in os.listdir(temp_dir) if f.startswith(image_name) and f.endswith('.png')]
+        iteration = len(existing_files) + 1
+        image_filename = f"{image_name}_viewer_image_{iteration:03d}.png"
+        temp_filepath = os.path.join(temp_dir, image_filename)
+
+        # Save the image to the unique file
+        viewer_image.save_render(temp_filepath)
+
+        # Load the unique image into Blender
+        image = bpy.data.images.load(temp_filepath)
+
+        # Add or update the image in the active object's shader tree
+        obj = context.active_object
+        if obj is None or obj.type != 'MESH':
+            self.report({'ERROR'}, "No active mesh object found")
+            return {'CANCELLED'}
+
+        mat = obj.active_material
+        if mat is None:
+            mat = bpy.data.materials.new(name="Material")
+            obj.data.materials.append(mat)
+
+        if mat.use_nodes is False:
+            mat.use_nodes = True
+
+        # Get the material's node tree
+        shader_tree = mat.node_tree
+
+        # Check if an Image Texture node with the corresponding name already exists
+        target_node_name = f"{image_name}_viewer_image"
+        image_node = None
+
+        for node in shader_tree.nodes:
+            if isinstance(node, bpy.types.ShaderNodeTexImage) and node.name.startswith(target_node_name):
+                image_node = node
+                break
+
+        if image_node:
+            # If it exists, update the image data in the existing node
+            image_node.image = image
+            self.report({'INFO'},
+                        f"Viewer image '{image_filename}' updated in existing shader node '{image_node.name}'")
+        else:
+            # If it doesn't exist, create a new Image Texture node
+            image_node = shader_tree.nodes.new(type='ShaderNodeTexImage')
+            image_node.image = image
+            image_node.name = target_node_name
+            image_node.label = target_node_name
+            image_node.location = (0, 0)
+            self.report({'INFO'},
+                        f"Viewer image '{image_filename}' saved and added as new node in active object shader")
+
+        return {'FINISHED'}
