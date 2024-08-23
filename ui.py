@@ -547,7 +547,6 @@ class VIEWER_PT_Panel(bpy.types.Panel):
     bl_space_type = 'NODE_EDITOR'
     bl_region_type = 'UI'
     bl_category = 'Tool'
-    bl_context = "objectmode"
 
     @classmethod
     def poll(cls, context):
