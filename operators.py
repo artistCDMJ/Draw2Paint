@@ -3251,7 +3251,8 @@ class D2P_OT_Viewer2Image(bpy.types.Operator):
         existing_files = [f for f in os.listdir(temp_dir) if f.startswith(image_name) and f.endswith('.png')]
         iteration = len(existing_files) + 1
         image_filename = f"{image_name}_viewer_image_{iteration:03d}.png"
-        temp_filepath = os.path.join(temp_dir, image_filename)
+                
+        temp_filepath = os.path.join("C:/tmp", image_filename)
 
         # Save the image to the unique file
         viewer_image.save_render(temp_filepath)
@@ -3299,5 +3300,25 @@ class D2P_OT_Viewer2Image(bpy.types.Operator):
             image_node.location = (0, 0)
             self.report({'INFO'},
                         f"Viewer image '{image_filename}' saved and added as new node in active object shader")
+
+        return {'FINISHED'}
+
+
+class D2P_OT_EditorSwap(bpy.types.Operator):
+    """Toggle Shader and Compositor Editor"""
+    bl_idname = "d2p.editor_swap"
+    bl_label = "Editor Swap Compositor and Shader"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        scene = context.scene
+        area = bpy.context.area
+
+        if area.ui_type != 'ShaderNodeTree':
+            area.ui_type = 'ShaderNodeTree'
+        else:
+            area.ui_type = 'CompositorNodeTree'
+
+        # toggle node editor for compositor and shader windows
 
         return {'FINISHED'}

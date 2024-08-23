@@ -120,8 +120,7 @@ classes = (
     IMAGE_RESIZE_OT_scale_percentage,
     IMAGE_RESIZE_OT_main,
     IMAGE_RESIZE_PT_panel,
-    NODE_PT_flattener_panel,
-    VIEWER_PT_Panel,
+    D2P_PT_node_editor_panel,
     NODE_OT_flatten_images,
     D2P_OT_SetColorFamilies,
     D2P_OT_Trace2Curve,
@@ -130,7 +129,8 @@ classes = (
     D2P_OT_flip_gradient,
     D2P_OT_CalculateTexelDensity,
     D2P_OT_Shader2ViewerNode,
-    D2P_OT_Viewer2Image
+    D2P_OT_Viewer2Image,
+    D2P_OT_EditorSwap
 )
 
 def register():

@@ -524,34 +524,25 @@ def draw_func(self, context):
         layout.operator(D2P_OT_SetColorFamilies.bl_idname)
 
 #### nodes selected to compositor and back
-class NODE_PT_flattener_panel(bpy.types.Panel):
-    bl_label = "D2P 2Compositor"
-    bl_idname = "NODE_PT_flattener_panel"
+class D2P_PT_node_editor_panel(bpy.types.Panel):
+    bl_label = "D2P Node Editor Panel"
+    bl_idname = "D2P_PT_node_editor_panel"
     bl_space_type = 'NODE_EDITOR'
     bl_region_type = 'UI'
     bl_category = 'Tool'
 
-    @classmethod
-    def poll(cls, context):
-        return context.space_data.tree_type == 'ShaderNodeTree'
-
     def draw(self, context):
         layout = self.layout
-        layout.operator("node.flatten_images")
-        layout.operator("viewer.shader2viewer", text="Image2Compositor")
+        # swap editor button
 
+        if context.space_data.tree_type != 'CompositorNodeTree':
 
-class VIEWER_PT_Panel(bpy.types.Panel):
-    bl_label = "D2P 2 Shader"
-    bl_idname = "VIEWER_PT_Panel"
-    bl_space_type = 'NODE_EDITOR'
-    bl_region_type = 'UI'
-    bl_category = 'Tool'
+            # shader editor buttons
+            layout.operator("d2p.editor_swap", text="2Compositor", icon='AREA_SWAP')
+            layout.operator("node.flatten_images")
 
-    @classmethod
-    def poll(cls, context):
-        return context.space_data.tree_type == 'CompositorNodeTree'
-
-    def draw(self, context):
-        layout = self.layout
-        layout.operator("viewer.viewer2image", text="Compositor2Image")
+            layout.operator("viewer.shader2viewer", text="Image2Compositor")
+        else:
+            # compositor editor buttons
+            layout.operator("d2p.editor_swap", text="2ShaderEditor", icon='AREA_SWAP')
+            layout.operator("viewer.viewer2image", text="Compositor2Image")
