@@ -3193,6 +3193,9 @@ class D2P_OT_Shader2ViewerNode(bpy.types.Operator):
 
         # Connect the image node to the Viewer Node
         comp_node_tree.links.new(image_node.outputs['Image'], viewer_node.inputs['Image'])
+        
+        # Turn on Backdrop for Viewer Node
+        bpy.context.space_data.show_backdrop = True
 
         self.report({'INFO'}, f"Image '{image.name}' copied to a new viewer node in the compositor")
         return {'FINISHED'}
@@ -3211,9 +3214,10 @@ class D2P_OT_Viewer2Image(bpy.types.Operator):
 
         node_tree = context.scene.node_tree
         viewer_node = None
-        image_name = "viewer_image"
+        base_image_name = "viewer_image"
+        group_node_name = ""
 
-        # Find the Viewer Node and trace back to find the image source node name
+        # Find the Viewer Node
         for node in node_tree.nodes:
             if node.type == 'VIEWER':
                 viewer_node = node
@@ -3223,21 +3227,37 @@ class D2P_OT_Viewer2Image(bpy.types.Operator):
             self.report({'ERROR'}, "No Viewer Node found in the Compositor")
             return {'CANCELLED'}
 
-        # Trace the inputs to find an image name if possible
-        def get_image_name_from_node(node):
+        # Helper function to trace back and get the base image name and connected group node name
+        def get_image_and_group_name_from_node(node):
+            base_name = None
+            group_name = None
             if node.type == 'IMAGE' and node.image:
-                return bpy.path.clean_name(node.image.name)
+                base_name = bpy.path.clean_name(node.image.name)  # Base image name
+            if node.type == 'GROUP':
+                group_name = bpy.path.clean_name(node.name)  # Group node name
             if node.type == 'RENDER_LAYERS':
-                return "render_layer"
+                base_name = "render_layer"
             for input_socket in node.inputs:
                 if input_socket.is_linked:
                     linked_node = input_socket.links[0].from_node
-                    return get_image_name_from_node(linked_node)
-            return None
+                    linked_base_name, linked_group_name = get_image_and_group_name_from_node(linked_node)
+                    if linked_base_name:
+                        base_name = linked_base_name
+                    if linked_group_name:
+                        group_name = linked_group_name
+            return base_name, group_name
 
-        traced_image_name = get_image_name_from_node(viewer_node)
-        if traced_image_name:
-            image_name = traced_image_name
+        # Trace the inputs to find base image name and group node name
+        base_image_name, group_node_name = get_image_and_group_name_from_node(viewer_node)
+
+        if not base_image_name:
+            base_image_name = "viewer_image"  # Fallback if no image source is found
+
+        if group_node_name:
+            # Append the Group Node name to the base image name
+            image_name = f"{base_image_name}_{group_node_name}_Process"
+        else:
+            image_name = base_image_name  # Fallback to just the base image name if no Group Node is found
 
         # Ensure that Viewer Node has a valid image buffer
         if not bpy.data.images.get('Viewer Node'):
@@ -3246,13 +3266,18 @@ class D2P_OT_Viewer2Image(bpy.types.Operator):
 
         viewer_image = bpy.data.images['Viewer Node']
 
+        # Explicitly set the directory to C:\tmp\
+        temp_dir = "C:\\tmp\\"
+
+        # Ensure the temp directory exists
+        if not os.path.exists(temp_dir):
+            os.makedirs(temp_dir)
+
         # Generate a unique filename based on the number of existing files
-        temp_dir = bpy.app.tempdir
         existing_files = [f for f in os.listdir(temp_dir) if f.startswith(image_name) and f.endswith('.png')]
         iteration = len(existing_files) + 1
-        image_filename = f"{image_name}_viewer_image_{iteration:03d}.png"
-                
-        temp_filepath = os.path.join("C:/tmp", image_filename)
+        image_filename = f"{image_name}_{iteration:03d}.png"
+        temp_filepath = os.path.join(temp_dir, image_filename)
 
         # Save the image to the unique file
         viewer_image.save_render(temp_filepath)
@@ -3289,8 +3314,7 @@ class D2P_OT_Viewer2Image(bpy.types.Operator):
         if image_node:
             # If it exists, update the image data in the existing node
             image_node.image = image
-            self.report({'INFO'},
-                        f"Viewer image '{image_filename}' updated in existing shader node '{image_node.name}'")
+            self.report({'INFO'}, f"Viewer image '{image_filename}' updated in existing shader node '{image_node.name}'")
         else:
             # If it doesn't exist, create a new Image Texture node
             image_node = shader_tree.nodes.new(type='ShaderNodeTexImage')
@@ -3298,8 +3322,7 @@ class D2P_OT_Viewer2Image(bpy.types.Operator):
             image_node.name = target_node_name
             image_node.label = target_node_name
             image_node.location = (0, 0)
-            self.report({'INFO'},
-                        f"Viewer image '{image_filename}' saved and added as new node in active object shader")
+            self.report({'INFO'}, f"Viewer image '{image_filename}' saved and added as new node in active object shader")
 
         return {'FINISHED'}
 
@@ -3318,6 +3341,9 @@ class D2P_OT_EditorSwap(bpy.types.Operator):
             area.ui_type = 'ShaderNodeTree'
         else:
             area.ui_type = 'CompositorNodeTree'
+            # add a way to make sure the backdrop is on, might be here or in shader2viewernode
+            #bpy.context.space_data.show_backdrop = True
+
 
         # toggle node editor for compositor and shader windows
 
