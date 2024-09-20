@@ -130,7 +130,8 @@ classes = (
     D2P_OT_CalculateTexelDensity,
     D2P_OT_Shader2ViewerNode,
     D2P_OT_Viewer2Image,
-    D2P_OT_EditorSwap
+    D2P_OT_EditorSwap,
+    UVWireColor
 )
 
 def register():

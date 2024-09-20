@@ -546,3 +546,20 @@ class D2P_PT_node_editor_panel(bpy.types.Panel):
             # compositor editor buttons
             layout.operator("d2p.editor_swap", text="2ShaderEditor", icon='AREA_SWAP')
             layout.operator("viewer.viewer2image", text="Compositor2Image")
+
+#### easy to see UV access
+class UVWireColor(bpy.types.Panel):
+    """Creates a Panel in the UV Editor to change the UV wire color"""
+    bl_label = "UV Wire Color"
+    bl_idname = "UV_PT_wire_color"
+    bl_space_type = 'IMAGE_EDITOR'
+    bl_region_type = 'UI'
+    bl_category = 'View'
+
+    def draw(self, context):
+        layout = self.layout
+        prefs = bpy.context.preferences
+        theme = prefs.themes[0].image_editor
+
+        # Display the color picker for UV wire color
+        layout.prop(theme, "wire_edit", text="UV Wire Color")
