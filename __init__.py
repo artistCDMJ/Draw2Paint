@@ -131,7 +131,8 @@ classes = (
     D2P_OT_Shader2ViewerNode,
     D2P_OT_Viewer2Image,
     D2P_OT_EditorSwap,
-    UVWireColor
+    UV_WireColor,
+    VIEW3D_WireColor
 )
 
 def register():
