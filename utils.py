@@ -309,12 +309,45 @@ def create_image_plane_from_image(active_image, scale_factor=0.01):
     bpy.ops.transform.resize(value=(width * scale_factor / 5, height * scale_factor / 5, 1))
     bpy.ops.object.mode_set(mode='OBJECT')
 
+    # Create material and node setup with Emission and Principled BSDF
     mat = bpy.data.materials.new(name=name + "Material")
     mat.use_nodes = True
+
+    # Get nodes
     bsdf = mat.node_tree.nodes["Principled BSDF"]
+    bsdf.location = (-212.01303100585938, 704.966796875)
     tex_image = mat.node_tree.nodes.new('ShaderNodeTexImage')
+    tex_image.location = (-617.7554931640625, 626.1090087890625)
     tex_image.image = active_image
+
+    # Add Emission shader node
+    emission = mat.node_tree.nodes.new('ShaderNodeEmission')
+    emission.location = (-172.02610778808594, 348.537109375)
+
+    # Add Mix Shader node
+    mix_shader = mat.node_tree.nodes.new('ShaderNodeMixShader')
+    mix_shader.location = (250.89752197265625, 651.1596069335938)
+
+    # Connect Image texture to both shaders (BSDF and Emission)
     mat.node_tree.links.new(bsdf.inputs['Base Color'], tex_image.outputs['Color'])
+    mat.node_tree.links.new(emission.inputs['Color'], tex_image.outputs['Color'])
+
+    # Connect both shaders to the Mix Shader
+    mat.node_tree.links.new(mix_shader.inputs[1], bsdf.outputs['BSDF'])
+    mat.node_tree.links.new(mix_shader.inputs[2], emission.outputs['Emission'])
+
+    # Optionally add a Value node to control the mix factor
+    mix_factor = mat.node_tree.nodes.new('ShaderNodeValue')
+    mix_factor.location = (243.66448974609375, 506.4412841796875)
+    mix_factor.outputs[0].default_value = 0.5  # Default to 50% mix
+    mat.node_tree.links.new(mix_shader.inputs[0], mix_factor.outputs[0])
+
+    # Connect Mix Shader to Material Output
+    material_output = mat.node_tree.nodes['Material Output']
+    material_output.location = (453.1165466308594, 643.1837768554688)
+    mat.node_tree.links.new(material_output.inputs['Surface'], mix_shader.outputs['Shader'])
+
+    # Apply the material to the object
     obj.data.materials.append(mat)
 
     # Rename the UV map
@@ -344,19 +377,23 @@ def create_matching_camera(image_plane_obj, width, height, distance=1):
     scene.render.resolution_x = int(width / 0.01)  # Converting back to original resolution
     scene.render.resolution_y = int(height / 0.01)  # Converting back to original resolution
 
+    # Set the camera as the main (active) camera
+    bpy.context.scene.camera = cam_obj
+
     return cam_obj
 
 
 def switch_to_camera_view(camera_obj):
+    # Set the camera as the active camera for the scene
+    bpy.context.scene.camera = camera_obj
+
+    # Iterate over all the areas in the current screen to find the VIEW_3D areas
     for area in bpy.context.screen.areas:
         if area.type == 'VIEW_3D':
-            space = area.spaces.active
-            space.region_3d.view_perspective = 'CAMERA'
-
-            bpy.context.scene.camera = camera_obj
-
-            break
-
+            # Override the context for each 3D view area
+            with bpy.context.temp_override(area=area):
+                space = area.spaces.active
+                space.region_3d.view_perspective = 'CAMERA'
 
 def get_image_from_selected_object(selected_object):
     if selected_object.type == 'MESH' and selected_object.active_material:

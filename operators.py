@@ -422,6 +422,7 @@ class D2P_OT_Subject2Canvas(bpy.types.Operator):
         switch_to_camera_view(camera_obj)
         return {'FINISHED'}
 
+
 class D2P_OT_Image2CanvasPlus(bpy.types.Operator):
     """Create Canvas and Camera from Active Image In Image Editor"""
     bl_description = "Create Canvas and Camera from Active Image In Image Editor"
@@ -439,34 +440,40 @@ class D2P_OT_Image2CanvasPlus(bpy.types.Operator):
         if not active_image:
             self.report({'WARNING'}, "No active image found.")
             return {'CANCELLED'}
-        bpy.context.area.ui_type = 'VIEW_3D'
-        
 
-        #image_name = active_image.name
+        # Switch to 3D view
+        bpy.context.area.ui_type = 'VIEW_3D'
+
+        # Create image plane and matching camera
         image_plane_obj, width, height = create_image_plane_from_image(active_image)
         if not image_plane_obj:
             self.report({'WARNING'}, "Failed to create image plane.")
             return {'CANCELLED'}
-        
+
         camera_obj = create_matching_camera(image_plane_obj, width, height)
         bpy.context.view_layer.objects.active = camera_obj
-                
+
         camera_obj.data.show_name = True
-        bpy.context.space_data.shading.type = 'SOLID'
-        bpy.context.space_data.shading.light = 'FLAT'
-        bpy.context.space_data.shading.color_type = 'TEXTURE'
-        if area.type == 'VIEW3D' :
-            #Blender refuses to switch to camera view here        
-            switch_to_camera_view(camera_obj)
-            
+
+        # Ensure the correct context is active before applying view settings
+        for area in bpy.context.screen.areas:
+            if area.type == 'VIEW_3D':
+                with bpy.context.temp_override(area=area):
+                    area.spaces.active.shading.type = 'SOLID'
+                    area.spaces.active.shading.light = 'FLAT'
+                    area.spaces.active.shading.color_type = 'TEXTURE'
+
         # Move camera and image plane to 'canvas_view' collection
         move_object_to_collection(image_plane_obj, 'canvas_view')
         move_object_to_collection(camera_obj, 'canvas_view')
-        
-        
+
+        # Switch to camera view (inside the 3D View context)
+        switch_to_camera_view(camera_obj)
+
+        # Switch back to Image Editor
         bpy.context.area.ui_type = 'IMAGE_EDITOR'
 
-        return {'FINISHED'}    
+        return {'FINISHED'}
     
 class D2P_OT_ToggleUV2Camera(bpy.types.Operator):
     """Toggle UV Image Visibility in Camera"""

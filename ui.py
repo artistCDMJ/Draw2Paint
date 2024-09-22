@@ -567,7 +567,7 @@ class UV_WireColor(bpy.types.Panel):
             layout.prop(theme, "uv_shadow", text="UV Wire in Paint")
 
 
-class VIEW3_DWireColor(bpy.types.Panel):
+class VIEW3D_WireColor(bpy.types.Panel):
     """Creates a Panel in the 3D View to change the Edit Mode wire color"""
     bl_label = "3D View Wire Color"
     bl_idname = "VIEW3D_PT_wire_color"
