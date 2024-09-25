@@ -211,6 +211,22 @@ approach.
 This pair will set a new copy of the Subject to a collection and will allow to draw a curve as selection for a \
 Solidify and Boolean Mask object to paint to as a 3d mask object. Experimental, not as flexible and repeatable as \
 the Mask Tool and Stencil Image workflow, but this is a good example of why we don't have an image-level lasso select.
+
+**2Compostitor and 2ShaderEditor** 
+This is a toggle from the Shader Editor back and forth to the Compositor for the use of the Compositor for Image \
+editing with the Composite nodes. 
+
+**Image2Compositor**
+This loads a copy of the shader's active image node's image to an image node connected to the Viewer in the \
+Compositor node editor. The user can then press 2Compositor to take the next step of adding Filter nodes, Color \
+Adjustment nodes, additional images or textures combined with Color Mix nodes and Transform/Scale/Rotate nodes etc.
+Presets are going to be made later for some basic effects to apply to the target painting as if using Flash Layer \
+Styles. Lots of stuff possible.
+
+**Compositor2Image**
+This sends the render of the Viewer node to the C:\tmp\ folder and then loads it into a new image texture node in \
+the shader tree. Press 2ShaderEditor to go back and connect the new image node to the shader color input.
+
 **EZPaint Additions** 
 
 Press W for the Brush Pop-up, Alt-W for the Texture and Mask Popup, and Shift-W brings up a \

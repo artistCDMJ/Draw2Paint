@@ -524,17 +524,67 @@ def draw_func(self, context):
         layout.operator(D2P_OT_SetColorFamilies.bl_idname)
 
 #### nodes selected to compositor and back
-class NODE_PT_flattener_panel(bpy.types.Panel):
-    bl_label = "Flattener"
-    bl_idname = "NODE_PT_flattener_panel"
+class D2P_PT_node_editor_panel(bpy.types.Panel):
+    bl_label = "D2P Node Editor Panel"
+    bl_idname = "D2P_PT_node_editor_panel"
     bl_space_type = 'NODE_EDITOR'
     bl_region_type = 'UI'
     bl_category = 'Tool'
 
-    @classmethod
-    def poll(cls, context):
-        return context.space_data.tree_type == 'ShaderNodeTree'
+    def draw(self, context):
+        layout = self.layout
+        # swap editor button
+
+        if context.space_data.tree_type != 'CompositorNodeTree':
+
+            # shader editor buttons
+            layout.operator("d2p.editor_swap", text="2Compositor", icon='AREA_SWAP')
+            layout.operator("node.flatten_images")
+
+            layout.operator("viewer.shader2viewer", text="Image2Compositor")
+        else:
+            # compositor editor buttons
+            layout.operator("d2p.editor_swap", text="2ShaderEditor", icon='AREA_SWAP')
+            layout.operator("viewer.viewer2image", text="Compositor2Image")
+
+#### easy to see UV access
+class UV_WireColor(bpy.types.Panel):
+    """Creates a Panel in the UV Editor to change the UV wire color"""
+    bl_label = "UV Wire Color"
+    bl_idname = "UV_PT_wire_color"
+    bl_space_type = 'IMAGE_EDITOR'
+    bl_region_type = 'UI'
+    bl_category = 'View'
 
     def draw(self, context):
         layout = self.layout
-        layout.operator("node.flatten_images")
+        prefs = bpy.context.preferences
+        theme = prefs.themes[0].image_editor
+
+        if context.area.ui_type == 'UV':
+            layout.prop(theme, "wire_edit", text="UV Wire in Edit")
+        else:
+            layout.prop(theme, "uv_shadow", text="UV Wire in Paint")
+
+
+class VIEW3D_WireColor(bpy.types.Panel):
+    """Creates a Panel in the 3D View to change the Edit Mode wire color"""
+    bl_label = "3D View Wire Color"
+    bl_idname = "VIEW3D_PT_wire_color"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+    bl_category = 'View'
+
+    @classmethod
+    def poll(cls, context):
+        return context.mode == 'EDIT_MESH'
+
+    def draw(self, context):
+        layout = self.layout
+        prefs = bpy.context.preferences
+        theme = prefs.themes[0].view_3d
+
+        layout.prop(theme, "wire_edit", text="Wire in Edit")
+        layout.prop(theme, "edge_width", text="Edge Width")
+
+

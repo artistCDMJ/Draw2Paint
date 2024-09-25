@@ -422,6 +422,7 @@ class D2P_OT_Subject2Canvas(bpy.types.Operator):
         switch_to_camera_view(camera_obj)
         return {'FINISHED'}
 
+
 class D2P_OT_Image2CanvasPlus(bpy.types.Operator):
     """Create Canvas and Camera from Active Image In Image Editor"""
     bl_description = "Create Canvas and Camera from Active Image In Image Editor"
@@ -439,34 +440,40 @@ class D2P_OT_Image2CanvasPlus(bpy.types.Operator):
         if not active_image:
             self.report({'WARNING'}, "No active image found.")
             return {'CANCELLED'}
-        bpy.context.area.ui_type = 'VIEW_3D'
-        
 
-        #image_name = active_image.name
+        # Switch to 3D view
+        bpy.context.area.ui_type = 'VIEW_3D'
+
+        # Create image plane and matching camera
         image_plane_obj, width, height = create_image_plane_from_image(active_image)
         if not image_plane_obj:
             self.report({'WARNING'}, "Failed to create image plane.")
             return {'CANCELLED'}
-        
+
         camera_obj = create_matching_camera(image_plane_obj, width, height)
         bpy.context.view_layer.objects.active = camera_obj
-                
+
         camera_obj.data.show_name = True
-        bpy.context.space_data.shading.type = 'SOLID'
-        bpy.context.space_data.shading.light = 'FLAT'
-        bpy.context.space_data.shading.color_type = 'TEXTURE'
-        if area.type == 'VIEW3D' :
-            #Blender refuses to switch to camera view here        
-            switch_to_camera_view(camera_obj)
-            
+
+        # Ensure the correct context is active before applying view settings
+        for area in bpy.context.screen.areas:
+            if area.type == 'VIEW_3D':
+                with bpy.context.temp_override(area=area):
+                    area.spaces.active.shading.type = 'SOLID'
+                    area.spaces.active.shading.light = 'FLAT'
+                    area.spaces.active.shading.color_type = 'TEXTURE'
+
         # Move camera and image plane to 'canvas_view' collection
         move_object_to_collection(image_plane_obj, 'canvas_view')
         move_object_to_collection(camera_obj, 'canvas_view')
-        
-        
+
+        # Switch to camera view (inside the 3D View context)
+        switch_to_camera_view(camera_obj)
+
+        # Switch back to Image Editor
         bpy.context.area.ui_type = 'IMAGE_EDITOR'
 
-        return {'FINISHED'}    
+        return {'FINISHED'}
     
 class D2P_OT_ToggleUV2Camera(bpy.types.Operator):
     """Toggle UV Image Visibility in Camera"""
@@ -3133,5 +3140,218 @@ class D2P_OT_CalculateTexelDensity(Operator):
 
         # Store the result in the context scene to display in the panel
         context.scene.texel_density_result = self.result
+
+        return {'FINISHED'}
+
+### Viewer Node to Shader Node and Shader Node to Viewer Node experiments here
+class D2P_OT_Shader2ViewerNode(bpy.types.Operator):
+    bl_idname = "viewer.shader2viewer"
+    bl_label = "Shader to Viewer"
+    bl_description = "Copy the active image node from the shader to a new image node connected to the Viewer Node in the compositor"
+
+    def execute(self, context):
+        obj = context.active_object
+
+        # Ensure an object is selected and it has a material
+        if obj is None or obj.type != 'MESH':
+            self.report({'ERROR'}, "No active mesh object found")
+            return {'CANCELLED'}
+
+        mat = obj.active_material
+        if mat is None or not mat.use_nodes:
+            self.report({'ERROR'}, "No active material with nodes found")
+            return {'CANCELLED'}
+
+        # Find the active image texture node
+        shader_tree = mat.node_tree
+        active_node = shader_tree.nodes.active
+
+        if not isinstance(active_node, bpy.types.ShaderNodeTexImage):
+            self.report({'ERROR'}, "Active node is not an image texture node")
+            return {'CANCELLED'}
+
+        image = active_node.image
+        if image is None:
+            self.report({'ERROR'}, "No image found in the active image texture node")
+            return {'CANCELLED'}
+
+        # Ensure the compositor is enabled
+        scene = context.scene
+        if not scene.use_nodes:
+            scene.use_nodes = True
+
+        comp_node_tree = scene.node_tree
+
+        # Check if there is already a Viewer Node, if not create one
+        viewer_node = None
+        for node in comp_node_tree.nodes:
+            if node.type == 'VIEWER':
+                viewer_node = node
+                break
+
+        if viewer_node is None:
+            viewer_node = comp_node_tree.nodes.new(type='CompositorNodeViewer')
+            viewer_node.location = (300, 200)
+
+        # Create a new Image node and set the image
+        image_node = comp_node_tree.nodes.new(type='CompositorNodeImage')
+        image_node.image = image
+        image_node.location = (100, 200)
+
+        # Connect the image node to the Viewer Node
+        comp_node_tree.links.new(image_node.outputs['Image'], viewer_node.inputs['Image'])
+        
+        # Turn on Backdrop for Viewer Node
+        bpy.context.space_data.show_backdrop = True
+
+        self.report({'INFO'}, f"Image '{image.name}' copied to a new viewer node in the compositor")
+        return {'FINISHED'}
+
+
+class D2P_OT_Viewer2Image(bpy.types.Operator):
+    bl_idname = "viewer.viewer2image"
+    bl_label = "Save Viewer Image"
+    bl_description = "Save the Viewer Node result to a unique image file and update the shader tree if necessary"
+
+    def execute(self, context):
+        # Ensure the context is correct
+        if not context.scene.use_nodes:
+            self.report({'ERROR'}, "Compositing nodes are not enabled")
+            return {'CANCELLED'}
+
+        node_tree = context.scene.node_tree
+        viewer_node = None
+        base_image_name = "viewer_image"
+        group_node_name = ""
+
+        # Find the Viewer Node
+        for node in node_tree.nodes:
+            if node.type == 'VIEWER':
+                viewer_node = node
+                break
+
+        if not viewer_node:
+            self.report({'ERROR'}, "No Viewer Node found in the Compositor")
+            return {'CANCELLED'}
+
+        # Helper function to trace back and get the base image name and connected group node name
+        def get_image_and_group_name_from_node(node):
+            base_name = None
+            group_name = None
+            if node.type == 'IMAGE' and node.image:
+                base_name = bpy.path.clean_name(node.image.name)  # Base image name
+            if node.type == 'GROUP':
+                group_name = bpy.path.clean_name(node.name)  # Group node name
+            if node.type == 'RENDER_LAYERS':
+                base_name = "render_layer"
+            for input_socket in node.inputs:
+                if input_socket.is_linked:
+                    linked_node = input_socket.links[0].from_node
+                    linked_base_name, linked_group_name = get_image_and_group_name_from_node(linked_node)
+                    if linked_base_name:
+                        base_name = linked_base_name
+                    if linked_group_name:
+                        group_name = linked_group_name
+            return base_name, group_name
+
+        # Trace the inputs to find base image name and group node name
+        base_image_name, group_node_name = get_image_and_group_name_from_node(viewer_node)
+
+        if not base_image_name:
+            base_image_name = "viewer_image"  # Fallback if no image source is found
+
+        if group_node_name:
+            # Append the Group Node name to the base image name
+            image_name = f"{base_image_name}_{group_node_name}_Process"
+        else:
+            image_name = base_image_name  # Fallback to just the base image name if no Group Node is found
+
+        # Ensure that Viewer Node has a valid image buffer
+        if not bpy.data.images.get('Viewer Node'):
+            self.report({'ERROR'}, "Viewer Node has no image data available")
+            return {'CANCELLED'}
+
+        viewer_image = bpy.data.images['Viewer Node']
+
+        # Explicitly set the directory to C:\tmp\
+        temp_dir = "C:\\tmp\\"
+
+        # Ensure the temp directory exists
+        if not os.path.exists(temp_dir):
+            os.makedirs(temp_dir)
+
+        # Generate a unique filename based on the number of existing files
+        existing_files = [f for f in os.listdir(temp_dir) if f.startswith(image_name) and f.endswith('.png')]
+        iteration = len(existing_files) + 1
+        image_filename = f"{image_name}_{iteration:03d}.png"
+        temp_filepath = os.path.join(temp_dir, image_filename)
+
+        # Save the image to the unique file
+        viewer_image.save_render(temp_filepath)
+
+        # Load the unique image into Blender
+        image = bpy.data.images.load(temp_filepath)
+
+        # Add or update the image in the active object's shader tree
+        obj = context.active_object
+        if obj is None or obj.type != 'MESH':
+            self.report({'ERROR'}, "No active mesh object found")
+            return {'CANCELLED'}
+
+        mat = obj.active_material
+        if mat is None:
+            mat = bpy.data.materials.new(name="Material")
+            obj.data.materials.append(mat)
+
+        if mat.use_nodes is False:
+            mat.use_nodes = True
+
+        # Get the material's node tree
+        shader_tree = mat.node_tree
+
+        # Check if an Image Texture node with the corresponding name already exists
+        target_node_name = f"{image_name}_viewer_image"
+        image_node = None
+
+        for node in shader_tree.nodes:
+            if isinstance(node, bpy.types.ShaderNodeTexImage) and node.name.startswith(target_node_name):
+                image_node = node
+                break
+
+        if image_node:
+            # If it exists, update the image data in the existing node
+            image_node.image = image
+            self.report({'INFO'}, f"Viewer image '{image_filename}' updated in existing shader node '{image_node.name}'")
+        else:
+            # If it doesn't exist, create a new Image Texture node
+            image_node = shader_tree.nodes.new(type='ShaderNodeTexImage')
+            image_node.image = image
+            image_node.name = target_node_name
+            image_node.label = target_node_name
+            image_node.location = (0, 0)
+            self.report({'INFO'}, f"Viewer image '{image_filename}' saved and added as new node in active object shader")
+
+        return {'FINISHED'}
+
+
+class D2P_OT_EditorSwap(bpy.types.Operator):
+    """Toggle Shader and Compositor Editor"""
+    bl_idname = "d2p.editor_swap"
+    bl_label = "Editor Swap Compositor and Shader"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        scene = context.scene
+        area = bpy.context.area
+
+        if area.ui_type != 'ShaderNodeTree':
+            area.ui_type = 'ShaderNodeTree'
+        else:
+            area.ui_type = 'CompositorNodeTree'
+            # add a way to make sure the backdrop is on, might be here or in shader2viewernode
+            #bpy.context.space_data.show_backdrop = True
+
+
+        # toggle node editor for compositor and shader windows
 
         return {'FINISHED'}
