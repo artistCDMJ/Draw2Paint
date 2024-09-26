@@ -92,8 +92,6 @@ classes = (
     D2P_OT_ProjectpaintPopup,
     D2P_OT_TexturePopup,
     D2P_OT_BrushPopup,
-    D2P_OT_Canvas2Camera,
-    D2P_OT_Camera2Canvas,
     D2P_OT_Subject2Canvas,
     D2P_OT_Image2CanvasPlus,
     D2P_OT_ToggleUV2Camera,

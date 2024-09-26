@@ -35,7 +35,7 @@ class D2P_PT_ImageCreation(bpy.types.Panel):
         col = box.column(align=True)
         col.label(text="Image2Camera")
         row = col.row(align=True)
-        row.scale_x = 0.50
+        row.scale_x = 0.35
         row.scale_y = 1.25
         row.operator("d2p.create_d2p_scene", text="D2P Scene", icon='PREFERENCES')
         row1 = row.split(align=True)
@@ -51,17 +51,7 @@ class D2P_PT_ImageCreation(bpy.types.Panel):
         else:
             row.operator("view3d.set_single_texture_paint_view", text="Set Single Texture View")
 
-        row = col.row(align=True)
-        row1 = row.split(align=True)
-        row1.scale_x = 0.50
-        row1.scale_y = 1.25
-        row1.operator("object.canvas_and_camera", text="Canvas2Camera",
-                      icon='IMAGE_PLANE')
-        row2 = row.split(align=True)
-        row2.scale_x = 0.50
-        row2.scale_y = 1.25
-        row2.operator("object.create_camera_from_selected_image_plane", text="Camera2Canvas",
-                      icon='RENDER_RESULT')
+
         row3 = col.row(align=True)
         row3.scale_x=0.50
         row3.scale_y=1.25
@@ -80,7 +70,7 @@ class D2P_PT_ImageCreation(bpy.types.Panel):
                       icon='FILE_IMAGE')
         row = layout.row()
         row.operator("d2p.reload_all", text= "Reload ALL", icon='FILE_REFRESH')
-        row.operator("d2p.save_dirty", text="Save All Pack All", icon='BORDERMOVE')
+        row.operator("d2p.save_dirty", text="Save/Pack All", icon='BORDERMOVE')
 
 
 ################################## GPencil Future Home of Shortcuts

@@ -276,92 +276,6 @@ class D2P_OT_UV2Mask(bpy.types.Operator):
 
         return {'FINISHED'}
 
-class D2P_OT_Canvas2Camera(bpy.types.Operator):
-    """Create Canvas and Camera from Active Image"""
-    bl_description = "Create Canvas and Camera from Active Image"
-    bl_idname = "object.canvas_and_camera"
-    bl_label = "Generate Image Plane and Matching Camera"
-    bl_options = {'REGISTER', 'UNDO'}
-    
-    @classmethod
-    def poll(cls, context):
-        # Check if 'subject_view' collection exists
-        return 'canvas_view' not in bpy.data.collections
-
-    def execute(self, context):
-        active_image = None
-        for area in bpy.context.screen.areas:
-            if area.type == 'IMAGE_EDITOR':
-                active_image = area.spaces.active.image
-                break
-
-        if not active_image:
-            self.report({'WARNING'}, "No active image found.")
-            return {'CANCELLED'}
-        
-
-        image_name = active_image.name
-        image_plane_obj, width, height = create_image_plane_from_image(active_image)
-        if not image_plane_obj:
-            self.report({'WARNING'}, "Failed to create image plane.")
-            return {'CANCELLED'}
-        
-        camera_obj = create_matching_camera(image_plane_obj, width, height)
-        camera_obj.data.show_name = True
-        
-        switch_to_camera_view(camera_obj)
-        
-        # Move camera and image plane to 'canvas_view' collection
-        move_object_to_collection(image_plane_obj, 'canvas_view')
-        move_object_to_collection(camera_obj, 'canvas_view')
-        
-        bpy.context.space_data.shading.type = 'SOLID'
-        bpy.context.space_data.shading.light = 'FLAT'
-        bpy.context.space_data.shading.color_type = 'TEXTURE'
-
-        return {'FINISHED'}
-
-class D2P_OT_Camera2Canvas(bpy.types.Operator):
-    """New Camera from Selected Canvas"""
-    bl_description = "New Camera from Selected Canvas"
-    bl_idname = "object.create_camera_from_selected_image_plane"
-    bl_label = "Create Camera from Selected Image Plane"
-    bl_options = {'REGISTER', 'UNDO'}
-    
-    
-    @classmethod
-    def poll(cls, context):
-        # Check if 'subject_view' collection exists
-        return 'subject_view' not in bpy.data.collections
-    
-    
-    def execute(self, context):
-        selected_objects = context.selected_objects
-        if not selected_objects:
-            self.report({'WARNING'}, "No selected objects found.")
-            return {'CANCELLED'}
-        
-        selected_object = selected_objects[0]
-        active_image = get_image_from_selected_object(selected_object)
-        if not active_image:
-            self.report({'WARNING'}, "Selected object has no image texture.")
-            return {'CANCELLED'}
-        
-        image_plane_obj = selected_objects[0]
-        width = (image_plane_obj.dimensions.x) * 5
-        height = (image_plane_obj.dimensions.y) * 5
-        
-        camera_obj = create_matching_camera(image_plane_obj, width, height)
-        camera_obj.data.show_name = True
-        switch_to_camera_view(camera_obj)
-        
-        # Move camera and image plane to 'canvas_view' collection
-        move_object_to_collection(image_plane_obj, 'canvas_view')
-        move_object_to_collection(camera_obj, 'canvas_view')
-        
-        bpy.context.space_data.shading.type = 'SOLID'
-        bpy.context.space_data.shading.color_type = 'TEXTURE'
-        return {'FINISHED'}
 
 class D2P_OT_Subject2Canvas(bpy.types.Operator):
     """New Canvas and Camera from Selected Subject"""
@@ -536,6 +450,10 @@ class D2P_OT_ToggleCollectionView(bpy.types.Operator):
             self.report({'WARNING'}, "One or both collections not found.")
             return {'CANCELLED'}
 
+### Might need to change this and set up versions inside Image2Canvas+ 
+### and Subject2Canvas, each making the new scene from the name of the active image
+### Subject2Canvas needs to link the subject, add all that to the new scene
+### Maybe Image2CanvasPlus needs new scene before actual creation
 
 class D2P_OT_D2PaintScene(bpy.types.Operator):
     """Create Draw2Paint Scene"""
@@ -711,6 +629,8 @@ class D2P_OT_Copy2Eraser(bpy.types.Operator):
         bpy.ops.paint.texture_paint_toggle()
 
         # make ERASER brush or use existing
+        # might need fixing for 4.3 version
+    
         try:
             context.tool_settings.image_paint.brush = bpy.data.brushes["Eraser"]
         except KeyError:
