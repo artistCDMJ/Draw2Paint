@@ -419,6 +419,31 @@ def move_object_to_collection(obj, collection_name):
     collection.objects.link(obj)
 
 
+### new function to move to new scene from name of active image in image editor or selected object active image node
+def create_scene_based_on_active_image():
+    # Attempt to get the image from the selected object
+    selected_object = bpy.context.view_layer.objects.active
+    active_image = None
+
+    if selected_object:
+        active_image = get_image_from_selected_object(selected_object)
+
+    # If no image found on the selected object, try the image editor
+    if not active_image:
+        try:
+            active_image = get_active_image_from_image_editor()
+        except ValueError as e:
+            print(e)
+
+    # If an image is found, create a new scene based on the image's name
+    if active_image:
+        image_name = active_image.name
+        new_scene = bpy.data.scenes.new(name=image_name)
+        bpy.context.window.scene = new_scene
+        print(f"New scene created: {image_name}")
+    else:
+        print("No active image found to create a new scene.")
+
 def export_uv_layout(obj, filepath):
     bpy.ops.object.mode_set(mode="EDIT")
     bpy.ops.mesh.select_all(action='SELECT')

@@ -354,6 +354,8 @@ class D2P_OT_Image2CanvasPlus(bpy.types.Operator):
         if not active_image:
             self.report({'WARNING'}, "No active image found.")
             return {'CANCELLED'}
+        # create new scene here
+        create_scene_based_on_active_image()
 
         # Switch to 3D view
         bpy.context.area.ui_type = 'VIEW_3D'
@@ -378,8 +380,8 @@ class D2P_OT_Image2CanvasPlus(bpy.types.Operator):
                     area.spaces.active.shading.color_type = 'TEXTURE'
 
         # Move camera and image plane to 'canvas_view' collection
-        move_object_to_collection(image_plane_obj, 'canvas_view')
-        move_object_to_collection(camera_obj, 'canvas_view')
+        move_object_to_collection(image_plane_obj, active_image.name + '_canvas_view')
+        move_object_to_collection(camera_obj, active_image.name + '_canvas_view')
 
         # Switch to camera view (inside the 3D View context)
         switch_to_camera_view(camera_obj)
