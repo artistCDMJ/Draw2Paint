@@ -16,7 +16,7 @@
 bl_info = {
     "name": "Draw2Paint",
     "author": "CDMJ, Spirou4D, Lapineige, Bart Crouch, batFINGER, stacker, todashuta",
-    "version": (4, 0, 9),
+    "version": (4, 1, 0),
     "blender": (4, 2, 0),
     "location": "UI > Draw2Paint",
     "description": "2D Paint in 3D View, Mask Manipulation, EZPaint Adoption",
