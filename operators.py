@@ -22,7 +22,7 @@ from .utils import (find_brush, create_image_plane_from_image, create_matching_c
                     triadic_colors, tetradic_colors, analogous_colors, create_palette, \
                     new_convert_curve_object,convert_gpencil_to_curve,move_trace_objects_to_collection, \
                     convert_image_plane_to_curve, is_canvas_mesh, create_compositor_node_tree,\
-                    render_and_extract_image,calculate_texel_density )
+                    render_and_extract_image,calculate_texel_density, create_scene_based_on_active_image )
 
 from bpy.types import Operator, Menu, Panel, UIList
 from bpy_extras.io_utils import ImportHelper
@@ -283,13 +283,11 @@ class D2P_OT_Subject2Canvas(bpy.types.Operator):
     bl_idname = "object.canvas_and_camera_from_selected_object"
     bl_label = "Generate Image Plane and Camera from Selected Object"
     bl_options = {'REGISTER', 'UNDO'}
-    
+
     @classmethod
     def poll(cls, context):
-        # Check if 'subject_view' collection exists
-        return 'subject_view' and 'canvas_view' not in bpy.data.collections
-    
-    
+        return 'subject_view' not in bpy.data.collections or 'canvas_view' not in bpy.data.collections
+
     def execute(self, context):
         selected_objects = context.selected_objects
         if not selected_objects:
@@ -297,13 +295,27 @@ class D2P_OT_Subject2Canvas(bpy.types.Operator):
             return {'CANCELLED'}
 
         selected_object = selected_objects[0]
-        
+
         if not selected_object.data.uv_layers:
             self.report({'WARNING'}, "Please Create UV Layer")
             return {'CANCELLED'}
-        #Rename object with suffix _subject
+
+        # Rename object with suffix _subject
         selected_object.name += '_subject'
-        
+
+        # Create new scene and ensure the object is linked
+        create_scene_based_on_active_image(selected_object)
+
+        # Ensure the object is active and selected in the new scene
+        selected_object = bpy.context.scene.objects.get(selected_object.name)
+        if selected_object is None:
+            self.report({'ERROR'}, "Selected object could not be found in the new scene.")
+            return {'CANCELLED'}
+
+        # Ensure the object is active and selected
+        bpy.context.view_layer.objects.active = selected_object
+        selected_object.select_set(True)
+
         # Move object to 'subject_view' collection
         move_object_to_collection(selected_object, 'subject_view')
 
@@ -311,6 +323,7 @@ class D2P_OT_Subject2Canvas(bpy.types.Operator):
         uv_filepath = os.path.join("C:/tmp", selected_object.name + ".png")
         export_uv_layout(selected_object, uv_filepath)
 
+        # Continue the rest of the process
         active_image = get_image_from_selected_object(selected_object)
         if not active_image:
             self.report({'WARNING'}, "Selected object has no image texture.")
@@ -354,8 +367,9 @@ class D2P_OT_Image2CanvasPlus(bpy.types.Operator):
         if not active_image:
             self.report({'WARNING'}, "No active image found.")
             return {'CANCELLED'}
-        # create new scene here
-        create_scene_based_on_active_image()
+
+        # Create new scene based on the image editor's active image (no object needed)
+        create_scene_based_on_active_image()  # No selected object is passed here
 
         # Switch to 3D view
         bpy.context.area.ui_type = 'VIEW_3D'
@@ -368,7 +382,6 @@ class D2P_OT_Image2CanvasPlus(bpy.types.Operator):
 
         camera_obj = create_matching_camera(image_plane_obj, width, height)
         bpy.context.view_layer.objects.active = camera_obj
-
         camera_obj.data.show_name = True
 
         # Ensure the correct context is active before applying view settings
@@ -390,7 +403,8 @@ class D2P_OT_Image2CanvasPlus(bpy.types.Operator):
         bpy.context.area.ui_type = 'IMAGE_EDITOR'
 
         return {'FINISHED'}
-    
+
+
 class D2P_OT_ToggleUV2Camera(bpy.types.Operator):
     """Toggle UV Image Visibility in Camera"""
     bl_description = "Toggle UV Image Visibility in Camera"
@@ -457,43 +471,7 @@ class D2P_OT_ToggleCollectionView(bpy.types.Operator):
 ### Subject2Canvas needs to link the subject, add all that to the new scene
 ### Maybe Image2CanvasPlus needs new scene before actual creation
 
-class D2P_OT_D2PaintScene(bpy.types.Operator):
-    """Create Draw2Paint Scene"""
-    bl_description = "Create Scene for Working in Draw2Paint"
-    bl_idname = "d2p.create_d2p_scene"
-    bl_label = "Create Scene for Draw2Paint"
-    bl_options = {'REGISTER', 'UNDO'}
 
-    @classmethod
-    def poll(cls, context):
-        for sc in bpy.data.scenes:
-            if sc.name == "Draw2Paint":
-                return False
-        return context.area.type == 'VIEW_3D'
-
-    def execute(self, context):
-        _name = "Draw2Paint"
-        for sc in bpy.data.scenes:
-            if sc.name == _name:
-                return {'FINISHED'}
-
-        bpy.ops.scene.new(type='NEW')
-        context.scene.name = _name
-        #unlock selection for multiple objects
-        bpy.context.scene.tool_settings.lock_object_mode = False
-
-        # Set to top view
-        bpy.ops.view3d.view_axis(type='TOP', align_active=True)
-
-        # Set the render engine based on Blender version
-        if bpy.app.version >= (4, 2, 0):
-            context.scene.render.engine = 'BLENDER_EEVEE_NEXT'
-        else:
-            context.scene.render.engine = 'BLENDER_EEVEE'
-
-        paint_view_color_management_settings()
-
-        return {'FINISHED'}
 
 class D2P_OT_holdout_shader(bpy.types.Operator):
     bl_label = "Mask Holdout Shader"

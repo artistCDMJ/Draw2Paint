@@ -34,14 +34,13 @@ class D2P_PT_ImageCreation(bpy.types.Panel):
         box = layout.box()
         col = box.column(align=True)
         col.label(text="Image2Camera")
+
+        row = layout.row()
         row = col.row(align=True)
-        row.scale_x = 0.35
+        row.scale_x = 0.50
         row.scale_y = 1.25
-        row.operator("d2p.create_d2p_scene", text="D2P Scene", icon='PREFERENCES')
-        row1 = row.split(align=True)
-        row1.scale_x = 0.50
-        row1.scale_y = 1.25
-        row1.operator("d2p.new_image", text="Image2Scene", icon='TEXTURE')
+        row = row.split(align=True)
+        row.operator("d2p.new_image", text="Image2Scene", icon='TEXTURE')
 
         row = col.row(align=True)
         row.scale_x = 0.50
@@ -69,6 +68,9 @@ class D2P_PT_ImageCreation(bpy.types.Panel):
         row2.operator("d2p.save_increm", text="Save +1",
                       icon='FILE_IMAGE')
         row = layout.row()
+        row = col.row(align=True)
+        row.scale_x = 0.50
+        row.scale_y = 1.25
         row.operator("d2p.reload_all", text= "Reload ALL", icon='FILE_REFRESH')
         row.operator("d2p.save_dirty", text="Save/Pack All", icon='BORDERMOVE')
 

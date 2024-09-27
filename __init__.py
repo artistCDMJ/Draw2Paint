@@ -80,7 +80,6 @@ classes = (
     D2P_OT_my_enum_shapes,
     D2P_OT_GPencil2Canvas,
     D2P_OT_Image2Scene,
-    D2P_OT_D2PaintScene,
     D2P_OT_Slot2Display,
     D2P_OT_ModifyBrushTextures,
     D2P_OT_InitPaintBlend,

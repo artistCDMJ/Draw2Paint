@@ -420,11 +420,10 @@ def move_object_to_collection(obj, collection_name):
 
 
 ### new function to move to new scene from name of active image in image editor or selected object active image node
-def create_scene_based_on_active_image():
-    # Attempt to get the image from the selected object
-    selected_object = bpy.context.view_layer.objects.active
+def create_scene_based_on_active_image(selected_object=None):
     active_image = None
 
+    # If a selected object is provided, try to get its texture image
     if selected_object:
         active_image = get_image_from_selected_object(selected_object)
 
@@ -439,16 +438,53 @@ def create_scene_based_on_active_image():
     if active_image:
         image_name = active_image.name
         new_scene = bpy.data.scenes.new(name=image_name)
+
+        # Link the selected object to the new scene (only if an object is provided)
+        if selected_object:
+            new_scene.collection.objects.link(selected_object)
+
+        # Switch to the new scene
         bpy.context.window.scene = new_scene
+
+        # Apply the additional settings for the new scene
+
+        # Unlock object selection for multiple objects
+        new_scene.tool_settings.lock_object_mode = False
+
+        # Set the render engine based on Blender version
+        if bpy.app.version >= (4, 2, 0):
+            new_scene.render.engine = 'BLENDER_EEVEE_NEXT'
+        else:
+            new_scene.render.engine = 'BLENDER_EEVEE'
+
+        # Set color management settings (assuming paint_view_color_management_settings is defined)
+        paint_view_color_management_settings()
+
+        # Copy the World shader from the original scene to the new scene
+        bpy.context.scene.world = bpy.data.worlds['World']
+
         print(f"New scene created: {image_name}")
     else:
         print("No active image found to create a new scene.")
 
 def export_uv_layout(obj, filepath):
-    bpy.ops.object.mode_set(mode="EDIT")
-    bpy.ops.mesh.select_all(action='SELECT')
-    bpy.ops.uv.export_layout(filepath=filepath, mode='PNG', opacity=0)
-    bpy.ops.object.mode_set(mode='OBJECT')
+    # Ensure the object is active and selected
+    bpy.context.view_layer.objects.active = obj
+    obj.select_set(True)
+
+    # Ensure the correct context is passed using context override
+    with bpy.context.temp_override(object=obj):
+        # Switch to Edit Mode
+        bpy.ops.object.mode_set(mode="EDIT")
+
+        # Select all faces
+        bpy.ops.mesh.select_all(action='SELECT')
+
+        # Export the UV layout to the given filepath
+        bpy.ops.uv.export_layout(filepath=filepath, mode='PNG', opacity=0)
+
+        # Switch back to Object Mode
+        bpy.ops.object.mode_set(mode='OBJECT')
 
 
 def set_camera_background_image(camera_obj, filepath):
