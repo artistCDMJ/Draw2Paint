@@ -255,11 +255,8 @@ automatically. These are also present in vertex Paint mode.
 
 
 
-![suzanne_painted_up](https://github.com/artistCDMJ/Draw2Paint/assets/16747273/d8841895-66e9-41b5-9868-890b606465ca)
 
-
-![suzanne_painted_up2](https://github.com/artistCDMJ/Draw2Paint/assets/16747273/8c62bc34-3e85-416a-a080-94af5e6d0ef4)
-
+![d2p_bleeding](https://github.com/user-attachments/assets/c54aa19e-2240-4996-bff4-5800beb01dcf)
 
 
 
