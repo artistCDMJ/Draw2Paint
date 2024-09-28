@@ -22,12 +22,11 @@ from .utils import (find_brush, create_image_plane_from_image, create_matching_c
                     triadic_colors, tetradic_colors, analogous_colors, create_palette, \
                     new_convert_curve_object,convert_gpencil_to_curve,move_trace_objects_to_collection, \
                     convert_image_plane_to_curve, is_canvas_mesh, create_compositor_node_tree,\
-                    render_and_extract_image,calculate_texel_density )
+                    render_and_extract_image,calculate_texel_density, create_scene_based_on_active_image )
 
 from bpy.types import Operator, Menu, Panel, UIList
 from bpy_extras.io_utils import ImportHelper
 
-# Define your operators here
 #new Trace2Curve makes the leap from image plane to gpencil to curve
 class D2P_OT_Trace2Curve(bpy.types.Operator):
     """Convert B&W Image Plane to Curve"""
@@ -276,92 +275,6 @@ class D2P_OT_UV2Mask(bpy.types.Operator):
 
         return {'FINISHED'}
 
-class D2P_OT_Canvas2Camera(bpy.types.Operator):
-    """Create Canvas and Camera from Active Image"""
-    bl_description = "Create Canvas and Camera from Active Image"
-    bl_idname = "object.canvas_and_camera"
-    bl_label = "Generate Image Plane and Matching Camera"
-    bl_options = {'REGISTER', 'UNDO'}
-    
-    @classmethod
-    def poll(cls, context):
-        # Check if 'subject_view' collection exists
-        return 'canvas_view' not in bpy.data.collections
-
-    def execute(self, context):
-        active_image = None
-        for area in bpy.context.screen.areas:
-            if area.type == 'IMAGE_EDITOR':
-                active_image = area.spaces.active.image
-                break
-
-        if not active_image:
-            self.report({'WARNING'}, "No active image found.")
-            return {'CANCELLED'}
-        
-
-        image_name = active_image.name
-        image_plane_obj, width, height = create_image_plane_from_image(active_image)
-        if not image_plane_obj:
-            self.report({'WARNING'}, "Failed to create image plane.")
-            return {'CANCELLED'}
-        
-        camera_obj = create_matching_camera(image_plane_obj, width, height)
-        camera_obj.data.show_name = True
-        
-        switch_to_camera_view(camera_obj)
-        
-        # Move camera and image plane to 'canvas_view' collection
-        move_object_to_collection(image_plane_obj, 'canvas_view')
-        move_object_to_collection(camera_obj, 'canvas_view')
-        
-        bpy.context.space_data.shading.type = 'SOLID'
-        bpy.context.space_data.shading.light = 'FLAT'
-        bpy.context.space_data.shading.color_type = 'TEXTURE'
-
-        return {'FINISHED'}
-
-class D2P_OT_Camera2Canvas(bpy.types.Operator):
-    """New Camera from Selected Canvas"""
-    bl_description = "New Camera from Selected Canvas"
-    bl_idname = "object.create_camera_from_selected_image_plane"
-    bl_label = "Create Camera from Selected Image Plane"
-    bl_options = {'REGISTER', 'UNDO'}
-    
-    
-    @classmethod
-    def poll(cls, context):
-        # Check if 'subject_view' collection exists
-        return 'subject_view' not in bpy.data.collections
-    
-    
-    def execute(self, context):
-        selected_objects = context.selected_objects
-        if not selected_objects:
-            self.report({'WARNING'}, "No selected objects found.")
-            return {'CANCELLED'}
-        
-        selected_object = selected_objects[0]
-        active_image = get_image_from_selected_object(selected_object)
-        if not active_image:
-            self.report({'WARNING'}, "Selected object has no image texture.")
-            return {'CANCELLED'}
-        
-        image_plane_obj = selected_objects[0]
-        width = (image_plane_obj.dimensions.x) * 5
-        height = (image_plane_obj.dimensions.y) * 5
-        
-        camera_obj = create_matching_camera(image_plane_obj, width, height)
-        camera_obj.data.show_name = True
-        switch_to_camera_view(camera_obj)
-        
-        # Move camera and image plane to 'canvas_view' collection
-        move_object_to_collection(image_plane_obj, 'canvas_view')
-        move_object_to_collection(camera_obj, 'canvas_view')
-        
-        bpy.context.space_data.shading.type = 'SOLID'
-        bpy.context.space_data.shading.color_type = 'TEXTURE'
-        return {'FINISHED'}
 
 class D2P_OT_Subject2Canvas(bpy.types.Operator):
     """New Canvas and Camera from Selected Subject"""
@@ -369,13 +282,11 @@ class D2P_OT_Subject2Canvas(bpy.types.Operator):
     bl_idname = "object.canvas_and_camera_from_selected_object"
     bl_label = "Generate Image Plane and Camera from Selected Object"
     bl_options = {'REGISTER', 'UNDO'}
-    
+
     @classmethod
     def poll(cls, context):
-        # Check if 'subject_view' collection exists
-        return 'subject_view' and 'canvas_view' not in bpy.data.collections
-    
-    
+        return 'subject_view' not in bpy.data.collections or 'canvas_view' not in bpy.data.collections
+
     def execute(self, context):
         selected_objects = context.selected_objects
         if not selected_objects:
@@ -383,13 +294,27 @@ class D2P_OT_Subject2Canvas(bpy.types.Operator):
             return {'CANCELLED'}
 
         selected_object = selected_objects[0]
-        
+
         if not selected_object.data.uv_layers:
             self.report({'WARNING'}, "Please Create UV Layer")
             return {'CANCELLED'}
-        #Rename object with suffix _subject
+
+        # Rename object with suffix _subject
         selected_object.name += '_subject'
-        
+
+        # Create new scene and ensure the object is linked
+        create_scene_based_on_active_image(selected_object)
+
+        # Ensure the object is active and selected in the new scene
+        selected_object = bpy.context.scene.objects.get(selected_object.name)
+        if selected_object is None:
+            self.report({'ERROR'}, "Selected object could not be found in the new scene.")
+            return {'CANCELLED'}
+
+        # Ensure the object is active and selected
+        bpy.context.view_layer.objects.active = selected_object
+        selected_object.select_set(True)
+
         # Move object to 'subject_view' collection
         move_object_to_collection(selected_object, 'subject_view')
 
@@ -397,6 +322,7 @@ class D2P_OT_Subject2Canvas(bpy.types.Operator):
         uv_filepath = os.path.join("C:/tmp", selected_object.name + ".png")
         export_uv_layout(selected_object, uv_filepath)
 
+        # Continue the rest of the process
         active_image = get_image_from_selected_object(selected_object)
         if not active_image:
             self.report({'WARNING'}, "Selected object has no image texture.")
@@ -420,6 +346,9 @@ class D2P_OT_Subject2Canvas(bpy.types.Operator):
             return {'CANCELLED'}
 
         switch_to_camera_view(camera_obj)
+        # Switch to canvas_view collection on init
+        bpy.ops.object.toggle_collection_visibility()
+
         return {'FINISHED'}
 
 
@@ -441,6 +370,9 @@ class D2P_OT_Image2CanvasPlus(bpy.types.Operator):
             self.report({'WARNING'}, "No active image found.")
             return {'CANCELLED'}
 
+        # Create new scene based on the image editor's active image (no object needed)
+        create_scene_based_on_active_image()  # No selected object is passed here
+
         # Switch to 3D view
         bpy.context.area.ui_type = 'VIEW_3D'
 
@@ -452,7 +384,6 @@ class D2P_OT_Image2CanvasPlus(bpy.types.Operator):
 
         camera_obj = create_matching_camera(image_plane_obj, width, height)
         bpy.context.view_layer.objects.active = camera_obj
-
         camera_obj.data.show_name = True
 
         # Ensure the correct context is active before applying view settings
@@ -464,8 +395,8 @@ class D2P_OT_Image2CanvasPlus(bpy.types.Operator):
                     area.spaces.active.shading.color_type = 'TEXTURE'
 
         # Move camera and image plane to 'canvas_view' collection
-        move_object_to_collection(image_plane_obj, 'canvas_view')
-        move_object_to_collection(camera_obj, 'canvas_view')
+        move_object_to_collection(image_plane_obj, active_image.name + '_canvas_view')
+        move_object_to_collection(camera_obj, active_image.name + '_canvas_view')
 
         # Switch to camera view (inside the 3D View context)
         switch_to_camera_view(camera_obj)
@@ -474,7 +405,8 @@ class D2P_OT_Image2CanvasPlus(bpy.types.Operator):
         bpy.context.area.ui_type = 'IMAGE_EDITOR'
 
         return {'FINISHED'}
-    
+
+
 class D2P_OT_ToggleUV2Camera(bpy.types.Operator):
     """Toggle UV Image Visibility in Camera"""
     bl_description = "Toggle UV Image Visibility in Camera"
@@ -516,8 +448,7 @@ class D2P_OT_ToggleCollectionView(bpy.types.Operator):
                 # Switch to front view
                 bpy.ops.view3d.view_axis(type='FRONT', align_active=True)
                 bpy.context.space_data.shading.type = 'MATERIAL'
-                #bpy.context.space_data.shading.light = 'FLAT'
-                
+
             else:
                 subject_view.hide_viewport = True
                 subject_view.hide_render = True
@@ -536,44 +467,6 @@ class D2P_OT_ToggleCollectionView(bpy.types.Operator):
             self.report({'WARNING'}, "One or both collections not found.")
             return {'CANCELLED'}
 
-
-class D2P_OT_D2PaintScene(bpy.types.Operator):
-    """Create Draw2Paint Scene"""
-    bl_description = "Create Scene for Working in Draw2Paint"
-    bl_idname = "d2p.create_d2p_scene"
-    bl_label = "Create Scene for Draw2Paint"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    @classmethod
-    def poll(cls, context):
-        for sc in bpy.data.scenes:
-            if sc.name == "Draw2Paint":
-                return False
-        return context.area.type == 'VIEW_3D'
-
-    def execute(self, context):
-        _name = "Draw2Paint"
-        for sc in bpy.data.scenes:
-            if sc.name == _name:
-                return {'FINISHED'}
-
-        bpy.ops.scene.new(type='NEW')
-        context.scene.name = _name
-        #unlock selection for multiple objects
-        bpy.context.scene.tool_settings.lock_object_mode = False
-
-        # Set to top view
-        bpy.ops.view3d.view_axis(type='TOP', align_active=True)
-
-        # Set the render engine based on Blender version
-        if bpy.app.version >= (4, 2, 0):
-            context.scene.render.engine = 'BLENDER_EEVEE_NEXT'
-        else:
-            context.scene.render.engine = 'BLENDER_EEVEE'
-
-        paint_view_color_management_settings()
-
-        return {'FINISHED'}
 
 class D2P_OT_holdout_shader(bpy.types.Operator):
     bl_label = "Mask Holdout Shader"
@@ -600,7 +493,7 @@ class D2P_OT_holdout_shader(bpy.types.Operator):
         bpy.context.object.active_material = mask
 
         ###output node new
-        # output = mask.node_tree.nodes.get('ShaderNodeOutputMaterial')
+
         material_output = bpy.context.active_object.active_material.node_tree.\
                                                 nodes.get('Material Output')
 
@@ -613,8 +506,6 @@ class D2P_OT_holdout_shader(bpy.types.Operator):
         hold.location = (-100, 0)
         hold.label = ("Holdout Mask")
 
-        # output = mask.node_tree.nodes.new('ShaderNodeOutputMaterial')
-        # newout = mask.node_tree.nodes.new('ShaderNodeOutputMaterial')
 
         #####LINKING
         link = mask.node_tree.links.new
@@ -711,6 +602,8 @@ class D2P_OT_Copy2Eraser(bpy.types.Operator):
         bpy.ops.paint.texture_paint_toggle()
 
         # make ERASER brush or use existing
+        # might need fixing for 4.3 version
+    
         try:
             context.tool_settings.image_paint.brush = bpy.data.brushes["Eraser"]
         except KeyError:
@@ -765,12 +658,6 @@ class D2P_OT_CanvasX(bpy.types.Operator):
     @classmethod
     def poll(cls, context):
         return is_canvas_mesh(context.object)
-
-        '''obj = context.active_object
-        if obj is not None:
-            A = obj.type == 'MESH'
-            B = context.mode == 'PAINT_TEXTURE'
-            return A and B'''
 
     def execute(self, context):
         scene = context.scene
@@ -830,12 +717,6 @@ class D2P_OT_CanvasY(bpy.types.Operator):
     @classmethod
     def poll(cls, context):
         return is_canvas_mesh(context.object)
-    '''def poll(self, context):
-        obj = context.active_object
-        if obj is not None:
-            A = obj.type == 'MESH'
-            B = context.mode == 'PAINT_TEXTURE'
-            return A and B'''
 
     def execute(self, context):
         scene = context.scene
@@ -1718,7 +1599,6 @@ class D2P_OT_getFaceMaskGroups(bpy.types.Operator):
             vgs = []
             while len(verts):
                 bm.verts[verts[0]].select = True
-                # bpy.ops.mesh.select_linked(delimit={'SEAM'})
                 bpy.ops.mesh.select_linked()
                 sv = [v.index for v in bm.verts if v.select]
                 vgs.append(sv)
@@ -1765,7 +1645,7 @@ class D2P_OT_GPencil2Canvas(bpy.types.Operator):
         bpy.ops.paint.texture_paint_toggle()
 
         # Create Grease Pencil Object
-        bpy.ops.object.gpencil_add(align='WORLD', location=(0, 0, 0), scale=(1, 1, 1), type='EMPTY')
+        bpy.ops.object.gpencil_add(align='WORLD', location=(0, 0, 0.0125), scale=(1, 1, 1), type='EMPTY')
         gpencil_obj = context.object
 
         # Find the parent object with suffix '_canvas'
@@ -2919,153 +2799,6 @@ class NODE_OT_flatten_images(bpy.types.Operator):
         new_image_node.label = "Flatten result"
         new_image_node.location = group_node.location.x + 300, group_node.location.y
 
-        return {'FINISHED'}
-
-### new code for lasso ops
-class D2P_OT_Copy2Lasso(bpy.types.Operator):
-    """Duplicate Subject and set Lasso to Draw"""
-    bl_idname = "d2p.copy_lasso"
-    bl_label = "Duplicate to Lasso Curve Draw"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    @classmethod
-    def poll(cls, context):
-        # Ensure an object is selected and the mode is Texture Paint
-        return (context.object is not None and
-                context.object.type == 'MESH' and
-                context.mode == 'PAINT_TEXTURE')
-
-    def execute(self, context):
-        selected_objects = context.selected_objects
-        if not selected_objects:
-            self.report({'WARNING'}, "No selected objects found.")
-            return {'CANCELLED'}
-
-        selected_object = selected_objects[0]
-
-        # Ensure we're in object mode before duplicating
-        bpy.ops.object.mode_set(mode='OBJECT')
-
-        # Duplicate the object
-        bpy.ops.object.duplicate()
-        new_object = context.object  # The duplicated object becomes the active object
-
-        # Rename the duplicated object
-        new_object.name = selected_object.name + '_lasso_copy'
-
-        # Create a new collection and link the duplicated object to it
-        collection_name = 'copy2lasso'
-        if collection_name not in bpy.data.collections:
-            new_collection = bpy.data.collections.new(collection_name)
-            bpy.context.scene.collection.children.link(new_collection)
-        else:
-            new_collection = bpy.data.collections[collection_name]
-
-        # Unlink from current collection and link to new collection
-        for collection in new_object.users_collection:
-            collection.objects.unlink(new_object)
-        new_collection.objects.link(new_object)
-
-        # Convert to mesh (if necessary)
-        bpy.ops.object.convert(target='MESH')
-
-        # Add subdivision surface modifier and apply it
-        #bpy.ops.object.modifier_add(type='SUBSURF')
-        #new_object.modifiers["Subdivision"].subdivision_type = 'SIMPLE'
-        #new_object.modifiers["Subdivision"].levels = 1
-
-        # bpy.ops.object.convert(target='MESH')
-
-        # Create new Bezier curve and delete its control points
-        bpy.ops.curve.primitive_bezier_curve_add(radius=1, enter_editmode=False, align='WORLD', location=(0, 0, 0.15),
-                                                 scale=(1, 1, 1))
-
-        # Name curve and add to collection
-        curve_object = context.object
-        curve_object.name = selected_object.name + '_lasso_selection'
-
-        # Unlink from current collection and link to new collection
-        for collection in curve_object.users_collection:
-            collection.objects.unlink(curve_object)
-        new_collection.objects.link(curve_object)
-
-        bpy.ops.object.editmode_toggle()
-        bpy.ops.curve.delete(type='VERT')
-        # bpy.ops.object.editmode_toggle()
-
-        # Set the tool to draw and adjust settings
-        bpy.ops.wm.tool_set_by_id(name="builtin.draw")
-        bpy.context.scene.tool_settings.curve_paint_settings.depth_mode = 'SURFACE'
-
-        return {'FINISHED'}
-
-
-# conversion of curve to mesh for boolean and return for paint result
-class D2P_OT_Lasso2Mask(bpy.types.Operator):
-    """Convert Drawn Curve to Lasso Selection for Boolean Mask"""
-    bl_idname = "d2p.lasso_mask"
-    bl_label = "Convert drawn curve to 3d bool mask"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    @classmethod
-    def poll(cls, context):
-        obj = context.active_object
-        return obj is not None and (obj.type == 'CURVE' or obj.type == 'MESH')
-
-    def execute(self, context):
-        obj = context.active_object
-
-        # Ensure we're in object mode before converting
-        if obj.mode == 'EDIT':
-            bpy.ops.object.mode_set(mode='OBJECT')
-
-        if obj.type == 'CURVE':
-            # Convert curve to mesh
-            bpy.ops.object.convert(target='MESH')
-
-            # Edit mode operations in one go
-            bpy.ops.object.mode_set(mode='EDIT')
-            bpy.ops.mesh.select_all(action='SELECT')
-            bpy.ops.mesh.edge_face_add()
-            bpy.ops.mesh.normals_make_consistent(inside=False)
-            bpy.ops.object.mode_set(mode='OBJECT')
-
-            # Add and configure the solidify modifier
-            solidify_modifier = obj.modifiers.new(name="Solidify", type='SOLIDIFY')
-            solidify_modifier.thickness = 1.75
-            solidify_modifier.offset = -0.5
-
-        # Select _lasso_copy object
-        lasso_copy_name = obj.name.replace('_lasso_selection', '_lasso_copy')
-        lasso_copy = bpy.data.objects.get(lasso_copy_name)
-
-        if lasso_copy is None:
-            self.report({'WARNING'}, f"{lasso_copy_name} not found.")
-            return {'CANCELLED'}
-
-        # Change display settings of _lasso_selection to Bounds
-        obj.display_type = 'BOUNDS'
-
-        # Deselect all and select the two objects
-        bpy.ops.object.select_all(action='DESELECT')
-        obj.select_set(True)
-        lasso_copy.select_set(True)
-        context.view_layer.objects.active = lasso_copy
-
-        # Perform boolean intersect
-        boolean_modifier = lasso_copy.modifiers.new(name="Boolean", type='BOOLEAN')
-        boolean_modifier.operation = 'INTERSECT'
-        boolean_modifier.use_self = True
-        boolean_modifier.object = obj
-
-        # DO NOT Apply the boolean modifier
-        # bpy.context.view_layer.objects.active = lasso_copy
-        # bpy.ops.object.modifier_apply(modifier=boolean_modifier.name)
-
-        # Switch to Texture Paint mode
-        bpy.ops.paint.texture_paint_toggle()
-
-        bpy.ops.view3d.localview()
         return {'FINISHED'}
 
 #flip gradient direction

@@ -13,17 +13,13 @@ The panel can be found in the N panel once installed.
 
 **Image Creation**
 
-**+Scene** 
-
-A clean new scene for working outside of your regular 3d file, this also sets Color Management to optimum settings for\
-hand painting textures to get them out flat. Use Emmission shader to deal with rendering GP and other objects into the \
-canvas.
-
 **Image2Scene** 
 
 Popup image editor for creating a new canvas image, open the Tool Bar to Image Panel to generate a Canvas and Camera \
 from the new image, or Open an Existing Image. Image DOES NOT HAVE TO BE SAVED TO DISK TO GENERATE, unlike Import \
 Images as Planes addon from before the 4.6 version of Draw2Paint. \
+
+NEW: Creates new scene based on image name to allow multiple scenes of painting
 
 Also: Image Resize by todashuta is incorporated herewith a small upgrade of adding a Scale Percentage. \
 New Image From Active Image Size was added to the Image Editor Image Menu dropdown, and New Texture Node from Active \
@@ -40,15 +36,6 @@ panel for examining the Properties.
 
 This is a toggle to go back and forth to settings optimum for display of the paint depending on what you are working on.
 
-**Canvas2Camera**
-
-If an image already exists in the file and is active in the Image Editor, this will generate a Canvas and Camera for \
-you to work with solo, without being tied to another object. Same as if you were still in the Image Editor, but more \
-likely to snap to Camera View immediately.
-
-**Camera2Canvas** 
-
-This is if you delete the camera by accident, the will make a new camera set to the selected image plane/canvas
 
 **Slot2Display** 
 
@@ -68,7 +55,7 @@ Saves the image to previous disk location from the 3D View
 
 Iterates the save to disk, useful for making animated brushes or different versions of brush images or layer painting
 
-**Save All Pack All** 
+**Save/Pack All** 
 
 This will attempt to save the images in the file that have been painted, or pack them to file if they haven't been \
 saved to disk, saving then keeps the changes in the packed images.
@@ -94,7 +81,9 @@ A panel of crop controls for the image in the camera view, shamelessly stolen fr
 **Subject2Canvas** 
 
 Select your model to be texture painted, and press this to add a new Canvas and Camera linked to share the Subject's \
-material, UV Map is sent to the Camera foreground and object is renamed (obj.name+_subject)
+material, UV Map is sent to the Camera foreground and object is renamed (obj.name+_subject), Init is Canvas_view
+
+This also creates a new scene named after the active image node
 
 **Canvas2View/Subject2View** 
 
@@ -107,11 +96,15 @@ TBD: maybe add all secondary objects to Canvas View collection with a button, as
 
 Toggle on and off the UV Map in the Camera view over the Canvas
 
+**Align2Face**
+
+Select a face or subset of faces in Face Select Masking mode and this will align the view to Top
+
 **Calculate Texel Density**
 
 With object scale applied, this will examine surface area and suggest a power of 2 image texture size
 
-**Symmetry2Guide**
+**Symmetry2Guide** Only for canvas_view for now
 
 **Guide2Canvas** 
 
@@ -122,7 +115,7 @@ the Object Center. Symmetry controls are in the upper toolbar by 'Options'
 
 Press to snap the guide and the Object Center back to origin
 
-**Sculpt Canvas Copy**
+**Sculpt Canvas Copy** Only for canvas_view for now
 
 **Copy2Eraser** 
 
@@ -159,7 +152,7 @@ Union bool using a few modifiers as well
 
 **Remove Mods** 
 
-This makes the masks into mesh to use with the next step
+This makes the masks into mesh to use with the (Re)project
 
 **UV2Mask**
 
@@ -207,12 +200,9 @@ Mask objects or anything else will need to be arranged with the Align addon that
 Import Images as Planes is no longer necessary here for using Draw2Paint, as this uses a much simpler and direct \
 approach.
 
-**Copy2lasso and Lasso2Mask** 
-This pair will set a new copy of the Subject to a collection and will allow to draw a curve as selection for a \
-Solidify and Boolean Mask object to paint to as a 3d mask object. Experimental, not as flexible and repeatable as \
-the Mask Tool and Stencil Image workflow, but this is a good example of why we don't have an image-level lasso select.
+**Extras outside the 3D View Panel**
 
-**2Compostitor and 2ShaderEditor** 
+**2Compositor and 2ShaderEditor** 
 This is a toggle from the Shader Editor back and forth to the Compositor for the use of the Compositor for Image \
 editing with the Composite nodes. 
 
@@ -226,6 +216,15 @@ Styles. Lots of stuff possible.
 **Compositor2Image**
 This sends the render of the Viewer node to the C:\tmp\ folder and then loads it into a new image texture node in \
 the shader tree. Press 2ShaderEditor to go back and connect the new image node to the shader color input.
+
+**Flatten Images**
+This requires selecting two images to combine and this will send them to a compositor session
+
+**New Texture Node from Active Texture**
+This will duplicate the size of the image in the active image node to a new generated image node in the Compositor
+
+**New Image from Active IMage Size**
+This will create a new image texture from the size of the active image in the Image Editor
 
 **EZPaint Additions** 
 
@@ -250,11 +249,8 @@ automatically. These are also present in vertex Paint mode.
 
 
 
-![suzanne_painted_up](https://github.com/artistCDMJ/Draw2Paint/assets/16747273/d8841895-66e9-41b5-9868-890b606465ca)
 
-
-![suzanne_painted_up2](https://github.com/artistCDMJ/Draw2Paint/assets/16747273/8c62bc34-3e85-416a-a080-94af5e6d0ef4)
-
+![d2p_bleeding](https://github.com/user-attachments/assets/c54aa19e-2240-4996-bff4-5800beb01dcf)
 
 
 
