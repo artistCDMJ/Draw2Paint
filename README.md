@@ -250,7 +250,7 @@ automatically. These are also present in vertex Paint mode.
 
 
 
-![d2p_bleeding](https://github.com/user-attachments/assets/c54aa19e-2240-4996-bff4-5800beb01dcf)
+
 ![d2p_bleeding_4](https://github.com/user-attachments/assets/2d2dcfa6-3e4a-4785-bd6b-cc99019c9c32)
 ![d2p_bleeding_3](https://github.com/user-attachments/assets/6906e4af-f1c5-48a9-883e-2fc373204d7b)
 ![d2p_bleeding_2](https://github.com/user-attachments/assets/3dc45ba1-3c13-469b-8700-de420277a279)
