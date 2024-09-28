@@ -121,8 +121,6 @@ classes = (
     NODE_OT_flatten_images,
     D2P_OT_SetColorFamilies,
     D2P_OT_Trace2Curve,
-    D2P_OT_Copy2Lasso,
-    D2P_OT_Lasso2Mask,
     D2P_OT_flip_gradient,
     D2P_OT_CalculateTexelDensity,
     D2P_OT_Shader2ViewerNode,

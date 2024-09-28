@@ -77,11 +77,12 @@ class D2P_PT_ImageCreation(bpy.types.Panel):
 
 ################################## GPencil Future Home of Shortcuts
 class D2P_PT_GreasePencil(bpy.types.Panel):
-    """Panel for D2P GPencil"""
+    """Panel for D2P GPencil for Sketching and Detailing"""
     bl_label = "Grease Pencil Tools"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_category = "Draw2Paint"
+    bl_parent_id = 'D2P_PT_ImageCreation'
     bl_options = {'DEFAULT_CLOSED'}
 
     def draw(self, context):
@@ -98,12 +99,12 @@ class D2P_PT_GreasePencil(bpy.types.Panel):
 ############# Scene Extras
 class D2P_PT_3dImageEditor(bpy.types.Panel):
     """3D-2D Image Editor"""
-    bl_label = "3D-2D Image Editor"
+    bl_label = "3DPaint-2-2DPaint"
     bl_idname = "D2P_PT_2dto3d_experiment"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_category = "Draw2Paint"
-    bl_parent_id = 'D2P_PT_ImageCreation'
+    #bl_parent_id = 'D2P_PT_ImageCreation'
     bl_options = {'DEFAULT_CLOSED'}
 
     def draw(self, context):
@@ -237,8 +238,6 @@ class D2P_PT_FlipRotate(bpy.types.Panel):
         return is_canvas_mesh(context.object)
     def draw(self, context):
         layout = self.layout
-
-        
         box = layout.box()
         col = box.column(align=True)
         col.label(text="Rotate and Flip Axis for Painting")
@@ -271,9 +270,6 @@ class D2P_PT_Symmetry2Guide(bpy.types.Panel):
     bl_parent_id = 'D2P_PT_ImageCreation'
     bl_options = {'DEFAULT_CLOSED'}
 
-    @classmethod
-    def poll(cls, context):
-        return is_canvas_mesh(context.object)
     def draw(self, context):
         layout = self.layout
 
@@ -337,38 +333,25 @@ class D2P_PT_MaskTools(bpy.types.Panel):
                      icon='UNLINKED')
 
         row = col.row(align=True)
-        row1 = row.split(align=True)
-        row1.scale_x = 0.50
-        row1.scale_y = 1.25
-        row1.operator("d2p.copy_lasso", text='Copy2Lasso', icon='CURVE_BEZCURVE')
-        row1.operator("d2p.lasso_mask", text='Lasso2Mask', icon='SURFACE_NCIRCLE')
+        row = row.split(align=True)
+        row.scale_x = 0.50
+        row.scale_y = 1.25
 
-
-        row = layout.row()
-        row.operator("object.uv_mask_from_selected_object", text='UV2Mask', icon='MESH_MONKEY')
-        row.operator("d2p.trace2curve", text='Trace2Curve', icon='OUTLINER_DATA_CURVE')
+        row.operator("d2p.reproject_mask", text='(Re)Project', icon='FULLSCREEN_EXIT')
+        row.operator("d2p.canvas_material", text='Copy Canvas', icon='OUTLINER_OB_IMAGE')
+        row.operator("d2p.add_holdout", text='Holdout', icon='GHOST_ENABLED')
 
         layout = self.layout
         box = layout.box()
         col = box.column(align=True)
-        col.label(text="Map and Apply Material to Mask")
+        col.label(text="Special Mask Ops")
         row = col.row(align=True)
 
         row1 = row.split(align=True)
         row1.scale_x = 0.50
         row1.scale_y = 1.25
-        row1.operator("d2p.reproject_mask", text='(Re)Project',
-                      icon='FULLSCREEN_EXIT')
-
-        row2 = row.split(align=True)
-        row2.scale_x = 0.50
-        row2.scale_y = 1.25
-        row1.operator("d2p.canvas_material", text='Copy Canvas',
-                      icon='OUTLINER_OB_IMAGE')
-        row3 = row.split(align=True)
-        row3.scale_x = 0.50
-        row3.scale_y = 1.25
-        row2.operator("d2p.add_holdout", text='Holdout', icon='GHOST_ENABLED')
+        row1.operator("object.uv_mask_from_selected_object", text='UV2Mask', icon='MESH_MONKEY')
+        row1.operator("d2p.trace2curve", text='Trace2Curve', icon='OUTLINER_DATA_CURVE')
 
         obj = context.object
         if obj and obj.type == 'MESH':
@@ -424,7 +407,7 @@ class D2P_PT_MaskTools(bpy.types.Panel):
 ############# liquid sculpt
 class D2P_PT_Sculpt2D(bpy.types.Panel):
     """Liquid Sculpt on a Copy of the Canvas"""
-    bl_label = "Sculpt Canvas Copy"
+    bl_label = "Sculpt2Canvas"
     bl_idname = "D2P_PT_Sculpt2D"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"

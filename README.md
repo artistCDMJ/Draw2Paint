@@ -81,7 +81,7 @@ A panel of crop controls for the image in the camera view, shamelessly stolen fr
 **Subject2Canvas** 
 
 Select your model to be texture painted, and press this to add a new Canvas and Camera linked to share the Subject's \
-material, UV Map is sent to the Camera foreground and object is renamed (obj.name+_subject)
+material, UV Map is sent to the Camera foreground and object is renamed (obj.name+_subject), Init is Canvas_view
 
 This also creates a new scene named after the active image node
 
@@ -153,12 +153,6 @@ Union bool using a few modifiers as well
 **Remove Mods** 
 
 This makes the masks into mesh to use with the (Re)project
-
-**Copy2Lasso**
-This creates a copy of the 3d object to draw a lasso on the surface for selection masking
-
-**Lasso2Mask** 
-This converts the lasso created into a boolean mask for painting only that area of the original texture
 
 **UV2Mask**
 

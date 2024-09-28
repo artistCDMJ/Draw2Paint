@@ -446,7 +446,8 @@ def create_scene_based_on_active_image(selected_object=None):
         # Switch to the new scene
         bpy.context.window.scene = new_scene
 
-        # Apply the additional settings for the new scene
+        # Set to transparent for the world
+        new_scene.render.film_transparent = True
 
         # Unlock object selection for multiple objects
         new_scene.tool_settings.lock_object_mode = False
@@ -457,7 +458,7 @@ def create_scene_based_on_active_image(selected_object=None):
         else:
             new_scene.render.engine = 'BLENDER_EEVEE'
 
-        # Set color management settings (assuming paint_view_color_management_settings is defined)
+        # Set color management settings
         paint_view_color_management_settings()
 
         # Copy the World shader from the original scene to the new scene
