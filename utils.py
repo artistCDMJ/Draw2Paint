@@ -499,7 +499,7 @@ def set_camera_background_image(camera_obj, filepath):
     bg.alpha = 1.0
     bg.display_depth = 'FRONT'
 
-
+# needed to swap windows to get active image to work here
 def get_active_image_from_image_editor():
     # Try to get the active image from the Image Editor if it's already open
     for area in bpy.context.screen.areas:
