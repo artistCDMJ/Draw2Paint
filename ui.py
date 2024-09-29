@@ -33,7 +33,7 @@ class D2P_PT_ImageCreation(bpy.types.Panel):
 
         box = layout.box()
         col = box.column(align=True)
-        col.label(text="Image2Camera")
+        col.label(text="Image2Paint")
 
         row = layout.row()
         row = col.row(align=True)
@@ -78,7 +78,7 @@ class D2P_PT_ImageCreation(bpy.types.Panel):
 ################################## GPencil Future Home of Shortcuts
 class D2P_PT_GreasePencil(bpy.types.Panel):
     """Panel for D2P GPencil for Sketching and Detailing"""
-    bl_label = "Grease Pencil Tools"
+    bl_label = "GPencil2Paint"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_category = "Draw2Paint"
@@ -112,10 +112,7 @@ class D2P_PT_3dImageEditor(bpy.types.Panel):
 
         box = layout.box()
         col = box.column(align=True)
-        col.label(text="Create Collections for Toggle:")
-        col.label(text="3d: subject view 2D:canvas view")
         row = col.row(align=True)
-
 
         layout.operator("object.calculate_texel_density", icon='TEXTURE')
         if context.scene.get("texel_density_result"):
