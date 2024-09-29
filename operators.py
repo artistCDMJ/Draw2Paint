@@ -22,7 +22,8 @@ from .utils import (find_brush, create_image_plane_from_image, create_matching_c
                     triadic_colors, tetradic_colors, analogous_colors, create_palette, \
                     new_convert_curve_object,convert_gpencil_to_curve,move_trace_objects_to_collection, \
                     convert_image_plane_to_curve, is_canvas_mesh, create_compositor_node_tree,\
-                    render_and_extract_image,calculate_texel_density, create_scene_based_on_active_image )
+                    render_and_extract_image,calculate_texel_density, create_scene_based_on_active_image,\
+                    select_object_by_suffix)
 
 from bpy.types import Operator, Menu, Panel, UIList
 from bpy_extras.io_utils import ImportHelper
@@ -311,6 +312,7 @@ class D2P_OT_Subject2Canvas(bpy.types.Operator):
             self.report({'ERROR'}, "Selected object could not be found in the new scene.")
             return {'CANCELLED'}
 
+
         # Ensure the object is active and selected
         bpy.context.view_layer.objects.active = selected_object
         selected_object.select_set(True)
@@ -321,6 +323,9 @@ class D2P_OT_Subject2Canvas(bpy.types.Operator):
         # Export UV layout
         uv_filepath = os.path.join("C:/tmp", selected_object.name + ".png")
         export_uv_layout(selected_object, uv_filepath)
+
+        # Try to link to original scene here
+        bpy.ops.object.make_links_scene(scene='Scene')
 
         # Continue the rest of the process
         active_image = get_image_from_selected_object(selected_object)
@@ -346,6 +351,7 @@ class D2P_OT_Subject2Canvas(bpy.types.Operator):
             return {'CANCELLED'}
 
         switch_to_camera_view(camera_obj)
+
         # Switch to canvas_view collection on init
         bpy.ops.object.toggle_collection_visibility()
 
@@ -448,6 +454,7 @@ class D2P_OT_ToggleCollectionView(bpy.types.Operator):
                 # Switch to front view
                 bpy.ops.view3d.view_axis(type='FRONT', align_active=True)
                 bpy.context.space_data.shading.type = 'MATERIAL'
+                select_object_by_suffix('_subject')
 
             else:
                 subject_view.hide_viewport = True
@@ -458,6 +465,7 @@ class D2P_OT_ToggleCollectionView(bpy.types.Operator):
                 switch_to_camera_view(context.scene.camera)
                 bpy.context.space_data.shading.type = 'SOLID'
                 bpy.context.space_data.shading.light = 'FLAT'
+                select_object_by_suffix('_canvas')
 
             
             # Update the view layer to reflect visibility changes

@@ -628,3 +628,24 @@ def create_palette(name, colors):
     for color in colors:
         palette_color = palette.colors.new()
         palette_color.color = color
+
+# need for setting selection on toggle
+def select_object_by_suffix(suffix):
+    """Selects an object whose name ends with the given suffix in Blender and switches modes."""
+
+    # Ensure we're in Object Mode first
+    if bpy.context.object and bpy.context.object.mode != 'OBJECT':
+        bpy.ops.object.mode_set(mode='OBJECT')
+
+    # Deselect all objects
+    bpy.ops.object.select_all(action='DESELECT')
+
+    # Iterate through all objects in the scene
+    for obj in bpy.data.objects:
+        if obj.name.endswith(suffix):
+            obj.select_set(True)
+            bpy.context.view_layer.objects.active = obj  # Set as active object
+            break
+
+    # Switch to Texture Paint Mode after selecting the object
+    bpy.ops.object.mode_set(mode='TEXTURE_PAINT')
