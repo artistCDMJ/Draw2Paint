@@ -501,13 +501,42 @@ def set_camera_background_image(camera_obj, filepath):
 
 
 def get_active_image_from_image_editor():
+    # Try to get the active image from the Image Editor if it's already open
     for area in bpy.context.screen.areas:
         if area.type == 'IMAGE_EDITOR':
             for space in area.spaces:
-                if space.type == 'IMAGE_EDITOR':
-                    if space.image:
-                        return space.image
-    raise ValueError("No active image found in the Image Editor")
+                if space.type == 'IMAGE_EDITOR' and space.image:
+                    return space.image
+
+    # If no Image Editor is found, dynamically open one and check for an image
+    image_found = False
+    for area in bpy.context.screen.areas:
+        if area.type == 'VIEW_3D':
+            # Temporarily switch the 3D Viewport to an Image Editor
+            old_type = area.type
+            area.type = 'IMAGE_EDITOR'
+            for space in area.spaces:
+                if space.type == 'IMAGE_EDITOR' and space.image:
+                    image_found = True
+                    active_image = space.image
+                    break
+            # Restore the area type back to VIEW_3D
+            area.type = old_type
+            if image_found:
+                return active_image
+
+    # If no image is found in the Image Editor, search in the Shader Editor
+    for area in bpy.context.screen.areas:
+        if area.type == 'NODE_EDITOR':
+            for space in area.spaces:
+                if space.type == 'NODE_EDITOR':
+                    if space.node_tree and space.shader_type == 'OBJECT':
+                        for node in space.node_tree.nodes:
+                            if node.type == 'TEX_IMAGE' and node.image:
+                                return node.image
+
+    # If no image found in either Image or Shader Editors
+    raise ValueError("No active image found in the Image Editor or Shader Editor")
 
 
 def increment_filename(filepath):
