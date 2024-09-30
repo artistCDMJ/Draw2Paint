@@ -662,19 +662,26 @@ def create_palette(name, colors):
 def select_object_by_suffix(suffix):
     """Selects an object whose name ends with the given suffix in Blender and switches modes."""
 
-    # Ensure we're in Object Mode first
+    # Ensure we are in Object Mode first
     if bpy.context.object and bpy.context.object.mode != 'OBJECT':
         bpy.ops.object.mode_set(mode='OBJECT')
 
     # Deselect all objects
     bpy.ops.object.select_all(action='DESELECT')
 
-    # Iterate through all objects in the scene
-    for obj in bpy.data.objects:
+    # Iterate through all objects in the current view layer
+    for obj in bpy.context.view_layer.objects:
         if obj.name.endswith(suffix):
             obj.select_set(True)
             bpy.context.view_layer.objects.active = obj  # Set as active object
             break
+    else:
+        # If no object with the suffix was found in the current view layer
+        print(f"No object with suffix '{suffix}' found in the current view layer.")
+        return {'CANCELLED'}
 
     # Switch to Texture Paint Mode after selecting the object
     bpy.ops.object.mode_set(mode='TEXTURE_PAINT')
+
+    return {'FINISHED'}
+
