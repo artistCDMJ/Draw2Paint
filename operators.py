@@ -1331,6 +1331,8 @@ class D2P_OT_my_enum_shapes(bpy.types.Operator):
             # Add a new bezier curve
             bpy.ops.curve.primitive_bezier_curve_add(radius=1, enter_editmode=False, align='WORLD', location=(0, 0, 0.15), scale=(1, 1, 1))
             new_obj = bpy.context.object
+            # Move new_obj to 'canvas_view' collection
+            move_object_to_collection(new_obj, 'canvas_view')
             add_child_constraint(new_obj)
             bpy.ops.object.editmode_toggle()
             bpy.ops.curve.delete(type='VERT')
@@ -1345,6 +1347,8 @@ class D2P_OT_my_enum_shapes(bpy.types.Operator):
             # Add a new bezier curve and set handle type to VECTOR
             bpy.ops.curve.primitive_bezier_curve_add(enter_editmode=True, align='WORLD', location=(0, 0, 0.15), scale=(1, 1, 1))
             new_obj = bpy.context.object
+            # Move new_obj to 'canvas_view' collection
+            move_object_to_collection(new_obj, 'canvas_view')
             add_child_constraint(new_obj)
             bpy.ops.curve.handle_type_set(type='VECTOR')
             bpy.ops.object.editmode_toggle()
@@ -1358,6 +1362,8 @@ class D2P_OT_my_enum_shapes(bpy.types.Operator):
             # Add a new bezier circle
             bpy.ops.curve.primitive_bezier_circle_add(radius=0.25, enter_editmode=False, align='WORLD', location=(0, 0, 0.15), scale=(1, 1, 1))
             new_obj = bpy.context.object
+            # Move new_obj to 'canvas_view' collection
+            move_object_to_collection(new_obj, 'canvas_view')
             add_child_constraint(new_obj)
             copy_material_to_new_object(new_obj)
             new_obj.data.dimensions = '2D'
@@ -1372,6 +1378,8 @@ class D2P_OT_my_enum_shapes(bpy.types.Operator):
             # Add a new bezier circle
             bpy.ops.curve.primitive_bezier_circle_add(radius=0.25, enter_editmode=False, align='WORLD', location=(0, 0, 0.15), scale=(1, 1, 1))
             new_obj = bpy.context.object
+            # Move new_obj to 'canvas_view' collection
+            move_object_to_collection(new_obj, 'canvas_view')
             add_child_constraint(new_obj)
             copy_material_to_new_object(new_obj)
             new_obj.data.dimensions = '2D'
