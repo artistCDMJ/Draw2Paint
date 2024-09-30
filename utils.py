@@ -499,15 +499,44 @@ def set_camera_background_image(camera_obj, filepath):
     bg.alpha = 1.0
     bg.display_depth = 'FRONT'
 
-
+# needed to swap windows to get active image to work here
 def get_active_image_from_image_editor():
+    # Try to get the active image from the Image Editor if it's already open
     for area in bpy.context.screen.areas:
         if area.type == 'IMAGE_EDITOR':
             for space in area.spaces:
-                if space.type == 'IMAGE_EDITOR':
-                    if space.image:
-                        return space.image
-    raise ValueError("No active image found in the Image Editor")
+                if space.type == 'IMAGE_EDITOR' and space.image:
+                    return space.image
+
+    # If no Image Editor is found, dynamically open one and check for an image
+    image_found = False
+    for area in bpy.context.screen.areas:
+        if area.type == 'VIEW_3D':
+            # Temporarily switch the 3D Viewport to an Image Editor
+            old_type = area.type
+            area.type = 'IMAGE_EDITOR'
+            for space in area.spaces:
+                if space.type == 'IMAGE_EDITOR' and space.image:
+                    image_found = True
+                    active_image = space.image
+                    break
+            # Restore the area type back to VIEW_3D
+            area.type = old_type
+            if image_found:
+                return active_image
+
+    # If no image is found in the Image Editor, search in the Shader Editor
+    for area in bpy.context.screen.areas:
+        if area.type == 'NODE_EDITOR':
+            for space in area.spaces:
+                if space.type == 'NODE_EDITOR':
+                    if space.node_tree and space.shader_type == 'OBJECT':
+                        for node in space.node_tree.nodes:
+                            if node.type == 'TEX_IMAGE' and node.image:
+                                return node.image
+
+    # If no image found in either Image or Shader Editors
+    raise ValueError("No active image found in the Image Editor or Shader Editor")
 
 
 def increment_filename(filepath):
@@ -633,19 +662,26 @@ def create_palette(name, colors):
 def select_object_by_suffix(suffix):
     """Selects an object whose name ends with the given suffix in Blender and switches modes."""
 
-    # Ensure we're in Object Mode first
+    # Ensure we are in Object Mode first
     if bpy.context.object and bpy.context.object.mode != 'OBJECT':
         bpy.ops.object.mode_set(mode='OBJECT')
 
     # Deselect all objects
     bpy.ops.object.select_all(action='DESELECT')
 
-    # Iterate through all objects in the scene
-    for obj in bpy.data.objects:
+    # Iterate through all objects in the current view layer
+    for obj in bpy.context.view_layer.objects:
         if obj.name.endswith(suffix):
             obj.select_set(True)
             bpy.context.view_layer.objects.active = obj  # Set as active object
             break
+    else:
+        # If no object with the suffix was found in the current view layer
+        print(f"No object with suffix '{suffix}' found in the current view layer.")
+        return {'CANCELLED'}
 
     # Switch to Texture Paint Mode after selecting the object
     bpy.ops.object.mode_set(mode='TEXTURE_PAINT')
+
+    return {'FINISHED'}
+
