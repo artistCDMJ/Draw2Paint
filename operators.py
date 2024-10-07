@@ -927,7 +927,7 @@ class D2P_OT_Image2Scene(bpy.types.Operator):
                 
         return {'FINISHED'}
 
-class D2P_OT_SaveImage(bpy.types.Operator):
+class D2P_OT_SaveImage(bpy.types.Operator): # works IF image is already in Slot2Display prior
     """Save Image"""
     bl_idname = "d2p.save_current"
     bl_label = "Save Image Current"
@@ -955,7 +955,7 @@ class D2P_OT_SaveImage(bpy.types.Operator):
 
         return {'FINISHED'}
 
-class D2P_OT_SaveIncrem(bpy.types.Operator):
+class D2P_OT_SaveIncrem(bpy.types.Operator): #works already with Material and Image IF image is opened in Editor prior
     """Save Incremential Images - MUST SAVE SESSION FILE FIRST"""
     bl_description = ""
     bl_idname = "d2p.save_increm"
@@ -979,7 +979,7 @@ class D2P_OT_SaveIncrem(bpy.types.Operator):
             self.report({'ERROR'}, str(e))
         return {'FINISHED'}
 
-class D2P_OT_SaveDirty(bpy.types.Operator):
+class D2P_OT_SaveDirty(bpy.types.Operator):  #Already Good for Image and Material
     """Save All Modified Images or Pack if Unsaved"""
     bl_description = "Save all modified images or pack them if unsaved"
     bl_idname = "d2p.save_dirty"
@@ -997,7 +997,7 @@ class D2P_OT_SaveDirty(bpy.types.Operator):
 
     def execute(self, context):
         # Save or pack all modified images
-        for image in bpy.data.images:
+        for image in bpy.data.images:  #already packs all in Image and Material modes
             if image.is_dirty:
                 if image.filepath:
                     try:
@@ -1010,7 +1010,7 @@ class D2P_OT_SaveDirty(bpy.types.Operator):
                     self.report({'INFO'}, f"Packed image: {image.name}")
 
         return {'FINISHED'}
-class D2P_OT_ReloadAll(bpy.types.Operator):
+class D2P_OT_ReloadAll(bpy.types.Operator):  #Already Good for Image and Material
     '''Reload ALL IMAGES to last Saved State'''
     bl_idname = "d2p.reload_all"
     bl_label = "Reload ALL IMAGES"
@@ -1025,12 +1025,12 @@ class D2P_OT_ReloadAll(bpy.types.Operator):
             B = context.mode == 'PAINT_TEXTURE'
             return A and B
     def execute(self, context):
-        for image in bpy.data.images:
+        for image in bpy.data.images:## already affects Image mode as well as Material mode images
             image.reload()
         return {'FINISHED'}
 
 
-class D2P_OT_ImageReload(bpy.types.Operator):
+class D2P_OT_ImageReload(bpy.types.Operator):  #Fixed for Material and Image mode
     """Reload Image Last Saved State"""
     bl_idname = "d2p.reload_saved_state"
     bl_label = "Reload Image Save Point"
@@ -1045,17 +1045,43 @@ class D2P_OT_ImageReload(bpy.types.Operator):
             return A and B
 
     def execute(self, context):
+        # Store the current UI type to switch back after
         original_type = context.area.ui_type
-        context.area.ui_type = 'IMAGE_EDITOR'
 
-        #obdat = context.active_object.data
-        #ima = obdat.materials[0].texture_paint_images[0]
-        mat = bpy.context.object.active_material
-        image = mat.texture_paint_images[mat.paint_active_slot]
-        context.space_data.image = image
-        bpy.ops.image.reload()  # return image to last saved state
+        image = None
 
+        # Detect the current paint mode
+        paint_mode = context.scene.tool_settings.image_paint.mode
+
+        if paint_mode == 'MATERIAL':
+            # Handle MATERIAL mode: get the image from the material's texture paint slot
+            mat = context.object.active_material
+            if mat and mat.texture_paint_images:
+                image = mat.texture_paint_images[mat.paint_active_slot]
+            else:
+                self.report({'INFO'}, "No active material slot to reload.")
+                return {'CANCELLED'}
+
+        elif paint_mode == 'IMAGE':
+            # Handle IMAGE mode: get the active image from the image paint canvas
+            image = context.scene.tool_settings.image_paint.canvas
+            if not image:
+                self.report({'INFO'}, "No active image to reload.")
+                return {'CANCELLED'}
+
+        # If an image was found, reload it
+        if image:
+            # Switch to Image Editor to reload the image
+            context.area.ui_type = 'IMAGE_EDITOR'
+            context.space_data.image = image
+            bpy.ops.image.reload()  # Reload the image to its last saved state
+        else:
+            self.report({'WARNING'}, "No image found to reload.")
+            return {'CANCELLED'}
+
+        # Restore the original UI type
         context.area.ui_type = original_type
+
         return {'FINISHED'}
 
 class D2P_OT_Guide2Canvas(bpy.types.Operator):
@@ -1686,32 +1712,59 @@ class D2P_OT_GPencil2Canvas(bpy.types.Operator):
 
         return {'FINISHED'}
 
-class D2P_OT_Slot2Display(bpy.types.Operator):
-    '''Display selected paint slot in new window'''
-    bl_label = "Display active Slot"
+
+class D2P_OT_Slot2Display(bpy.types.Operator): #Fixed for Material and Image modes
+    '''Display selected paint slot or image in new window'''
+    bl_label = "Display Active Slot or Image"
     bl_idname = "d2p.display_active_slot"
     bl_options = {'REGISTER', 'UNDO'}
 
     @classmethod
-    def poll(self, context):
-        return context.object.active_material.texture_paint_images
+    def poll(cls, context):
+        # Ensure the object has an active material and/or image for painting
+        paint_mode = context.scene.tool_settings.image_paint.mode
+        obj = context.object
+        if obj is None:
+            return False
+
+        if paint_mode == 'MATERIAL':
+            return obj.active_material and obj.active_material.texture_paint_images
+        elif paint_mode == 'IMAGE':
+            return bool(context.scene.tool_settings.image_paint.canvas)
+        return False
 
     def execute(self, context):
-        if context.object.active_material.texture_paint_images:
-            # Get the Image
-            mat = bpy.context.object.active_material
-            image = mat.texture_paint_images[mat.paint_active_slot]
-            # Call user prefs window
-            #bpy.ops.screen.userpref_show('INVOKE_DEFAULT')
-            bpy.ops.wm.window_new()
-            # Change area type
-            area = context.window_manager.windows[-1].screen.areas[0]
-            area.type = 'IMAGE_EDITOR'
-            # Assign the Image
-            context.area.spaces.active.image = image
-            context.space_data.mode = 'PAINT'
-        else:
-            self.report({'INFO'}, "No active Slot")
+        # Detect the current paint mode
+        paint_mode = context.scene.tool_settings.image_paint.mode
+
+        if paint_mode == 'MATERIAL':
+            # Handle MATERIAL mode: Display the texture paint slot from the material
+            mat = context.object.active_material
+            if mat and mat.texture_paint_images:
+                image = mat.texture_paint_images[mat.paint_active_slot]
+            else:
+                self.report({'INFO'}, "No active material slot")
+                return {'CANCELLED'}
+
+        elif paint_mode == 'IMAGE':
+            # Handle IMAGE mode: Display the active image from the image paint canvas
+            image = context.scene.tool_settings.image_paint.canvas
+            if not image:
+                self.report({'INFO'}, "No active image")
+                return {'CANCELLED'}
+
+        # Open a new window and set the area to IMAGE_EDITOR
+        bpy.ops.wm.window_new()
+        new_window = context.window_manager.windows[-1]
+        area = new_window.screen.areas[0]
+        area.type = 'IMAGE_EDITOR'
+
+        # Set the image in the newly created image editor space
+        space = area.spaces.active
+        space.image = image
+        space.mode = 'PAINT'
+
+        self.report({'INFO'}, f"Displaying {paint_mode.lower()} image")
         return {'FINISHED'}
 
 ########################################
@@ -2213,6 +2266,25 @@ class D2P_OT_TexturePopup(bpy.types.Operator):
 
     def execute(self, context):
         return {'FINISHED'}
+# new operator to fix selection of texslots
+class D2P_OT_set_active_texture_slot(bpy.types.Operator):
+    """Set the active texture slot"""
+    bl_idname = "view3d.set_active_texture_slot"
+    bl_label = "Set Active Texture Slot"
+
+    slot_index: bpy.props.IntProperty()
+
+    def execute(self, context):
+        obj = context.object
+        mat = obj.active_material
+
+        if mat and mat.texture_paint_slots:
+            mat.paint_active_slot = self.slot_index
+            self.report({'INFO'}, f"Active texture slot set to: {self.slot_index}")
+        else:
+            self.report({'ERROR'}, "No texture slots found")
+
+        return {'FINISHED'}
 
 class D2P_OT_ProjectpaintPopup(bpy.types.Operator):
     """Slots ProjectPaint popup"""
@@ -2227,106 +2299,100 @@ class D2P_OT_ProjectpaintPopup(bpy.types.Operator):
     def poll(cls, context):
         brush = context.tool_settings.image_paint.brush
         ob = context.active_object
-        if brush is not None and ob is not None:
-            A = ob.type == 'MESH'
-            B = context.space_data.type == 'VIEW_3D'
-            if A:
-                C = context.mode in {'PAINT_TEXTURE', 'PAINT_VERTEX', 'PAINT_WEIGHT'}
-                D = context.mode == 'EDIT_MESH'
-            E = context.space_data.type == 'IMAGE_EDITOR'
-            if E:
-                F = context.mode == 'EDIT_MESH'
-                G = context.space_data.mode == 'PAINT'
-            H = context.mode == 'WEIGHT_PAINT' and ob.vertex_groups and ob.data.use_paint_mask_vertex
-            return A and ((B and (C or D)) or (E and (F or G) or H))
+        if brush is not None and ob is not None and ob.type == 'MESH':
+            print("Object is a mesh and brush is active")
+            if context.space_data.type in {'VIEW_3D', 'IMAGE_EDITOR'}:
+                print(f"Space type is {context.space_data.type}")
+                return True
+        print("poll failed")
         return False
 
     def draw(self, context):
         settings = context.tool_settings.image_paint
         ob = context.active_object
-
         layout = self.layout
 
-        # Vertex Paint
+        # Vertex Paint Section (unchanged)
         group = ob.vertex_groups.active
         rows = 4 if group else 2
 
         row = layout.row()
         row.template_list("MESH_UL_vgroups", "", ob, "vertex_groups", ob.vertex_groups, "active_index", rows=rows)
 
-        col = row.column(align=True)
-        col.operator("object.vertex_group_add", icon='ADD', text="")
-        col.operator("object.vertex_group_remove", icon='REMOVE', text="").all = False
-        col.menu("MESH_MT_vertex_group_specials", icon='DOWNARROW_HLT', text="")
+        col = layout.column()
 
-        if group:
-            col.separator()
-            col.operator("object.vertex_group_move", icon='TRIA_UP', text="").direction = 'UP'
-            col.operator("object.vertex_group_move", icon='TRIA_DOWN', text="").direction = 'DOWN'
-
-        if ob.vertex_groups and (ob.mode == 'EDIT' or (ob.mode == 'WEIGHT_PAINT' and ob.type == 'MESH' and ob.data.use_paint_mask_vertex)):
-            row = layout.row()
-
-            sub = row.row(align=True)
-            sub.operator("object.vertex_group_assign", text="Assign")
-            sub.operator("object.vertex_group_remove_from", text="Remove")
-
-            sub = row.row(align=True)
-            sub.operator("object.vertex_group_select", text="Select")
-            sub.operator("object.vertex_group_deselect", text="Deselect")
-
-            layout.prop(context.tool_settings, "vertex_group_weight", text="Weight")
-
-        # Material Paint
+        # Paint Mode Selection
         if context.mode == 'PAINT_TEXTURE':
-            col = layout.column()
             col.label(text="Painting Mode")
             col.prop(settings, "mode", text="")
             col.separator()
 
             if settings.mode == 'MATERIAL':
+                # Material Mode Section
                 if len(ob.material_slots) > 1:
                     col.label(text="Materials")
-                    col.template_list("MATERIAL_UL_matslots", "layers", ob, "material_slots", ob, "active_material_index", rows=4)
+                    col.template_list("MATERIAL_UL_matslots", "layers", ob, "material_slots", ob,
+                                      "active_material_index", rows=4)
 
                 mat = ob.active_material
-                if mat:
+                if mat and mat.use_nodes:
                     col.label(text="Available Paint Slots")
-                    col.template_list("TEXTURE_UL_texpaintslots", "", mat, "texture_paint_images", mat, "paint_active_slot", rows=4)
 
+                    # Display texture paint slots
                     if mat.texture_paint_slots:
-                        slot = mat.texture_paint_slots[mat.paint_active_slot]
+                        for i, slot in enumerate(mat.texture_paint_slots):
+                            if slot:
+                                slot_name = slot.name if slot.name else f"Slot {i}"
+                                row = col.row()
+                                row.operator("view3d.set_active_texture_slot", text=slot_name).slot_index = i
+                            else:
+                                col.label(text=f"Slot {i} is empty", icon='ERROR')
                     else:
-                        slot = None
+                        col.label(text="No texture slots available", icon='ERROR')
 
-                    if not mat.use_nodes and context.scene.render.engine in {'BLENDER_EEVEE', 'CYCLES'}:
-                        row = col.row(align=True)
-                        row.operator_menu_enum("paint.add_texture_paint_slot", "type")
-                        row.operator("paint.delete_texture_paint_slot", text="", icon='X')
-
+                    if ob.data.uv_layers:
+                        # col.label(text="UV Map")
+                        slot = mat.texture_paint_slots[mat.paint_active_slot] if mat.texture_paint_slots else None
                         if slot:
-                            col.prop(mat.texture_slots[slot.index], "blend_type")
-                            col.separator()
-
-                    if slot:
-                        col.label(text="UV Map")
-                        col.prop_search(slot, "uv_layer", ob.data, "uv_textures", text="")
+                            col.prop_search(slot, "uv_layer", ob.data, "uv_layers", text="Select UV Map")
+                            col.label(text="Active UV Layer: " + ob.data.uv_layers.active.name)
+                        else:
+                            col.label(text="No active UV map found", icon='ERROR')
 
             elif settings.mode == 'IMAGE':
+                # Image Mode Section
                 mesh = ob.data
-                uv_text = mesh.uv_textures.active.name if mesh.uv_textures.active else ""
+                uv_text = mesh.uv_layers.active.name if mesh.uv_layers.active else ""
                 col.label(text="Canvas Image")
                 col.template_ID(settings, "canvas")
-                col.operator("image.new", text="New").gen_context = 'PAINT_CANVAS'
+
+                col.operator("image.new", text="New")
                 col.label(text="UV Map")
                 col.menu("VIEW3D_MT_tools_projectpaint_uvlayer", text=uv_text, translate=False)
 
             col.separator()
-            if bpy.context.scene.render.engine == 'CYCLES':
-                col.operator("paint.add_texture_paint_slot", text="Add Texture", icon="").type = "DIFFUSE_COLOR"
-                col.operator("object.save_ext_paint_texture", text="Save selected Slot")
-            else:
-                col.operator("image.save_all_modified", text="Save All Images")
+
+        # Ensure that the button block is drawn **once**, outside the mode checks
+        if bpy.context.scene.render.engine in {'CYCLES', 'BLENDER_EEVEE_NEXT'}:
+            col.label(text="Save/Reload")
+            col.operator("d2p.display_active_slot", text="Slot2Display")
+            row = col.row(align=True)
+            row.scale_x = 0.50
+            row.scale_y = 1.25
+            row = row.split(align=True)
+
+            row.operator("d2p.save_current", text="Save")
+            row.operator("d2p.reload_saved_state", text="Reload")
+
+            row = col.row(align=True)
+            row.scale_x = 0.50
+            row.scale_y = 1.25
+            row = row.split(align=True)
+
+            row.operator("d2p.save_increm", text="Save +1")
+            row.operator("d2p.reload_all", text="Reload ALL")
+
+            col.operator("d2p.save_dirty", text="Save/Pack ALL")
 
     def invoke(self, context, event):
         return context.window_manager.invoke_props_dialog(self, width=240)
