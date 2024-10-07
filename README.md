@@ -228,9 +228,9 @@ This will create a new image texture from the size of the active image in the Im
 
 **EZPaint Additions** 
 
-Press W for the Brush Pop-up that helps as a color wheel tool panel
-Alt-W for the Texture and Mask Popup, can create texture and mask from new image
-and Shift-W brings up a ProjectPaint popup for Vertex Groups and Texture Slots in Material Mode and Single Image for IMage Mode
+Press W for the Brush Pop-up that helps as a color wheel tool panel \
+Alt-W for the Texture and Mask Popup, can create texture and mask from new image \
+and Shift-W brings up a ProjectPaint popup for Vertex Groups and Texture Slots in Material Mode and Single Image for IMage Mode \
 
 D toggles Multiply and Add
 
