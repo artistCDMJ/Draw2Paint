@@ -128,7 +128,8 @@ classes = (
     D2P_OT_EditorSwap,
     UV_WireColor,
     VIEW3D_WireColor,
-    D2P_OT_set_active_texture_slot
+    D2P_OT_set_active_texture_slot,
+    D2P_OT_set_active_clone_slot
 )
 
 def register():
