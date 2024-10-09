@@ -2555,6 +2555,19 @@ class D2P_OT_BrushPopup(bpy.types.Operator):
             brush = settings.brush
             ipaint = toolsettings.image_paint
 
+            col = layout.column(align=True)
+            row = col.row(align=False)
+            row.scale_x = 1.5  # Increase the horizontal scale of the row
+            row.scale_y = 1.5  # Increase vertical scale (makes icons appear larger vertically too)
+
+            # Tool buttons with larger icons
+            row.operator("wm.tool_set_by_id", text="", icon='BRUSH_TEXDRAW').name = "builtin_brush.Draw"
+            row.operator("wm.tool_set_by_id", text="", icon='BRUSH_SOFTEN').name = "builtin_brush.Soften"
+            row.operator("wm.tool_set_by_id", text="", icon='BRUSH_SMEAR').name = "builtin_brush.Smear"
+            row.operator("wm.tool_set_by_id", text="", icon='BRUSH_CLONE').name = "builtin_brush.Clone"
+            row.operator("wm.tool_set_by_id", text="", icon='BRUSH_TEXFILL').name = "builtin_brush.Fill"
+            row.operator("wm.tool_set_by_id", text="", icon='BRUSH_TEXMASK').name = "builtin_brush.Mask"
+
             # imagepaint tool operate  buttons: UILayout.template_ID_preview()
             col = layout.split().column()
             ###################################### ICI PROBLEME d'icones de brosse !
