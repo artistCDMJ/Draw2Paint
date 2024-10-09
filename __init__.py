@@ -88,7 +88,7 @@ classes = (
     D2P_OT_ToggleAddMultiply,
     D2P_OT_MakeBrushImageTextureMask,
     D2P_OT_MakeBrushImageTexture,
-    D2P_OT_ProjectpaintPopup,
+    D2P_OT_SlotsVGroupsPopup,
     D2P_OT_TexturePopup,
     D2P_OT_BrushPopup,
     D2P_OT_Subject2Canvas,
