@@ -2539,7 +2539,6 @@ class D2P_OT_BrushPopup(bpy.types.Operator):
         col.prop(brush, "use_gradient")
         col.separator()
         col.template_ID(settings, "palette", new="palette.new")
-        # col.operator(D2P_OT_SetColorFamilies.bl_idname)
 
     def draw(self, context):
         # Init values
@@ -2555,77 +2554,6 @@ class D2P_OT_BrushPopup(bpy.types.Operator):
         else:
             brush = settings.brush
             ipaint = toolsettings.image_paint
-            # Stroke mode
-            col.prop(brush, "stroke_method", text="")
-
-            if brush.use_airbrush:
-                col.separator()
-                col.prop(brush, "rate", text="Rate", slider=True)
-
-            if brush.use_space:
-                col.separator()
-                row = col.row(align=True)
-                row.prop(brush, "spacing", text="Spacing")
-                row.prop(brush, "use_pressure_spacing", toggle=True, text="")
-
-            if brush.use_line or brush.use_curve:
-                col.separator()
-                row = col.row(align=True)
-                row.prop(brush, "spacing", text="Spacing")
-
-            if brush.use_curve:
-                col.separator()
-                col.template_ID(brush, "paint_curve", new="paintcurve.new")
-                col.operator("paintcurve.draw")
-
-            else:
-                col.separator()
-
-                row = col.row(align=True)
-                row.prop(brush, "use_pressure_jitter", icon_only=True)
-                if brush.use_pressure_jitter:
-                    row.prop(brush, "jitter", slider=True)
-                else:
-                    row.prop(brush, "jitter_absolute")
-                row.prop(brush, "use_pressure_jitter", toggle=True, text="")
-
-                col = layout.column()
-                col.separator()
-
-                if brush.brush_capabilities.has_smooth_stroke:
-                    col.prop(brush, "use_smooth_stroke")
-                    if brush.use_smooth_stroke:
-                        sub = col.column()
-                        sub.prop(brush, "smooth_stroke_radius", text="Radius", slider=True)
-                        sub.prop(brush, "smooth_stroke_factor", text="Factor", slider=True)
-
-            layout.prop(settings, "input_samples")
-
-            # Curve stroke
-            if brush.curve_preset == 'CUSTOM':
-                layout.template_curve_mapping(brush, "curve", brush=True)
-
-            col = layout.column(align=True)
-            row = col.row(align=True)
-            row.operator("brush.curve_preset", icon='SMOOTHCURVE', text="").shape = 'SMOOTH'
-            row.operator("brush.curve_preset", icon='SPHERECURVE', text="").shape = 'ROUND'
-            row.operator("brush.curve_preset", icon='ROOTCURVE', text="").shape = 'ROOT'
-            row.operator("brush.curve_preset", icon='SHARPCURVE', text="").shape = 'SHARP'
-            row.operator("brush.curve_preset", icon='LINCURVE', text="").shape = 'LINE'
-            row.operator("brush.curve_preset", icon='NOCURVE', text="").shape = 'MAX'
-
-            # Symetries mode
-            col = layout.column(align=True)
-            row = col.row(align=True)
-            obj = bpy.context.active_object
-
-            # row.prop(ipaint, "use_mesh_mirror_x", text="X", toggle=False)
-            # row.prop(ipaint, "use_mesh_mirror_y", text="Y", toggle=False)
-            # row.prop(ipaint, "use_mesh_mirror_z", text="Z", toggle=False)
-            # bpy.context.object.use_mesh_mirror_x = True
-            row.prop(obj, "use_mesh_mirror_x", text="X", toggle=True)
-            row.prop(obj, "use_mesh_mirror_y", text="Y", toggle=True)
-            row.prop(obj, "use_mesh_mirror_z", text="Z", toggle=True)
 
             # imagepaint tool operate  buttons: UILayout.template_ID_preview()
             col = layout.split().column()
@@ -2692,23 +2620,103 @@ class D2P_OT_BrushPopup(bpy.types.Operator):
                 col.separator()
                 col.template_ID(settings, "palette", new="palette.new")
 
+            # Stroke mode
+            col.prop(brush, "stroke_method", text="")
+
+            if brush.use_airbrush:
+                col.separator()
+                col.prop(brush, "rate", text="Rate", slider=True)
+
+            if brush.use_space:
+                col.separator()
+                row = col.row(align=True)
+                row.prop(brush, "spacing", text="Spacing")
+                row.prop(brush, "use_pressure_spacing", toggle=True, text="")
+
+            if brush.use_line or brush.use_curve:
+                col.separator()
+                row = col.row(align=True)
+                row.prop(brush, "spacing", text="Spacing")
+
+            if brush.use_curve:
+                col.separator()
+                col.template_ID(brush, "paint_curve", new="paintcurve.new")
+                col.operator("paintcurve.draw")
+
+            else:
+                col.separator()
+
+                row = col.row(align=True)
+                # row.prop(brush, "use_pressure_jitter", icon_only=True)
+                if brush.use_pressure_jitter:
+                    row.prop(brush, "jitter", slider=True)
+                else:
+                    row.prop(brush, "jitter_absolute")
+                row.prop(brush, "use_pressure_jitter", toggle=True, text="")
+
+                col = layout.column()
+                col.separator()
+
+                if brush.brush_capabilities.has_smooth_stroke:
+                    col.prop(brush, "use_smooth_stroke")
+                    if brush.use_smooth_stroke:
+                        sub = col.column()
+                        sub.prop(brush, "smooth_stroke_radius", text="Radius", slider=True)
+                        sub.prop(brush, "smooth_stroke_factor", text="Factor", slider=True)
+
+            layout.prop(settings, "input_samples")
+
+            # Curve stroke
+            if brush.curve_preset == 'CUSTOM':
+                layout.template_curve_mapping(brush, "curve", brush=True)
+
+            col = layout.column(align=True)
+            row = col.row(align=True)
+            row.operator("brush.curve_preset", icon='SMOOTHCURVE', text="").shape = 'SMOOTH'
+            row.operator("brush.curve_preset", icon='SPHERECURVE', text="").shape = 'ROUND'
+            row.operator("brush.curve_preset", icon='ROOTCURVE', text="").shape = 'ROOT'
+            row.operator("brush.curve_preset", icon='SHARPCURVE', text="").shape = 'SHARP'
+            row.operator("brush.curve_preset", icon='LINCURVE', text="").shape = 'LINE'
+            row.operator("brush.curve_preset", icon='NOCURVE', text="").shape = 'MAX'
+
+            # Symetries mode
+            col = layout.column(align=True)
+            row = col.row(align=True)
+            obj = bpy.context.active_object
+
+            row.prop(obj, "use_mesh_mirror_x", text="X", toggle=True)
+            row.prop(obj, "use_mesh_mirror_y", text="Y", toggle=True)
+            row.prop(obj, "use_mesh_mirror_z", text="Z", toggle=True)
+
     def invoke(self, context, event):
         if context.space_data.type == 'IMAGE_EDITOR':
             context.space_data.mode = 'PAINT'
 
         return context.window_manager.invoke_props_dialog(self, width=180)
-        # return context.window_manager.invoke_props_dialog(self, width=148)
-        # return {'PASS_THROUGH'} ou {'CANCELLED'} si le bouton ok est cliqué
 
     def execute(self, context):
         return {'FINISHED'}
 
 
-class D2P_OT_ProjectpaintPopup(bpy.types.Operator):
+##################### main popup operator
+class D2P_OT_SlotsVGroupsPopup(bpy.types.Operator):
     """Slots ProjectPaint popup"""
     bl_idname = "view3d.projectpaint"
     bl_label = "Slots & VGroups"
     bl_options = {'REGISTER', 'UNDO'}
+    ##################################################################
+    # Properties to toggle visibility of subsections
+    use_basic_settings: bpy.props.BoolProperty(
+        name="Show Basic Settings",
+        default=True  # Starts as expanded
+    )
+
+    use_advanced_settings: bpy.props.BoolProperty(
+        name="Show Advanced Settings",
+        default=False  # Starts as collapsed
+    )
+
+    ####################################################################
 
     def check(self, context):
         return True
@@ -2729,48 +2737,55 @@ class D2P_OT_ProjectpaintPopup(bpy.types.Operator):
         settings = context.tool_settings.image_paint
         ob = context.active_object
         layout = self.layout
-        ######## borrowed
+        col = layout.column()
+        box = col.box()
+        row = box.row()
+        row.prop(self, "use_advanced_settings",
+                 text="Face Mask Groups",
+                 icon='TRIA_RIGHT' if self.use_basic_settings else 'TRIA_DOWN',
+                 emboss=False)
 
-        row = layout.row()
-        row.label(text="Face Mask Groups")
-        box = layout.box()  # HORIZONTAL ALIGN
-        col = box.column(align=True)
-        row = col.row(align=True)
-        row1 = row.split(align=True)
-        row1.label(text="Generate FMG from Islands")
-        row1.operator("d2p.getfacemaskgroups", text="FMG+", icon='SHADERFX')
+        # row = layout.row()
+        # row.label(text="Face Mask Groups")
+        if self.use_advanced_settings:
+            box = layout.box()  # HORIZONTAL ALIGN
+            col = box.column(align=True)
+            row = col.row(align=True)
+            row1 = row.split(align=True)
+            row1.label(text="Generate FMG from Islands")
+            row1.operator("d2p.getfacemaskgroups", text="FMG+", icon='SHADERFX')
 
-        # Vertex Paint Section (unchanged)
-        group = ob.vertex_groups.active
-        rows = 4 if group else 2
+            # Vertex Paint Section (unchanged)
+            group = ob.vertex_groups.active
+            rows = 4 if group else 2
 
-        row = layout.row()
-        row.template_list("MESH_UL_vgroups", "", ob, "vertex_groups", ob.vertex_groups, "active_index", rows=rows)
-        ############borrowed
-        col = row.column(align=True)
-        col.operator("object.vertex_group_add", icon='ADD', text="")
-        col.operator("object.vertex_group_remove", icon='REMOVE',
-                     text="").all = False
-        col.menu("MESH_MT_vertex_group_context_menu",
-                 icon='DOWNARROW_HLT', text="")
-        if group:
-            col.separator()
-            col.operator("object.vertex_group_move",
-                         icon='TRIA_UP', text="").direction = 'UP'
-            col.operator("object.vertex_group_move",
-                         icon='TRIA_DOWN', text="").direction = 'DOWN'
+            row = layout.row()
+            row.template_list("MESH_UL_vgroups", "", ob, "vertex_groups", ob.vertex_groups, "active_index", rows=rows)
+            ############borrowed
+            col = row.column(align=True)
+            col.operator("object.vertex_group_add", icon='ADD', text="")
+            col.operator("object.vertex_group_remove", icon='REMOVE',
+                         text="").all = False
+            col.menu("MESH_MT_vertex_group_context_menu",
+                     icon='DOWNARROW_HLT', text="")
+            if group:
+                col.separator()
+                col.operator("object.vertex_group_move",
+                             icon='TRIA_UP', text="").direction = 'UP'
+                col.operator("object.vertex_group_move",
+                             icon='TRIA_DOWN', text="").direction = 'DOWN'
 
-        box = layout.box()
-        col = box.column(align=True)
-        row = col.row(align=True)
-        row1 = row.split(align=True)
-        row1.operator("d2p.select_vgroup", text="Sel", icon='RADIOBUT_ON')
+            box = layout.box()
+            col = box.column(align=True)
+            row = col.row(align=True)
+            row1 = row.split(align=True)
+            row1.operator("d2p.select_vgroup", text="Sel", icon='RADIOBUT_ON')
 
-        row1.operator("d2p.deselect_vgroup", text="Desel", icon='RADIOBUT_OFF')
+            row1.operator("d2p.deselect_vgroup", text="Desel", icon='RADIOBUT_OFF')
 
-        row1.operator("d2p.assign_vgroup", text="Set", icon='ADD')
+            row1.operator("d2p.assign_vgroup", text="Set", icon='ADD')
 
-        row1.operator("d2p.unassign_vgroup", text="Unset", icon='REMOVE')
+            row1.operator("d2p.unassign_vgroup", text="Unset", icon='REMOVE')
 
         col = layout.column()
 
