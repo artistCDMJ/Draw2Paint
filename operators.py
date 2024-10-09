@@ -1,6 +1,6 @@
 import os
 import bpy
-
+import colorsys
 
 import bmesh
 
@@ -1771,24 +1771,23 @@ class D2P_OT_Slot2Display(bpy.types.Operator): #Fixed for Material and Image mod
 #EZPaint Adopted Testing   needs work
 ########################################
 
-class  D2P_OT_BrushPopup(bpy.types.Operator):
+class D2P_OT_BrushPopup(bpy.types.Operator):
     """Brush popup"""
     bl_idname = "view3d.brush_popup"
-    bl_label = "Brush settings"
-    COMPAT_ENGINES = {'EEVEE', 'CYCLES'}
+    bl_label = "Brush Settings"
+    COMPAT_ENGINES = {'BLENDER_EEVEE_NEXT', 'CYCLES'}
     bl_options = {'REGISTER', 'UNDO'}
 
     @classmethod
     def poll(self, context):
         if context.active_object:
             A = context.active_object.type == 'MESH'
-            B = context.mode in {'PAINT_TEXTURE','PAINT_VERTEX','PAINT_WEIGHT'}
+            B = context.mode in {'PAINT_TEXTURE', 'PAINT_VERTEX', 'PAINT_WEIGHT'}
             return A and B
 
     @staticmethod
     def check(self, context):
         return True
-
 
     @staticmethod
     def paint_settings(context):
@@ -1849,38 +1848,44 @@ class  D2P_OT_BrushPopup(bpy.types.Operator):
         ptr = ups if ups.use_unified_color else brush
         parent.template_color_picker(ptr, prop_name, value_slider=value_slider)
 
-
-
-
     def brush_texpaint_common(self, layout, context, brush, settings, projpaint=False):
         capabilities = brush.image_paint_capabilities
-
         col = layout.column()
+        row = col.row(align=True)
+        row.use_property_split = False
+        row.prop(brush, "color_type", expand=True)
 
         if brush.image_tool in {'DRAW', 'FILL'}:
             if brush.blend not in {'ERASE_ALPHA', 'ADD_ALPHA'}:
-                if not brush.color_type == 'GRADIENT':
+                # If the color type is not 'GRADIENT', show the color picker
+                if brush.color_type != 'GRADIENT':
                     self.prop_unified_color_picker(col, context, brush, "color", value_slider=True)
 
+                # Show palette if available
                 if settings.palette:
                     col.template_palette(settings, "palette", color=True)
-
-                if brush.color_type =='GRADIENT':
-                    col.label("Gradient Colors")
+                    col.operator(D2P_OT_SetColorFamilies.bl_idname)
+                # If the brush uses gradients
+                if brush.color_type == 'GRADIENT':
+                    col.label(text="Gradient Colors")
+                    # Show the gradient color ramp
                     col.template_color_ramp(brush, "gradient", expand=True)
+                    col.operator("brush.generate_gradient_from_palette", text="Gradient from Palette")
 
                     if brush.image_tool != 'FILL':
-                        col.label("Background Color")
+                        col.label(text="Background Color")
                         row = col.row(align=True)
                         self.prop_unified_color(row, context, brush, "secondary_color", text="")
 
                     if brush.image_tool == 'DRAW':
+                        # Gradient stroke mode options
                         col.prop(brush, "gradient_stroke_mode", text="Mode")
                         if brush.gradient_stroke_mode in {'SPACING_REPEAT', 'SPACING_CLAMP'}:
                             col.prop(brush, "grad_spacing")
                     elif brush.image_tool == 'FILL':
                         col.prop(brush, "gradient_fill_mode")
                 else:
+                    # For non-gradient brushes, show the primary and secondary color options
                     row = col.row(align=True)
                     self.prop_unified_color(row, context, brush, "color", text="")
                     if brush.image_tool == 'FILL' and not projpaint:
@@ -1890,6 +1895,7 @@ class  D2P_OT_BrushPopup(bpy.types.Operator):
                         row.separator()
                         row.operator("paint.brush_colors_flip", icon='FILE_REFRESH', text="")
 
+        # Additional tool-specific settings
         elif brush.image_tool == 'SOFTEN':
             col = layout.column(align=True)
             col.row().prop(brush, "direction", expand=True)
@@ -1905,6 +1911,8 @@ class  D2P_OT_BrushPopup(bpy.types.Operator):
 
         elif brush.image_tool == 'CLONE':
             col.separator()
+
+            # Handle project paint settings
             if projpaint:
                 if settings.mode == 'MATERIAL':
                     col.prop(settings, "use_clone_layer", text="Clone from paint slot")
@@ -1915,28 +1923,41 @@ class  D2P_OT_BrushPopup(bpy.types.Operator):
                     ob = context.active_object
                     col = layout.column()
 
+                    # Handle MATERIAL mode
                     if settings.mode == 'MATERIAL':
                         if len(ob.material_slots) > 1:
-                            col.label("Materials")
-                            col.template_list("MATERIAL_UL_matslots", "",
-                                              ob, "material_slots",
-                                              ob, "active_material_index", rows=2)
+                            col.label(text="Materials")
+                            col.template_list("MATERIAL_UL_matslots", "", ob, "material_slots", ob,
+                                              "active_material_index", rows=2)
 
                         mat = ob.active_material
                         if mat:
-                            col.label("Source Clone Slot")
-                            col.template_list("TEXTURE_UL_texpaintslots", "",
-                                              mat, "texture_paint_images",
-                                              mat, "paint_clone_slot", rows=2)
+                            # Display active clone slot
+                            col.label(text=f"Active Clone Slot: {mat.paint_clone_slot}")
 
+                            # Display texture paint slots
+                            if mat.texture_paint_slots:
+                                for i, slot in enumerate(mat.texture_paint_slots):
+                                    if slot:
+                                        slot_name = slot.name if slot.name else f"Slot {i}"
+                                        row = col.row()
+                                        row.operator("view3d.set_active_clone_slot", text=slot_name).slot_index = i
+                                    else:
+                                        col.label(text=f"Slot {i} is empty", icon='ERROR')
+                            else:
+                                col.label(text="No texture slots available", icon='ERROR')
+
+
+                    # Handle IMAGE mode
                     elif settings.mode == 'IMAGE':
                         mesh = ob.data
-
                         clone_text = mesh.uv_texture_clone.name if mesh.uv_texture_clone else ""
-                        col.label("Source Clone Image")
+                        col.label(text="Source Clone Image")
                         col.template_ID(settings, "clone_image")
-                        col.label("Source Clone UV Map")
+                        col.label(text="Source Clone UV Map")
                         col.menu("VIEW3D_MT_tools_projectpaint_clone", text=clone_text, translate=False)
+
+            # Standard clone settings if not using project paint
             else:
                 col.prop(brush, "clone_image", text="Image")
                 col.prop(brush, "clone_alpha", text="Alpha")
@@ -1946,13 +1967,9 @@ class  D2P_OT_BrushPopup(bpy.types.Operator):
         if capabilities.has_radius:
             row = col.row(align=True)
             self.prop_unified_size(row, context, brush, "size", slider=True, text="Radius")
-            self.prop_unified_size(row, context, brush, "use_pressure_size")
+            row.prop(brush, "use_pressure_size", text="")
 
         row = col.row(align=True)
-
-        #if capabilities.has_space_attenuation:
-            #row.prop(brush, "use_space_attenuation", toggle=True, icon_only=True)
-
         self.prop_unified_strength(row, context, brush, "strength", text="Strength")
         self.prop_unified_strength(row, context, brush, "use_pressure_strength")
 
@@ -1961,21 +1978,16 @@ class  D2P_OT_BrushPopup(bpy.types.Operator):
             col.prop(brush, "blend", text="Blend")
 
         col = layout.column()
-
-        # use_accumulate
         if capabilities.has_accumulate:
-            col = layout.column(align=True)
             col.prop(brush, "use_accumulate")
 
         if projpaint:
             col.prop(brush, "use_alpha")
 
         col.prop(brush, "use_gradient")
-
         col.separator()
         col.template_ID(settings, "palette", new="palette.new")
-
-
+        # col.operator(D2P_OT_SetColorFamilies.bl_idname)
 
     def draw(self, context):
         # Init values
@@ -1993,10 +2005,6 @@ class  D2P_OT_BrushPopup(bpy.types.Operator):
             ipaint = toolsettings.image_paint
             # Stroke mode
             col.prop(brush, "stroke_method", text="")
-
-            if brush.use_anchor:
-                col.separator()
-                col.prop(brush, "use_edge_to_edge", "Edge To Edge")
 
             if brush.use_airbrush:
                 col.separator()
@@ -2042,6 +2050,9 @@ class  D2P_OT_BrushPopup(bpy.types.Operator):
             layout.prop(settings, "input_samples")
 
             # Curve stroke
+            if brush.curve_preset == 'CUSTOM':
+                layout.template_curve_mapping(brush, "curve", brush=True)
+
             col = layout.column(align=True)
             row = col.row(align=True)
             row.operator("brush.curve_preset", icon='SMOOTHCURVE', text="").shape = 'SMOOTH'
@@ -2054,22 +2065,28 @@ class  D2P_OT_BrushPopup(bpy.types.Operator):
             # Symetries mode
             col = layout.column(align=True)
             row = col.row(align=True)
-            row.prop(ipaint, "use_symmetry_x", text="X", toggle=True)
-            row.prop(ipaint, "use_symmetry_y", text="Y", toggle=True)
-            row.prop(ipaint, "use_symmetry_z", text="Z", toggle=True)
+            obj = bpy.context.active_object
+
+            # row.prop(ipaint, "use_mesh_mirror_x", text="X", toggle=False)
+            # row.prop(ipaint, "use_mesh_mirror_y", text="Y", toggle=False)
+            # row.prop(ipaint, "use_mesh_mirror_z", text="Z", toggle=False)
+            # bpy.context.object.use_mesh_mirror_x = True
+            row.prop(obj, "use_mesh_mirror_x", text="X", toggle=True)
+            row.prop(obj, "use_mesh_mirror_y", text="Y", toggle=True)
+            row.prop(obj, "use_mesh_mirror_z", text="Z", toggle=True)
 
             # imagepaint tool operate  buttons: UILayout.template_ID_preview()
             col = layout.split().column()
             ###################################### ICI PROBLEME d'icones de brosse !
             # bpy.context.tool_settings.image_paint.brush
 
-            col.template_ID_preview(settings, "brush", new="brush.add", rows=1, cols=3   )
+            col.template_ID_preview(settings, "brush", new="brush.add", rows=1, cols=3)
 
             ########################################################################
 
             # Texture Paint Mode #
             if context.image_paint_object and brush:
-                self.brush_texpaint_common( layout, context, brush, settings, True)
+                self.brush_texpaint_common(layout, context, brush, settings, True)
 
             ########################################################################
             # Weight Paint Mode #
@@ -2117,19 +2134,18 @@ class  D2P_OT_BrushPopup(bpy.types.Operator):
                 self.prop_unified_strength(row, context, brush, "use_pressure_strength")
 
                 col.separator()
-                col.prop(brush, "vertex_tool", text="Blend")
+                # col.prop(brush, "vertex_tool", text="Blend")
+                col.prop(brush, "blend", text="Blend")
 
                 col.separator()
                 col.template_ID(settings, "palette", new="palette.new")
-
-
-
 
     def invoke(self, context, event):
         if context.space_data.type == 'IMAGE_EDITOR':
             context.space_data.mode = 'PAINT'
 
-        return context.window_manager.invoke_props_dialog(self, width=148)
+        return context.window_manager.invoke_props_dialog(self, width=180)
+        # return context.window_manager.invoke_props_dialog(self, width=148)
         # return {'PASS_THROUGH'} ou {'CANCELLED'} si le bouton ok est cliqué
 
     def execute(self, context):
@@ -2286,6 +2302,408 @@ class D2P_OT_set_active_texture_slot(bpy.types.Operator):
 
         return {'FINISHED'}
 
+
+class D2P_OT_set_active_clone_slot(bpy.types.Operator):  # hack to get image layers for use as clone source
+    """Set the active texture slot"""
+    bl_idname = "view3d.set_active_clone_slot"
+    bl_label = "Set Active Clone Slot"
+
+    slot_index: bpy.props.IntProperty()
+
+    def execute(self, context):
+        obj = context.object
+        mat = obj.active_material
+
+        if mat and mat.texture_paint_slots:
+            mat.paint_clone_slot = self.slot_index
+            self.report({'INFO'}, f"Active texture slot set to: {self.slot_index}")
+        else:
+            self.report({'ERROR'}, "No texture slots found")
+
+        return {'FINISHED'}
+
+
+class D2P_OT_BrushPopup(bpy.types.Operator):
+    """Brush popup"""
+    bl_idname = "view3d.brush_popup"
+    bl_label = "Brush Settings"
+    COMPAT_ENGINES = {'BLENDER_EEVEE_NEXT', 'CYCLES'}
+    bl_options = {'REGISTER', 'UNDO'}
+
+    @classmethod
+    def poll(self, context):
+        if context.active_object:
+            A = context.active_object.type == 'MESH'
+            B = context.mode in {'PAINT_TEXTURE', 'PAINT_VERTEX', 'PAINT_WEIGHT'}
+            return A and B
+
+    @staticmethod
+    def check(self, context):
+        return True
+
+    @staticmethod
+    def paint_settings(context):
+        toolsettings = context.tool_settings
+
+        if context.vertex_paint_object:
+            return toolsettings.vertex_paint
+        elif context.weight_paint_object:
+            return toolsettings.weight_paint
+        elif context.image_paint_object:
+            if (toolsettings.image_paint and toolsettings.image_paint.detect_data()):
+                return toolsettings.image_paint
+
+            return None
+        return None
+
+    @staticmethod
+    def unified_paint_settings(parent, context):
+        ups = context.tool_settings.unified_paint_settings
+        parent.label(text="Unified Settings:")
+        row = parent.row()
+        row.prop(ups, "use_unified_size", text="Size")
+        row.prop(ups, "use_unified_strength", text="Strength")
+        if context.weight_paint_object:
+            parent.prop(ups, "use_unified_weight", text="Weight")
+        elif context.vertex_paint_object or context.image_paint_object:
+            parent.prop(ups, "use_unified_color", text="Color")
+        else:
+            parent.prop(ups, "use_unified_color", text="Color")
+
+    @staticmethod
+    def prop_unified_size(parent, context, brush, prop_name, icon='NONE', text="", slider=False):
+        ups = context.tool_settings.unified_paint_settings
+        ptr = ups if ups.use_unified_size else brush
+        parent.prop(ptr, prop_name, icon=icon, text=text, slider=slider)
+
+    @staticmethod
+    def prop_unified_strength(parent, context, brush, prop_name, icon='NONE', text="", slider=False):
+        ups = context.tool_settings.unified_paint_settings
+        ptr = ups if ups.use_unified_strength else brush
+        parent.prop(ptr, prop_name, icon=icon, text=text, slider=slider)
+
+    @staticmethod
+    def prop_unified_weight(parent, context, brush, prop_name, icon='NONE', text="", slider=False):
+        ups = context.tool_settings.unified_paint_settings
+        ptr = ups if ups.use_unified_weight else brush
+        parent.prop(ptr, prop_name, icon=icon, text=text, slider=slider)
+
+    @staticmethod
+    def prop_unified_color(parent, context, brush, prop_name, text=""):
+        ups = context.tool_settings.unified_paint_settings
+        ptr = ups if ups.use_unified_color else brush
+        parent.prop(ptr, prop_name, text=text)
+
+    @staticmethod
+    def prop_unified_color_picker(parent, context, brush, prop_name, value_slider=True):
+        ups = context.tool_settings.unified_paint_settings
+        ptr = ups if ups.use_unified_color else brush
+        parent.template_color_picker(ptr, prop_name, value_slider=value_slider)
+
+    def brush_texpaint_common(self, layout, context, brush, settings, projpaint=False):
+        capabilities = brush.image_paint_capabilities
+        col = layout.column()
+        row = col.row(align=True)
+        row.use_property_split = False
+        row.prop(brush, "color_type", expand=True)
+
+        if brush.image_tool in {'DRAW', 'FILL'}:
+            if brush.blend not in {'ERASE_ALPHA', 'ADD_ALPHA'}:
+                # If the color type is not 'GRADIENT', show the color picker
+                if brush.color_type != 'GRADIENT':
+                    self.prop_unified_color_picker(col, context, brush, "color", value_slider=True)
+
+                # Show palette if available
+                if settings.palette:
+                    col.template_palette(settings, "palette", color=True)
+                    col.operator(D2P_OT_SetColorFamilies.bl_idname)
+                # If the brush uses gradients
+                if brush.color_type == 'GRADIENT':
+                    col.label(text="Gradient Colors")
+                    # Show the gradient color ramp
+                    col.template_color_ramp(brush, "gradient", expand=True)
+                    col.operator("brush.generate_gradient_from_palette", text="Gradient from Palette")
+
+                    if brush.image_tool != 'FILL':
+                        col.label(text="Background Color")
+                        row = col.row(align=True)
+                        self.prop_unified_color(row, context, brush, "secondary_color", text="")
+
+                    if brush.image_tool == 'DRAW':
+                        # Gradient stroke mode options
+                        col.prop(brush, "gradient_stroke_mode", text="Mode")
+                        if brush.gradient_stroke_mode in {'SPACING_REPEAT', 'SPACING_CLAMP'}:
+                            col.prop(brush, "grad_spacing")
+                    elif brush.image_tool == 'FILL':
+                        col.prop(brush, "gradient_fill_mode")
+                else:
+                    # For non-gradient brushes, show the primary and secondary color options
+                    row = col.row(align=True)
+                    self.prop_unified_color(row, context, brush, "color", text="")
+                    if brush.image_tool == 'FILL' and not projpaint:
+                        col.prop(brush, "fill_threshold")
+                    else:
+                        self.prop_unified_color(row, context, brush, "secondary_color", text="")
+                        row.separator()
+                        row.operator("paint.brush_colors_flip", icon='FILE_REFRESH', text="")
+
+        # Additional tool-specific settings
+        elif brush.image_tool == 'SOFTEN':
+            col = layout.column(align=True)
+            col.row().prop(brush, "direction", expand=True)
+            col.separator()
+            col.prop(brush, "sharp_threshold")
+            if not projpaint:
+                col.prop(brush, "blur_kernel_radius")
+            col.separator()
+            col.prop(brush, "blur_mode")
+
+        elif brush.image_tool == 'MASK':
+            col.prop(brush, "weight", text="Mask Value", slider=True)
+
+        elif brush.image_tool == 'CLONE':
+            col.separator()
+
+            # Handle project paint settings
+            if projpaint:
+                if settings.mode == 'MATERIAL':
+                    col.prop(settings, "use_clone_layer", text="Clone from paint slot")
+                elif settings.mode == 'IMAGE':
+                    col.prop(settings, "use_clone_layer", text="Clone from image/UV map")
+
+                if settings.use_clone_layer:
+                    ob = context.active_object
+                    col = layout.column()
+
+                    # Handle MATERIAL mode
+                    if settings.mode == 'MATERIAL':
+                        if len(ob.material_slots) > 1:
+                            col.label(text="Materials")
+                            col.template_list("MATERIAL_UL_matslots", "", ob, "material_slots", ob,
+                                              "active_material_index", rows=2)
+
+                        mat = ob.active_material
+                        if mat:
+                            # Display active clone slot
+                            col.label(text=f"Active Clone Slot: {mat.paint_clone_slot}")
+
+                            # Display texture paint slots
+                            if mat.texture_paint_slots:
+                                for i, slot in enumerate(mat.texture_paint_slots):
+                                    if slot:
+                                        slot_name = slot.name if slot.name else f"Slot {i}"
+                                        row = col.row()
+                                        row.operator("view3d.set_active_clone_slot", text=slot_name).slot_index = i
+                                    else:
+                                        col.label(text=f"Slot {i} is empty", icon='ERROR')
+                            else:
+                                col.label(text="No texture slots available", icon='ERROR')
+
+
+                    # Handle IMAGE mode
+                    elif settings.mode == 'IMAGE':
+                        mesh = ob.data
+                        clone_text = mesh.uv_texture_clone.name if mesh.uv_texture_clone else ""
+                        col.label(text="Source Clone Image")
+                        col.template_ID(settings, "clone_image")
+                        col.label(text="Source Clone UV Map")
+                        col.menu("VIEW3D_MT_tools_projectpaint_clone", text=clone_text, translate=False)
+
+            # Standard clone settings if not using project paint
+            else:
+                col.prop(brush, "clone_image", text="Image")
+                col.prop(brush, "clone_alpha", text="Alpha")
+
+        col.separator()
+
+        if capabilities.has_radius:
+            row = col.row(align=True)
+            self.prop_unified_size(row, context, brush, "size", slider=True, text="Radius")
+            row.prop(brush, "use_pressure_size", text="")
+
+        row = col.row(align=True)
+        self.prop_unified_strength(row, context, brush, "strength", text="Strength")
+        self.prop_unified_strength(row, context, brush, "use_pressure_strength")
+
+        if brush.image_tool in {'DRAW', 'FILL'}:
+            col.separator()
+            col.prop(brush, "blend", text="Blend")
+
+        col = layout.column()
+        if capabilities.has_accumulate:
+            col.prop(brush, "use_accumulate")
+
+        if projpaint:
+            col.prop(brush, "use_alpha")
+
+        col.prop(brush, "use_gradient")
+        col.separator()
+        col.template_ID(settings, "palette", new="palette.new")
+        # col.operator(D2P_OT_SetColorFamilies.bl_idname)
+
+    def draw(self, context):
+        # Init values
+        toolsettings = context.tool_settings
+        settings = self.paint_settings(context)
+
+        layout = self.layout
+        col = layout.column()
+
+        if not settings:
+            row = col.row(align=True)
+            row.label(text="Setup texture paint, please!")
+        else:
+            brush = settings.brush
+            ipaint = toolsettings.image_paint
+            # Stroke mode
+            col.prop(brush, "stroke_method", text="")
+
+            if brush.use_airbrush:
+                col.separator()
+                col.prop(brush, "rate", text="Rate", slider=True)
+
+            if brush.use_space:
+                col.separator()
+                row = col.row(align=True)
+                row.prop(brush, "spacing", text="Spacing")
+                row.prop(brush, "use_pressure_spacing", toggle=True, text="")
+
+            if brush.use_line or brush.use_curve:
+                col.separator()
+                row = col.row(align=True)
+                row.prop(brush, "spacing", text="Spacing")
+
+            if brush.use_curve:
+                col.separator()
+                col.template_ID(brush, "paint_curve", new="paintcurve.new")
+                col.operator("paintcurve.draw")
+
+            else:
+                col.separator()
+
+                row = col.row(align=True)
+                row.prop(brush, "use_pressure_jitter", icon_only=True)
+                if brush.use_pressure_jitter:
+                    row.prop(brush, "jitter", slider=True)
+                else:
+                    row.prop(brush, "jitter_absolute")
+                row.prop(brush, "use_pressure_jitter", toggle=True, text="")
+
+                col = layout.column()
+                col.separator()
+
+                if brush.brush_capabilities.has_smooth_stroke:
+                    col.prop(brush, "use_smooth_stroke")
+                    if brush.use_smooth_stroke:
+                        sub = col.column()
+                        sub.prop(brush, "smooth_stroke_radius", text="Radius", slider=True)
+                        sub.prop(brush, "smooth_stroke_factor", text="Factor", slider=True)
+
+            layout.prop(settings, "input_samples")
+
+            # Curve stroke
+            if brush.curve_preset == 'CUSTOM':
+                layout.template_curve_mapping(brush, "curve", brush=True)
+
+            col = layout.column(align=True)
+            row = col.row(align=True)
+            row.operator("brush.curve_preset", icon='SMOOTHCURVE', text="").shape = 'SMOOTH'
+            row.operator("brush.curve_preset", icon='SPHERECURVE', text="").shape = 'ROUND'
+            row.operator("brush.curve_preset", icon='ROOTCURVE', text="").shape = 'ROOT'
+            row.operator("brush.curve_preset", icon='SHARPCURVE', text="").shape = 'SHARP'
+            row.operator("brush.curve_preset", icon='LINCURVE', text="").shape = 'LINE'
+            row.operator("brush.curve_preset", icon='NOCURVE', text="").shape = 'MAX'
+
+            # Symetries mode
+            col = layout.column(align=True)
+            row = col.row(align=True)
+            obj = bpy.context.active_object
+
+            # row.prop(ipaint, "use_mesh_mirror_x", text="X", toggle=False)
+            # row.prop(ipaint, "use_mesh_mirror_y", text="Y", toggle=False)
+            # row.prop(ipaint, "use_mesh_mirror_z", text="Z", toggle=False)
+            # bpy.context.object.use_mesh_mirror_x = True
+            row.prop(obj, "use_mesh_mirror_x", text="X", toggle=True)
+            row.prop(obj, "use_mesh_mirror_y", text="Y", toggle=True)
+            row.prop(obj, "use_mesh_mirror_z", text="Z", toggle=True)
+
+            # imagepaint tool operate  buttons: UILayout.template_ID_preview()
+            col = layout.split().column()
+            ###################################### ICI PROBLEME d'icones de brosse !
+            # bpy.context.tool_settings.image_paint.brush
+
+            col.template_ID_preview(settings, "brush", new="brush.add", rows=1, cols=3)
+
+            ########################################################################
+
+            # Texture Paint Mode #
+            if context.image_paint_object and brush:
+                self.brush_texpaint_common(layout, context, brush, settings, True)
+
+            ########################################################################
+            # Weight Paint Mode #
+            elif context.weight_paint_object and brush:
+
+                col = layout.column()
+
+                row = col.row(align=True)
+                self.prop_unified_weight(row, context, brush, "weight", slider=True, text="Weight")
+
+                row = col.row(align=True)
+                self.prop_unified_size(row, context, brush, "size", slider=True, text="Radius")
+                self.prop_unified_size(row, context, brush, "use_pressure_size")
+
+                row = col.row(align=True)
+                self.prop_unified_strength(row, context, brush, "strength", text="Strength")
+                self.prop_unified_strength(row, context, brush, "use_pressure_strength")
+                ####### need work here, Blend mode doesn't draw in popup
+                col.prop(brush, "vertex_tool", text="Blend")
+
+                if brush.vertex_tool == 'BLUR':
+                    col.prop(brush, "use_accumulate")
+                    col.separator()
+
+                col = layout.column()
+                col.prop(toolsettings, "use_auto_normalize", text="Auto Normalize")
+                col.prop(toolsettings, "use_multipaint", text="Multi-Paint")
+
+            ########################################################################
+            # Vertex Paint Mode #
+            elif context.vertex_paint_object and brush:
+                col = layout.column()
+                self.prop_unified_color_picker(col, context, brush, "color", value_slider=True)
+                if settings.palette:
+                    col.template_palette(settings, "palette", color=True)
+                self.prop_unified_color(col, context, brush, "color", text="")
+
+                col.separator()
+                row = col.row(align=True)
+                self.prop_unified_size(row, context, brush, "size", slider=True, text="Radius")
+                self.prop_unified_size(row, context, brush, "use_pressure_size")
+
+                row = col.row(align=True)
+                self.prop_unified_strength(row, context, brush, "strength", text="Strength")
+                self.prop_unified_strength(row, context, brush, "use_pressure_strength")
+
+                col.separator()
+                # col.prop(brush, "vertex_tool", text="Blend")
+                col.prop(brush, "blend", text="Blend")
+
+                col.separator()
+                col.template_ID(settings, "palette", new="palette.new")
+
+    def invoke(self, context, event):
+        if context.space_data.type == 'IMAGE_EDITOR':
+            context.space_data.mode = 'PAINT'
+
+        return context.window_manager.invoke_props_dialog(self, width=180)
+        # return context.window_manager.invoke_props_dialog(self, width=148)
+        # return {'PASS_THROUGH'} ou {'CANCELLED'} si le bouton ok est cliqué
+
+    def execute(self, context):
+        return {'FINISHED'}
+
+
 class D2P_OT_ProjectpaintPopup(bpy.types.Operator):
     """Slots ProjectPaint popup"""
     bl_idname = "view3d.projectpaint"
@@ -2311,6 +2729,16 @@ class D2P_OT_ProjectpaintPopup(bpy.types.Operator):
         settings = context.tool_settings.image_paint
         ob = context.active_object
         layout = self.layout
+        ######## borrowed
+
+        row = layout.row()
+        row.label(text="Face Mask Groups")
+        box = layout.box()  # HORIZONTAL ALIGN
+        col = box.column(align=True)
+        row = col.row(align=True)
+        row1 = row.split(align=True)
+        row1.label(text="Generate FMG from Islands")
+        row1.operator("d2p.getfacemaskgroups", text="FMG+", icon='SHADERFX')
 
         # Vertex Paint Section (unchanged)
         group = ob.vertex_groups.active
@@ -2318,6 +2746,31 @@ class D2P_OT_ProjectpaintPopup(bpy.types.Operator):
 
         row = layout.row()
         row.template_list("MESH_UL_vgroups", "", ob, "vertex_groups", ob.vertex_groups, "active_index", rows=rows)
+        ############borrowed
+        col = row.column(align=True)
+        col.operator("object.vertex_group_add", icon='ADD', text="")
+        col.operator("object.vertex_group_remove", icon='REMOVE',
+                     text="").all = False
+        col.menu("MESH_MT_vertex_group_context_menu",
+                 icon='DOWNARROW_HLT', text="")
+        if group:
+            col.separator()
+            col.operator("object.vertex_group_move",
+                         icon='TRIA_UP', text="").direction = 'UP'
+            col.operator("object.vertex_group_move",
+                         icon='TRIA_DOWN', text="").direction = 'DOWN'
+
+        box = layout.box()
+        col = box.column(align=True)
+        row = col.row(align=True)
+        row1 = row.split(align=True)
+        row1.operator("d2p.select_vgroup", text="Sel", icon='RADIOBUT_ON')
+
+        row1.operator("d2p.deselect_vgroup", text="Desel", icon='RADIOBUT_OFF')
+
+        row1.operator("d2p.assign_vgroup", text="Set", icon='ADD')
+
+        row1.operator("d2p.unassign_vgroup", text="Unset", icon='REMOVE')
 
         col = layout.column()
 
@@ -2358,7 +2811,7 @@ class D2P_OT_ProjectpaintPopup(bpy.types.Operator):
                             col.label(text="Active UV Layer: " + ob.data.uv_layers.active.name)
                         else:
                             col.label(text="No active UV map found", icon='ERROR')
-
+                col.operator("paint.add_texture_paint_slot", text="Add Texture", icon='TEXTURE_DATA')
             elif settings.mode == 'IMAGE':
                 # Image Mode Section
                 mesh = ob.data
@@ -2366,7 +2819,7 @@ class D2P_OT_ProjectpaintPopup(bpy.types.Operator):
                 col.label(text="Canvas Image")
                 col.template_ID(settings, "canvas")
 
-                col.operator("image.new", text="New")
+                col.operator("image.new", text="New Single Image")
                 col.label(text="UV Map")
                 col.menu("VIEW3D_MT_tools_projectpaint_uvlayer", text=uv_text, translate=False)
 
@@ -2399,7 +2852,6 @@ class D2P_OT_ProjectpaintPopup(bpy.types.Operator):
 
     def execute(self, context):
         return {'FINISHED'}
-
 class D2P_OT_MakeBrushImageTexture(bpy.types.Operator):
     bl_label = "New Texture from Image"
     bl_idname = "gizmo.image_texture"

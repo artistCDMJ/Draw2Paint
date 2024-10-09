@@ -16,7 +16,7 @@
 bl_info = {
     "name": "Draw2Paint",
     "author": "CDMJ, Spirou4D, Lapineige, Bart Crouch, batFINGER, stacker, todashuta",
-    "version": (4, 1, 0),
+    "version": (4, 1, 1),
     "blender": (4, 2, 0),
     "location": "UI > Draw2Paint",
     "description": "2D Paint in 3D View, Mask Manipulation, EZPaint Adoption",
@@ -128,7 +128,8 @@ classes = (
     D2P_OT_EditorSwap,
     UV_WireColor,
     VIEW3D_WireColor,
-    D2P_OT_set_active_texture_slot
+    D2P_OT_set_active_texture_slot,
+    D2P_OT_set_active_clone_slot
 )
 
 def register():
