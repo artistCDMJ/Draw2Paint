@@ -50,6 +50,16 @@ class D2P_PT_ImageCreation(bpy.types.Panel):
         else:
             row.operator("view3d.set_single_texture_paint_view", text="Set Single Texture View")
 
+        row = col.row(align=True)
+        row.scale_x = 0.50
+        row.scale_y = 1.25
+        # Number of textures input
+        layout.prop(scene, "num_textures")
+
+        # Add material button
+        layout.operator("object.add_photostack", text="Generate/Extend Photostack")
+
+
 
         row3 = col.row(align=True)
         row3.scale_x=0.50
@@ -514,10 +524,16 @@ class D2P_PT_node_editor_panel(bpy.types.Panel):
             layout.operator("node.flatten_images")
 
             layout.operator("viewer.shader2viewer", text="Image2Compositor")
+            layout.operator('node.copy_photostack_to_compositor', text="PhotoStack2Compositor")
         else:
             # compositor editor buttons
             layout.operator("d2p.editor_swap", text="2ShaderEditor", icon='AREA_SWAP')
             layout.operator("viewer.viewer2image", text="Compositor2Image")
+
+
+
+
+# Define the Operator that is triggered by the button
 
 #### easy to see UV access
 class UV_WireColor(bpy.types.Panel):

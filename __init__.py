@@ -129,7 +129,11 @@ classes = (
     UV_WireColor,
     VIEW3D_WireColor,
     D2P_OT_set_active_texture_slot,
-    D2P_OT_set_active_clone_slot
+    D2P_OT_set_active_clone_slot,
+    PhotoStackProperties,
+    PhotoStack,
+    NODE_OT_copy_photostack_to_compositor
+
 )
 
 def register():
@@ -159,6 +163,20 @@ def register():
         keymaps.register()
     bpy.types.VIEW3D_PT_tools_brush_color.append(draw_func)
 
+    bpy.types.Scene.num_textures = bpy.props.IntProperty(
+        name="Number of Textures",
+        default=1,  # Set default to 1
+        min=1,
+        max=10,
+        description="Number of image textures to add",
+        update=update_texture_settings  # Ensure we update texture settings on change
+    )
+
+    bpy.types.Scene.texture_settings = bpy.props.CollectionProperty(type=PhotoStackProperties)
+
+    # Initialize the collection when the script is run
+    update_texture_settings(bpy.context.scene, bpy.context)
+
 
 
 def unregister():
@@ -177,6 +195,9 @@ def unregister():
     del bpy.types.Scene.view_mode
     del bpy.types.Scene.texel_density_result
     bpy.types.VIEW3D_PT_tools_brush_color.remove(draw_func)
+
+    del bpy.types.Scene.num_textures
+    del bpy.types.Scene.texture_settings
 
 
 if __name__ == "__main__":

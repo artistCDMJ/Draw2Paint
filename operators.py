@@ -23,7 +23,7 @@ from .utils import (find_brush, create_image_plane_from_image, create_matching_c
                     new_convert_curve_object,convert_gpencil_to_curve,move_trace_objects_to_collection, \
                     convert_image_plane_to_curve, is_canvas_mesh, create_compositor_node_tree,\
                     render_and_extract_image,calculate_texel_density, create_scene_based_on_active_image,\
-                    select_object_by_suffix)
+                    select_object_by_suffix, update_texture_settings, copy_photostack_nodes_to_compositor)
 
 from bpy.types import Operator, Menu, Panel, UIList
 from bpy_extras.io_utils import ImportHelper
@@ -391,14 +391,6 @@ class D2P_OT_Image2CanvasPlus(bpy.types.Operator):
         camera_obj = create_matching_camera(image_plane_obj, width, height)
         bpy.context.view_layer.objects.active = camera_obj
         camera_obj.data.show_name = True
-
-        # Ensure the correct context is active before applying view settings
-        for area in bpy.context.screen.areas:
-            if area.type == 'VIEW_3D':
-                with bpy.context.temp_override(area=area):
-                    area.spaces.active.shading.type = 'SOLID'
-                    area.spaces.active.shading.light = 'FLAT'
-                    area.spaces.active.shading.color_type = 'TEXTURE'
 
         # Move camera and image plane to 'canvas_view' collection
         move_object_to_collection(image_plane_obj, active_image.name + '_canvas_view')
@@ -2982,6 +2974,223 @@ class NODE_OT_flatten_images(bpy.types.Operator):
         new_image_node.image = combined_image
         new_image_node.label = "Flatten result"
         new_image_node.location = group_node.location.x + 300, group_node.location.y
+
+        return {'FINISHED'}
+
+### photostack ops
+class PhotoStackProperties(bpy.types.PropertyGroup):
+    uv_map_name: bpy.props.StringProperty(
+        name="UV Map Name",
+        default="UVMap"
+    )
+class NODE_OT_copy_photostack_to_compositor(bpy.types.Operator):
+    bl_idname = "node.copy_photostack_to_compositor"
+    bl_label = "Copy PhotoStack to Compositor"
+
+    def execute(self, context):
+        copy_photostack_nodes_to_compositor()
+        return {'FINISHED'}
+
+class PhotoStack(bpy.types.Operator):
+    """Add or extend a 'Photostack' with Multiple Image Textures inside a Node Group"""
+    bl_idname = "object.add_photostack"
+    bl_label = "Add to or Create Photostack"
+
+    def execute(self, context):
+        scene = context.scene
+        num_textures = scene.num_textures
+        obj = context.object
+
+        # Ensure the object has a material
+        if not obj.data.materials:
+            self.report({'ERROR'}, "Object has no material.")
+            return {'CANCELLED'}
+
+        material = obj.active_material
+        if not material.use_nodes:
+            material.use_nodes = True
+
+        nodes = material.node_tree.nodes
+
+        # Find the first Image Texture node (this is the active image node to copy)
+        image_node = None
+        for node in nodes:
+            if node.type == 'TEX_IMAGE':
+                image_node = node
+                break
+
+        if not image_node or not image_node.image:
+            self.report({'ERROR'}, "No valid image texture node found.")
+            return {'CANCELLED'}
+
+        original_image = image_node.image  # This is the original image to copy
+
+        # Check if a '_photostack' group node already exists in the material
+        group_node = None
+        for node in nodes:
+            if node.type == 'GROUP' and "_photostack" in node.node_tree.name:
+                group_node = node
+                break
+
+        # If no group node exists, create a new one
+        if not group_node:
+            nodegroup_name = f"{original_image.name}_photostack"
+            nodegroup = bpy.data.node_groups.new(type='ShaderNodeTree', name=nodegroup_name)
+
+            # Prepare links for adding more layers
+            links = nodegroup.links  # Initialize the links for the nodegroup here
+
+            # Create input and output nodes in the node group
+            group_input = nodegroup.nodes.new("NodeGroupInput")
+            group_output = nodegroup.nodes.new("NodeGroupOutput")
+            group_output.location = (600, 0)
+
+            # Add an output socket to the node group interface in Blender 4.0+
+            nodegroup.interface.new_socket(name="Result", socket_type='NodeSocketColor', in_out='OUTPUT')
+
+            # Create a new group node in the material
+            group_node = nodes.new(type="ShaderNodeGroup")
+            group_node.node_tree = nodegroup
+
+            ### Add a UV Map node for the first image (original image) ###
+            uv_node = nodegroup.nodes.new(type='ShaderNodeUVMap')
+            uv_node.location = (-300, 400)  # Position for the UV node
+            uv_node.uv_map = "UVMap"  # Assuming "UVMap", but this could be dynamic
+
+            # Copy the first image node to the node group as the first layer
+            img_tex = nodegroup.nodes.new(type='ShaderNodeTexImage')
+            img_tex.location = (-100, 400)
+            img_tex.image = original_image
+
+            # Connect the UV map to the original image texture node
+            links.new(uv_node.outputs['UV'], img_tex.inputs['Vector'])
+
+            previous_node = img_tex  # Track the first image node
+
+        else:
+            # If the group node already exists, retrieve it
+            nodegroup = group_node.node_tree  # This retrieves the existing nodegroup
+            links = nodegroup.links  # Initialize the links for the existing nodegroup
+
+            # Locate the Group Output node
+            group_output_node = None
+            for node in nodegroup.nodes:
+                if node.type == 'GROUP_OUTPUT':
+                    group_output_node = node
+                    break
+
+            if not group_output_node:
+                self.report({'ERROR'}, "Group output node not found.")
+                return {'CANCELLED'}
+
+            # Find the last node connected to the Group Output node
+            if group_output_node.inputs[0].is_linked:
+                last_link = group_output_node.inputs[0].links[0]
+                previous_node = last_link.from_node  # Set the last connected node as previous_node
+            else:
+                # If there's no Mix node or connection to the Group Output, fallback to the original image node
+                previous_node = None
+                for node in nodegroup.nodes:
+                    if node.type == 'TEX_IMAGE' and node.image == original_image:
+                        previous_node = node
+                        break
+
+                if not previous_node:
+                    self.report({'ERROR'}, "No valid previous node found.")
+                    return {'CANCELLED'}
+
+
+        # Start adding additional blank images (RGBA 0,0,0,0)
+        uv_y_offset = 200
+        img_y_offset = 400
+        mix_x_offset = 200
+
+        # Find the Group Output node
+        group_output_node = None
+        for node in nodegroup.nodes:
+            if node.type == 'GROUP_OUTPUT':
+                group_output_node = node
+                break
+
+        if not group_output_node:
+            self.report({'ERROR'}, "Group output node not found.")
+            return {'CANCELLED'}
+
+        # Keep track of existing textures to avoid name conflicts
+        num_existing_textures = len([n for n in nodegroup.nodes if n.type == 'TEX_IMAGE'])
+
+        # Add new blank image textures and mix them
+        for i in range(num_textures):
+            # Create a new blank image for painting with a unique name
+            new_image_name = f"PaintLayer_{num_existing_textures + i + 1}"
+            new_image = bpy.data.images.new(new_image_name, width=original_image.size[0], height=original_image.size[1], alpha=True)
+            new_image.generated_color = (0, 0, 0, 0)  # RGBA 0,0,0,0 for transparency
+
+            # Create a new UV Map node and Image Texture node for the blank image
+            uv_node = nodegroup.nodes.new(type='ShaderNodeUVMap')
+            uv_node.location = (-300, uv_y_offset)
+            uv_node.uv_map = "UVMap"  # Assuming "UVMap", but this could be dynamic
+
+            img_tex = nodegroup.nodes.new(type='ShaderNodeTexImage')
+            img_tex.location = (-100, img_y_offset)
+            img_tex.image = new_image
+
+            # Connect the UV map to the Image Texture
+            links.new(uv_node.outputs['UV'], img_tex.inputs['Vector'])
+
+            # Create a mix node to blend the new image with the previous layer
+            mix_node = nodegroup.nodes.new(type='ShaderNodeMix')
+            mix_node.location = (mix_x_offset, img_y_offset)
+            mix_node.data_type = 'RGBA'  # Mix colors with alpha
+            mix_node.inputs["Factor"].default_value = 1.0  # Can be adjusted for blending
+
+            # Connect the previous node (last mix node or first image) to the new mix node
+            if previous_node.type == 'ShaderNodeMix':
+                # For ShaderNodeMix, use the 'Result' output
+                links.new(previous_node.outputs['Result'], mix_node.inputs['A'])  # Previous mix Result goes to A
+            else:
+                # Check if the 'Color' output exists, else use 'Result' or another output
+                if 'Color' in previous_node.outputs:
+                    links.new(previous_node.outputs['Color'], mix_node.inputs['A'])  # Previous image's Color goes to A
+                elif 'Result' in previous_node.outputs:
+                    links.new(previous_node.outputs['Result'], mix_node.inputs['A'])  # Fallback to 'Result' if no 'Color'
+                elif 'RGBA' in previous_node.outputs:
+                    links.new(previous_node.outputs['RGBA'], mix_node.inputs['A'])  # Some nodes may have 'RGBA'
+                else:
+                    # If none of these outputs exist, raise an error
+                    self.report({'ERROR'}, f"No suitable output found on previous node: {previous_node.name}")
+                    return {'CANCELLED'}
+
+
+            # Connect new image's Color and Alpha to the new mix node
+            links.new(img_tex.outputs['Color'], mix_node.inputs['B'])  # New image's Color goes to B
+            links.new(img_tex.outputs['Alpha'], mix_node.inputs['Factor'])  # Alpha controls the mix factor
+
+            # Update previous_node to the new mix node for the next iteration
+            previous_node = mix_node
+
+            # Adjust positions for the next iteration
+            uv_y_offset -= 200
+            img_y_offset -= 200
+            mix_x_offset += 200
+
+        # Final output connection to the Group Output node
+        links.new(previous_node.outputs['Result'], group_output_node.inputs['Result'])  # Connect final mix Result to Group Output
+
+        # Connect the group output to the Material Output's surface
+        material_output_node = None
+        for node in nodes:
+            if node.type == 'OUTPUT_MATERIAL':
+                material_output_node = node
+                break
+
+        if not material_output_node:
+            material_output_node = nodes.new(type='ShaderNodeOutputMaterial')
+            material_output_node.location = (800, 0)
+
+        # Connect the group output to the material output
+        links = material.node_tree.links
+        links.new(group_node.outputs['Result'], material_output_node.inputs['Surface'])
 
         return {'FINISHED'}
 
