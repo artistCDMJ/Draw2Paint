@@ -303,7 +303,7 @@ class D2P_PT_MaskTools(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         scene = context.scene
-        mytool = scene.my_tool
+        mymask = scene.my_mask
 
         layout = self.layout
         box = layout.box()
@@ -316,7 +316,7 @@ class D2P_PT_MaskTools(bpy.types.Panel):
         row1.scale_y = 1.25
         # row1.operator("d2p.draw_curve", text='Draw Curve',
         # icon='CURVE_BEZCURVE')
-        row1.prop(mytool, "my_enum")
+        row1.prop(mymask, "my_enum")
         row1.operator("d2p.my_enum_shapes")
 
         row = col.row(align=True)

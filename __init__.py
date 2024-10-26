@@ -143,7 +143,7 @@ def register():
         bpy.utils.register_class(cls)
     bpy.types.IMAGE_MT_image.append(draw_image_editor_button)
     bpy.types.NODE_MT_node.append(draw_node_editor_button)
-    bpy.types.Scene.my_tool = bpy.props.PointerProperty(type=properties.D2P_Properties)
+    bpy.types.Scene.my_mask = bpy.props.PointerProperty(type=properties.D2P_Properties)
     bpy.types.Scene.image_resize_addon_width = bpy.props.IntProperty(name="Width")
     bpy.types.Scene.image_resize_addon_height = bpy.props.IntProperty(name="Height")
     bpy.types.Scene.image_resize_addon_percentage = bpy.props.FloatProperty(name="Scale Percentage", default=100.0,

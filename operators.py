@@ -1320,7 +1320,7 @@ class D2P_OT_my_enum_shapes(bpy.types.Operator):
 
     def execute(self, context):
         scene = context.scene
-        mytool = scene.my_tool
+        mymask = scene.my_mask
         
         # Find the parent object with suffix '_canvas'
         suffix = '_canvas'
@@ -1345,7 +1345,7 @@ class D2P_OT_my_enum_shapes(bpy.types.Operator):
             else:
                 self.report({'WARNING'}, f"Parent object '{parent_object.name}' has no materials.")
         
-        if mytool.my_enum == 'OP1':
+        if mymask.my_enum == 'OP1':
             # Add a new bezier curve
             bpy.ops.curve.primitive_bezier_curve_add(radius=1, enter_editmode=False, align='WORLD', location=(0, 0, 0.15), scale=(1, 1, 1))
             new_obj = bpy.context.object
@@ -1361,7 +1361,7 @@ class D2P_OT_my_enum_shapes(bpy.types.Operator):
             bpy.ops.object.editmode_toggle()
             bpy.ops.wm.tool_set_by_id(name="builtin.draw")
 
-        elif mytool.my_enum == 'OP2':
+        elif mymask.my_enum == 'OP2':
             # Add a new bezier curve and set handle type to VECTOR
             bpy.ops.curve.primitive_bezier_curve_add(enter_editmode=True, align='WORLD', location=(0, 0, 0.15), scale=(1, 1, 1))
             new_obj = bpy.context.object
@@ -1376,7 +1376,7 @@ class D2P_OT_my_enum_shapes(bpy.types.Operator):
             bpy.ops.transform.resize(value=(0.1, 0.1, 0.1))
             bpy.ops.wm.tool_set_by_id(name="builtin.select_box")
 
-        elif mytool.my_enum == 'OP3':
+        elif mymask.my_enum == 'OP3':
             # Add a new bezier circle
             bpy.ops.curve.primitive_bezier_circle_add(radius=0.25, enter_editmode=False, align='WORLD', location=(0, 0, 0.15), scale=(1, 1, 1))
             new_obj = bpy.context.object
@@ -1392,7 +1392,7 @@ class D2P_OT_my_enum_shapes(bpy.types.Operator):
             bpy.ops.object.editmode_toggle()
             bpy.ops.wm.tool_set_by_id(name="builtin.select_box")
 
-        elif mytool.my_enum == 'OP4':
+        elif mymask.my_enum == 'OP4':
             # Add a new bezier circle
             bpy.ops.curve.primitive_bezier_circle_add(radius=0.25, enter_editmode=False, align='WORLD', location=(0, 0, 0.15), scale=(1, 1, 1))
             new_obj = bpy.context.object
