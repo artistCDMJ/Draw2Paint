@@ -103,10 +103,18 @@ class D2P_PT_PhotoStack(bpy.types.Panel):
         row.scale_x = 0.50
         row.scale_y = 1.25
         # Number of textures input
-        layout.prop(scene, "num_textures")
+        row.prop(scene, "num_textures")
+
+        row = col.row(align=True)
+        row.scale_x = 0.50
+        row.scale_y = 1.25
 
         # Add material button
-        layout.operator("object.add_photostack", text="Generate/Extend Photostack")
+        row.operator("object.add_photostack", text="Generate/Extend Photostack")
+
+        row = col.row(align=True)
+        row.scale_x = 0.50
+        row.scale_y = 1.25
 
         if mat and mat.use_nodes:
             layout.label(text="Select Two Textures to Swap:")
