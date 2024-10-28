@@ -115,6 +115,18 @@ the Object Center. Symmetry controls are in the upper toolbar by 'Options'
 
 Press to snap the guide and the Object Center back to origin
 
+**PhotoStack Tools**
+
+**PhotoStack**
+Add the number of images you want to add in combination with the active image node of the object.
+
+Generate/Extend PhotoStack - adds the number of images based on the count and the size of the active image in the \
+active object, and uses a default of 0 alpha and mix blend mode in the color mix nodes. 
+
+To move painted images, we 'swap' them in assignment to the image nodes instead of connecting/disconnecting. \
+Select two(2) images in the PhotoStack to Swap them. This is helpful if you have already painted but want to  \
+reverse the order.
+
 **Sculpt Canvas Copy** Only for canvas_view for now
 
 **Copy2Eraser** 
@@ -211,19 +223,22 @@ This loads a copy of the shader's active image node's image to an image node con
 Compositor node editor. The user can then press 2Compositor to take the next step of adding Filter nodes, Color \
 Adjustment nodes, additional images or textures combined with Color Mix nodes and Transform/Scale/Rotate nodes etc.
 Presets are going to be made later for some basic effects to apply to the target painting as if using Flash Layer \
-Styles. Lots of stuff possible.
+Styles. Lots of stuff possible. Edit: added swap editor to automatically take you to Compositor.
+
+**PhotoStack2Compositor**
+Similar to Image2Compositor, but this is for a whole group node called the PhotoStack that we can now manipulate \
+a way to send the whole lot of images and mix nodes to the Compositor to edit. Automatic editor swap.
 
 **Compositor2Image**
 This sends the render of the Viewer node to the C:\tmp\ folder and then loads it into a new image texture node in \
-the shader tree. Press 2ShaderEditor to go back and connect the new image node to the shader color input.
+the shader tree. Press 2ShaderEditor to go back and connect the new image node to the shader color input. Might be \
+already automatic on the return, I've been adding the operator for swap editor to as much of this as possible.
 
-**Flatten Images**
-This requires selecting two images to combine and this will send them to a compositor session
 
 **New Texture Node from Active Texture**
 This will duplicate the size of the image in the active image node to a new generated image node in the Compositor
 
-**New Image from Active IMage Size**
+**New Image from Active Image Size**
 This will create a new image texture from the size of the active image in the Image Editor
 
 **EZPaint Additions** 

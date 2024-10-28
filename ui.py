@@ -50,16 +50,6 @@ class D2P_PT_ImageCreation(bpy.types.Panel):
         else:
             row.operator("view3d.set_single_texture_paint_view", text="Set Single Texture View")
 
-        row = col.row(align=True)
-        row.scale_x = 0.50
-        row.scale_y = 1.25
-        # Number of textures input
-        layout.prop(scene, "num_textures")
-
-        # Add material button
-        layout.operator("object.add_photostack", text="Generate/Extend Photostack")
-
-
 
         row3 = col.row(align=True)
         row3.scale_x=0.50
@@ -83,6 +73,59 @@ class D2P_PT_ImageCreation(bpy.types.Panel):
         row.scale_y = 1.25
         row.operator("d2p.reload_all", text= "Reload ALL", icon='FILE_REFRESH')
         row.operator("d2p.save_dirty", text="Save/Pack All", icon='BORDERMOVE')
+
+
+class D2P_PT_PhotoStack(bpy.types.Panel):
+    """Creation and Control of PhotoStack Group Node"""
+    bl_label = "PhotoStack Tools"
+    bl_idname = "D2P_PT_PhotoStack"
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "UI"
+    bl_category = "Draw2Paint"
+    bl_parent_id = 'D2P_PT_ImageCreation'
+    bl_options = {'DEFAULT_CLOSED'}
+
+    @classmethod
+    def poll(cls, context):
+        obj = context.active_object
+        return obj and obj.type == 'MESH' and obj.active_material
+
+    def draw(self, context):
+        layout = self.layout
+        scene = context.scene
+        mat = context.active_object.active_material
+
+        box = layout.box()
+        col = box.column(align=True)
+        col.label(text="PhotoStack")
+
+        row = col.row(align=True)
+        row.scale_x = 0.50
+        row.scale_y = 1.25
+        # Number of textures input
+        layout.prop(scene, "num_textures")
+
+        # Add material button
+        layout.operator("object.add_photostack", text="Generate/Extend Photostack")
+
+        if mat and mat.use_nodes:
+            layout.label(text="Select Two Textures to Swap:")
+            self.draw_texture_nodes(layout, mat.node_tree)
+
+            layout.operator("image.swap_selected_textures", text="Swap Selected Textures")
+
+    def draw_texture_nodes(self, layout, node_tree, prefix=""):
+        """Recursively draw texture nodes with checkboxes, showing image names."""
+        for node in node_tree.nodes:
+            if node.type == 'TEX_IMAGE' and node.image:
+                row = layout.row()
+                # Display image name with checkbox
+                image_name = node.image.name
+                row.prop(node.texture_swap_props, "swap_select", text=prefix + image_name)
+
+            elif node.type == 'GROUP' and node.node_tree:
+                # Recurse into group nodes
+                self.draw_texture_nodes(layout, node.node_tree, prefix=prefix + node.name + " > ")
 
 
 ################################## GPencil Future Home of Shortcuts
@@ -521,14 +564,16 @@ class D2P_PT_node_editor_panel(bpy.types.Panel):
 
             # shader editor buttons
             layout.operator("d2p.editor_swap", text="2Compositor", icon='AREA_SWAP')
-            layout.operator("node.flatten_images")
 
-            layout.operator("viewer.shader2viewer", text="Image2Compositor")
-            layout.operator('node.copy_photostack_to_compositor', text="PhotoStack2Compositor")
+            layout.label(text="Image Node Ops")
+            layout.operator("viewer.shader2viewer", text="Image2Compositor", icon='OUTLINER_OB_IMAGE')
+            layout.operator('node.copy_photostack_to_compositor', text="PhotoStack2Compositor", icon ='RENDERLAYERS')
         else:
             # compositor editor buttons
             layout.operator("d2p.editor_swap", text="2ShaderEditor", icon='AREA_SWAP')
-            layout.operator("viewer.viewer2image", text="Compositor2Image")
+
+            layout.label(text="Composite Node Ops")
+            layout.operator("viewer.viewer2image", text="Compositor2Image", icon='RENDER_STILL')
 
 
 

@@ -16,7 +16,7 @@
 bl_info = {
     "name": "Draw2Paint",
     "author": "CDMJ, Spirou4D, Lapineige, Bart Crouch, batFINGER, stacker, todashuta",
-    "version": (4, 1, 1),
+    "version": (4, 1, 2),
     "blender": (4, 2, 0),
     "location": "UI > Draw2Paint",
     "description": "2D Paint in 3D View, Mask Manipulation, EZPaint Adoption",
@@ -118,7 +118,6 @@ classes = (
     IMAGE_RESIZE_OT_main,
     IMAGE_RESIZE_PT_panel,
     D2P_PT_node_editor_panel,
-    NODE_OT_flatten_images,
     D2P_OT_SetColorFamilies,
     D2P_OT_Trace2Curve,
     D2P_OT_flip_gradient,
@@ -132,7 +131,10 @@ classes = (
     D2P_OT_set_active_clone_slot,
     PhotoStackProperties,
     PhotoStack,
-    NODE_OT_copy_photostack_to_compositor
+    NODE_OT_copy_photostack_to_compositor,
+    D2P_PT_PhotoStack,
+    TextureSwapProperties,
+    SwapSelectedTextures
 
 )
 
@@ -149,6 +151,7 @@ def register():
     bpy.types.Scene.image_resize_addon_percentage = bpy.props.FloatProperty(name="Scale Percentage", default=100.0,
                                                                             min=0.0)
     bpy.types.Scene.texel_density_result = bpy.props.StringProperty(name="Texel Density Result", default="")
+    bpy.types.Node.texture_swap_props = bpy.props.PointerProperty(type=TextureSwapProperties)
     bpy.types.Scene.view_mode = bpy.props.EnumProperty(
         name="View Mode",
         description="Current view mode",
@@ -195,6 +198,7 @@ def unregister():
     del bpy.types.Scene.view_mode
     del bpy.types.Scene.texel_density_result
     bpy.types.VIEW3D_PT_tools_brush_color.remove(draw_func)
+    del bpy.types.Node.texture_swap_props
 
     del bpy.types.Scene.num_textures
     del bpy.types.Scene.texture_settings
