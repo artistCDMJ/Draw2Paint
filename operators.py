@@ -2151,6 +2151,52 @@ class D2P_OT_BrushPopup(bpy.types.Operator):
 
     def execute(self, context):
         return {'FINISHED'}
+############## palette popup for convenience aside from brush popup
+class D2P_PT_PalettePopup(bpy.types.Operator):
+    """Popup Menu with Color Palette"""
+    bl_idname = "d2p.palette_popup"
+    bl_label = "Color Palette Popup"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    @classmethod
+    def poll(cls, context):
+        """Ensures popup is shown only in valid paint modes on a mesh object."""
+        if context.active_object:
+            A = context.active_object.type == 'MESH'
+            B = context.mode in {'PAINT_TEXTURE', 'PAINT_VERTEX', 'PAINT_WEIGHT'}
+            return A and B
+        return False
+
+    def paint_settings(self, context):
+        """Retrieve paint settings based on the paint mode."""
+        toolsettings = context.tool_settings
+
+        if context.vertex_paint_object:
+            return toolsettings.vertex_paint
+        elif context.weight_paint_object:
+            return toolsettings.weight_paint
+        elif context.image_paint_object:
+            if toolsettings.image_paint and toolsettings.image_paint.detect_data():
+                return toolsettings.image_paint
+        return None
+
+    def draw(self, context):
+        layout = self.layout
+        settings = self.paint_settings(context)
+
+        if settings:
+            layout.template_ID(settings, "palette", new="palette.new")
+            if settings.palette:
+                layout.template_palette(settings, "palette", color=True)
+        else:
+            layout.label(text="No paint settings available in this mode")
+            print("No valid paint settings found. Ensure correct mode and object setup.")
+
+    def invoke(self, context, event):
+        return context.window_manager.invoke_props_dialog(self, width=200)
+
+    def execute(self, context):
+        return {'FINISHED'}
 
 class D2P_OT_TexturePopup(bpy.types.Operator):
     """Texture popup"""
@@ -3494,6 +3540,4 @@ class D2P_OT_EditorSwap(bpy.types.Operator):
             bpy.ops.node.view_all()
 
 
-        # toggle node editor for compositor and shader windows
-        bpy.ops.node.view_all()
         return {'FINISHED'}

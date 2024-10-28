@@ -134,7 +134,8 @@ classes = (
     PhotoStack,
     NODE_OT_copy_photostack_to_compositor,
     TextureSwapProperties,
-    SwapSelectedTextures
+    SwapSelectedTextures,
+    D2P_PT_PalettePopup
 
 )
 
