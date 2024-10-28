@@ -2907,6 +2907,9 @@ class NODE_OT_copy_photostack_to_compositor(bpy.types.Operator):
         # Turn on Backdrop for Viewer Node
         bpy.context.space_data.show_backdrop = True
 
+        # Set color management
+        paint_view_color_management_settings()
+
         return {'FINISHED'}
 
 
@@ -3320,6 +3323,9 @@ class D2P_OT_Shader2ViewerNode(bpy.types.Operator):
         if hasattr(bpy.context.space_data, 'show_backdrop'):
             bpy.context.space_data.show_backdrop = True
 
+        #set color management
+        paint_view_color_management_settings()
+
         #swap editor
         bpy.ops.d2p.editor_swap()
 
@@ -3477,9 +3483,13 @@ class D2P_OT_EditorSwap(bpy.types.Operator):
 
         if area.ui_type != 'ShaderNodeTree':
             area.ui_type = 'ShaderNodeTree'
+
+            bpy.context.object.active_material.use_nodes = True
             bpy.ops.node.view_all()
         else:
             area.ui_type = 'CompositorNodeTree'
+            bpy.context.scene.use_nodes = True
+
             bpy.ops.node.view_all()
 
 

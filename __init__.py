@@ -97,6 +97,7 @@ classes = (
     D2P_OT_ToggleCollectionView,
     D2P_OT_SaveIncrem,
     D2P_PT_ImageCreation,
+    D2P_PT_PhotoStack,
     D2P_PT_GreasePencil,
     D2P_PT_FlipRotate,
     D2P_PT_Crop2Camera,
@@ -132,7 +133,6 @@ classes = (
     PhotoStackProperties,
     PhotoStack,
     NODE_OT_copy_photostack_to_compositor,
-    D2P_PT_PhotoStack,
     TextureSwapProperties,
     SwapSelectedTextures
 
