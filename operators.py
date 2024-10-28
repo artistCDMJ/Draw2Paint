@@ -24,7 +24,7 @@ from .utils import (find_brush, create_image_plane_from_image, create_matching_c
                     convert_image_plane_to_curve, is_canvas_mesh, create_compositor_node_tree,\
                     render_and_extract_image,calculate_texel_density, create_scene_based_on_active_image,\
                     select_object_by_suffix, update_texture_settings, copy_photostack_nodes_to_compositor, \
-                    find_selected_texture_nodes)
+                    find_selected_texture_nodes, get_image_from_photostack_group)
 
 from bpy.types import Operator, Menu, Panel, UIList
 from bpy_extras.io_utils import ImportHelper
@@ -304,18 +304,18 @@ class D2P_OT_Subject2Canvas(bpy.types.Operator):
         # Rename object with suffix _subject
         selected_object.name += '_subject'
 
-        # Create new scene and ensure the object is linked
+        # Create new scene and link the object, using the active image if possible
         create_scene_based_on_active_image(selected_object)
 
-        # Ensure the object is active and selected in the new scene
-        selected_object = bpy.context.scene.objects.get(selected_object.name)
+        # Ensure the object is active and selected in the new scene context
+        new_scene = bpy.context.window.scene  # The newly created scene from create_scene_based_on_active_image
+        selected_object = new_scene.objects.get(selected_object.name)
         if selected_object is None:
             self.report({'ERROR'}, "Selected object could not be found in the new scene.")
             return {'CANCELLED'}
 
-
-        # Ensure the object is active and selected
-        bpy.context.view_layer.objects.active = selected_object
+        # Make the object active and selected in the new scene
+        new_scene.view_layers[0].objects.active = selected_object
         selected_object.select_set(True)
 
         # Move object to 'subject_view' collection
@@ -325,15 +325,15 @@ class D2P_OT_Subject2Canvas(bpy.types.Operator):
         uv_filepath = os.path.join("C:/tmp", selected_object.name + ".png")
         export_uv_layout(selected_object, uv_filepath)
 
-        # Try to link to original scene here
-        bpy.ops.object.make_links_scene(scene='Scene')
-
-        # Continue the rest of the process
+        # Retrieve the active image or fallback to the "_photostack" group node if none
         active_image = get_image_from_selected_object(selected_object)
         if not active_image:
-            self.report({'WARNING'}, "Selected object has no image texture.")
-            return {'CANCELLED'}
+            active_image = get_image_from_photostack_group(selected_object)
+            if not active_image:
+                self.report({'WARNING'}, "No active image or group image found in '_photostack' node.")
+                return {'CANCELLED'}
 
+        # Create the image plane and camera based on the retrieved image
         image_plane_obj, width, height = create_image_plane_from_image(active_image)
         if not image_plane_obj:
             self.report({'WARNING'}, "Failed to create image plane.")
@@ -351,9 +351,10 @@ class D2P_OT_Subject2Canvas(bpy.types.Operator):
             self.report({'ERROR'}, str(e))
             return {'CANCELLED'}
 
+        # Switch to camera view
         switch_to_camera_view(camera_obj)
 
-        # Switch to canvas_view collection on init
+        # Toggle canvas_view collection visibility
         bpy.ops.object.toggle_collection_visibility()
 
         return {'FINISHED'}
@@ -2907,6 +2908,9 @@ class NODE_OT_copy_photostack_to_compositor(bpy.types.Operator):
         # Turn on Backdrop for Viewer Node
         bpy.context.space_data.show_backdrop = True
 
+        # Set color management
+        paint_view_color_management_settings()
+
         return {'FINISHED'}
 
 
@@ -3320,6 +3324,9 @@ class D2P_OT_Shader2ViewerNode(bpy.types.Operator):
         if hasattr(bpy.context.space_data, 'show_backdrop'):
             bpy.context.space_data.show_backdrop = True
 
+        #set color management
+        paint_view_color_management_settings()
+
         #swap editor
         bpy.ops.d2p.editor_swap()
 
@@ -3477,9 +3484,13 @@ class D2P_OT_EditorSwap(bpy.types.Operator):
 
         if area.ui_type != 'ShaderNodeTree':
             area.ui_type = 'ShaderNodeTree'
+
+            bpy.context.object.active_material.use_nodes = True
             bpy.ops.node.view_all()
         else:
             area.ui_type = 'CompositorNodeTree'
+            bpy.context.scene.use_nodes = True
+
             bpy.ops.node.view_all()
 
 

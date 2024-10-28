@@ -522,6 +522,21 @@ def get_image_from_selected_object(selected_object):
                 return node.image
     return None
 
+def get_image_from_photostack_group(obj):
+    """Retrieve the first image from the '_photostack' node group if available."""
+    if not obj or not obj.active_material or not obj.active_material.node_tree:
+        return None
+
+    node_tree = obj.active_material.node_tree
+    for node in node_tree.nodes:
+        if node.type == 'GROUP' and node.node_tree and '_photostack' in node.node_tree.name:
+            # Search for the first image node within the group
+            for subnode in node.node_tree.nodes:
+                if subnode.type == 'TEX_IMAGE' and subnode.image:
+                    return subnode.image
+    return None
+
+
 
 def move_object_to_collection(obj, collection_name):
     # Get the collection or create it if it doesn't exist
@@ -546,7 +561,11 @@ def create_scene_based_on_active_image(selected_object=None):
     if selected_object:
         active_image = get_image_from_selected_object(selected_object)
 
-    # If no image found on the selected object, try the image editor
+    # If no active image is found, try to get the primary image from the `_photostack` group node
+    if not active_image and selected_object:
+        active_image = get_image_from_photostack_group(selected_object)
+
+    # If still no image is found, try the image editor (as a last resort)
     if not active_image:
         try:
             active_image = get_active_image_from_image_editor()
@@ -586,6 +605,7 @@ def create_scene_based_on_active_image(selected_object=None):
         print(f"New scene created: {image_name}")
     else:
         print("No active image found to create a new scene.")
+
 
 def export_uv_layout(obj, filepath):
     # Ensure the object is active and selected
