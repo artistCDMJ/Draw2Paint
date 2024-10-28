@@ -23,7 +23,8 @@ from .utils import (find_brush, create_image_plane_from_image, create_matching_c
                     new_convert_curve_object,convert_gpencil_to_curve,move_trace_objects_to_collection, \
                     convert_image_plane_to_curve, is_canvas_mesh, create_compositor_node_tree,\
                     render_and_extract_image,calculate_texel_density, create_scene_based_on_active_image,\
-                    select_object_by_suffix)
+                    select_object_by_suffix, update_texture_settings, copy_photostack_nodes_to_compositor, \
+                    find_selected_texture_nodes)
 
 from bpy.types import Operator, Menu, Panel, UIList
 from bpy_extras.io_utils import ImportHelper
@@ -391,14 +392,6 @@ class D2P_OT_Image2CanvasPlus(bpy.types.Operator):
         camera_obj = create_matching_camera(image_plane_obj, width, height)
         bpy.context.view_layer.objects.active = camera_obj
         camera_obj.data.show_name = True
-
-        # Ensure the correct context is active before applying view settings
-        for area in bpy.context.screen.areas:
-            if area.type == 'VIEW_3D':
-                with bpy.context.temp_override(area=area):
-                    area.spaces.active.shading.type = 'SOLID'
-                    area.spaces.active.shading.light = 'FLAT'
-                    area.spaces.active.shading.color_type = 'TEXTURE'
 
         # Move camera and image plane to 'canvas_view' collection
         move_object_to_collection(image_plane_obj, active_image.name + '_canvas_view')
@@ -1328,7 +1321,7 @@ class D2P_OT_my_enum_shapes(bpy.types.Operator):
 
     def execute(self, context):
         scene = context.scene
-        mytool = scene.my_tool
+        mymask = scene.my_mask
         
         # Find the parent object with suffix '_canvas'
         suffix = '_canvas'
@@ -1353,7 +1346,7 @@ class D2P_OT_my_enum_shapes(bpy.types.Operator):
             else:
                 self.report({'WARNING'}, f"Parent object '{parent_object.name}' has no materials.")
         
-        if mytool.my_enum == 'OP1':
+        if mymask.my_enum == 'OP1':
             # Add a new bezier curve
             bpy.ops.curve.primitive_bezier_curve_add(radius=1, enter_editmode=False, align='WORLD', location=(0, 0, 0.15), scale=(1, 1, 1))
             new_obj = bpy.context.object
@@ -1369,7 +1362,7 @@ class D2P_OT_my_enum_shapes(bpy.types.Operator):
             bpy.ops.object.editmode_toggle()
             bpy.ops.wm.tool_set_by_id(name="builtin.draw")
 
-        elif mytool.my_enum == 'OP2':
+        elif mymask.my_enum == 'OP2':
             # Add a new bezier curve and set handle type to VECTOR
             bpy.ops.curve.primitive_bezier_curve_add(enter_editmode=True, align='WORLD', location=(0, 0, 0.15), scale=(1, 1, 1))
             new_obj = bpy.context.object
@@ -1384,7 +1377,7 @@ class D2P_OT_my_enum_shapes(bpy.types.Operator):
             bpy.ops.transform.resize(value=(0.1, 0.1, 0.1))
             bpy.ops.wm.tool_set_by_id(name="builtin.select_box")
 
-        elif mytool.my_enum == 'OP3':
+        elif mymask.my_enum == 'OP3':
             # Add a new bezier circle
             bpy.ops.curve.primitive_bezier_circle_add(radius=0.25, enter_editmode=False, align='WORLD', location=(0, 0, 0.15), scale=(1, 1, 1))
             new_obj = bpy.context.object
@@ -1400,7 +1393,7 @@ class D2P_OT_my_enum_shapes(bpy.types.Operator):
             bpy.ops.object.editmode_toggle()
             bpy.ops.wm.tool_set_by_id(name="builtin.select_box")
 
-        elif mytool.my_enum == 'OP4':
+        elif mymask.my_enum == 'OP4':
             # Add a new bezier circle
             bpy.ops.curve.primitive_bezier_circle_add(radius=0.25, enter_editmode=False, align='WORLD', location=(0, 0, 0.15), scale=(1, 1, 1))
             new_obj = bpy.context.object
@@ -2371,6 +2364,7 @@ class D2P_OT_SlotsVGroupsPopup(bpy.types.Operator):
     def draw(self, context):
         settings = context.tool_settings.image_paint
         ob = context.active_object
+        scene = context.scene
         layout = self.layout
         col = layout.column()
         box = col.box()
@@ -2461,7 +2455,13 @@ class D2P_OT_SlotsVGroupsPopup(bpy.types.Operator):
                             col.label(text="Active UV Layer: " + ob.data.uv_layers.active.name)
                         else:
                             col.label(text="No active UV map found", icon='ERROR')
-                col.operator("paint.add_texture_paint_slot", text="Add Texture", icon='TEXTURE_DATA')
+
+                #col.operator("paint.add_texture_paint_slot", text="Add Texture", icon='TEXTURE_DATA')
+                # Number of textures input
+                col.prop(scene, "num_textures")
+                col.operator("object.add_photostack", text="Generate/Extend Photostack")
+
+
             elif settings.mode == 'IMAGE':
                 # Image Mode Section
                 mesh = ob.data
@@ -2888,102 +2888,284 @@ class D2P_OT_SetColorFamilies(bpy.types.Operator):
         self.report({'INFO'}, "Brush Colors and Palettes Set")
         return {'FINISHED'}
 
-####nodes selected to compositor and back as one node
-class NODE_OT_flatten_images(bpy.types.Operator):
-    bl_idname = "node.flatten_images"
-    bl_label = "Flatten Images"
-    bl_description = "Flatten selected image nodes using a mix node and create a composite image"
-    bl_options = {'REGISTER', 'UNDO'}
+
+
+### photostack ops
+class PhotoStackProperties(bpy.types.PropertyGroup):
+    uv_map_name: bpy.props.StringProperty(
+        name="UV Map Name",
+        default="UVMap"
+    )
+class NODE_OT_copy_photostack_to_compositor(bpy.types.Operator):
+    bl_idname = "node.copy_photostack_to_compositor"
+    bl_label = "Copy PhotoStack to Compositor"
 
     def execute(self, context):
-        # Ensure we are in the Shader Editor
-        if context.area.type != 'NODE_EDITOR' or context.space_data.tree_type != 'ShaderNodeTree':
-            self.report({'ERROR'}, "This operator must be run in the Shader Editor")
-            return {'CANCELLED'}
+        copy_photostack_nodes_to_compositor()
 
-        obj = context.active_object
-        if not obj:
-            self.report({'ERROR'}, "No active object")
+        bpy.ops.d2p.editor_swap()
+        # Turn on Backdrop for Viewer Node
+        bpy.context.space_data.show_backdrop = True
+
+        return {'FINISHED'}
+
+
+class PhotoStack(bpy.types.Operator):
+    """Add or extend a 'Photostack' with Multiple Image Textures inside a Node Group"""
+    bl_idname = "object.add_photostack"
+    bl_label = "Add to or Create Photostack"
+
+    def execute(self, context):
+        scene = context.scene
+        num_textures = scene.num_textures
+        obj = context.object
+
+        # Ensure the object has a material
+        if not obj.data.materials:
+            self.report({'ERROR'}, "Object has no material.")
             return {'CANCELLED'}
 
         material = obj.active_material
-        if not material:
-            self.report({'ERROR'}, "Active object has no active material")
-            return {'CANCELLED'}
-
         if not material.use_nodes:
-            self.report({'ERROR'}, "Active material does not use nodes")
+            material.use_nodes = True
+
+        nodes = material.node_tree.nodes
+
+        # Find the first Image Texture node (this is the active image node to copy)
+        image_node = None
+        for node in nodes:
+            if node.type == 'TEX_IMAGE':
+                image_node = node
+                break
+
+        # If the image node isn't found in the material's main node tree, check inside the _photostack group node.
+        if not image_node:
+            # Check if a '_photostack' group node exists in the material
+            group_node = None
+            for node in nodes:
+                if node.type == 'GROUP' and "_photostack" in node.node_tree.name:
+                    group_node = node
+                    break
+
+            if group_node:
+                # Look for the original image node inside the _photostack group node
+                for sub_node in group_node.node_tree.nodes:
+                    if sub_node.type == 'TEX_IMAGE' and sub_node.image:
+                        image_node = sub_node
+                        break
+
+        # Validate the image node and retrieve the original image
+        if not image_node or not image_node.image:
+            self.report({'ERROR'}, "No valid image texture node found.")
             return {'CANCELLED'}
 
-        node_tree = material.node_tree
-        nodes = node_tree.nodes
+        original_image = image_node.image  # This is the original image to copy
 
-        # Get selected nodes from the node tree
-        selected_nodes = [node for node in nodes if node.select]
-
-        # Debug print to verify selected nodes
-        print("Selected nodes:", [(node.name, node.type) for node in selected_nodes])
-
-        image_nodes = [node for node in selected_nodes if node.type == 'TEX_IMAGE']
-        mix_nodes = [node for node in selected_nodes if node.type == 'MIX']
-
-        # Debug print to verify filtered nodes
-        print("Selected image nodes:", [node.name for node in image_nodes])
-        print("Selected mix nodes:", [node.name for node in mix_nodes])
-
-        # Debug print the actual types of all selected nodes to diagnose the issue
-        for node in selected_nodes:
-            print(f"Node {node.name} has type {node.type}")
-
-        if len(image_nodes) != 2 or len(mix_nodes) != 1:
-            self.report({'ERROR'}, "Select exactly two image nodes and one mix node")
-            return {'CANCELLED'}
-
-        image_node1, image_node2 = image_nodes
-        mix_node = mix_nodes[0]
-
-        blend_mode = mix_node.blend_type
-
-        image1 = image_node1.image
-        image2 = image_node2.image
-
-        if not image1.has_data or not image2.has_data:
-            self.report({'ERROR'}, "One or both images are not loaded")
-            return {'CANCELLED'}
-
-        width1, height1 = image1.size
-        width2, height2 = image2.size
-
-        if (width1, height1) != (width2, height2):
-            self.report({'ERROR'}, "Images must be the same size")
-            return {'CANCELLED'}
-
-        render_width, render_height = width1, height1
-        create_compositor_node_tree(image1, image2, blend_mode)
-        combined_image = render_and_extract_image("CombinedImage", render_width, render_height)
-
-        bpy.context.area.ui_type = 'ShaderNodeTree'
-
-        # Create a group from the selected nodes
-        bpy.ops.node.group_make()
-
-        # Find the newly created group node
+        # Check if a '_photostack' group node already exists in the material
         group_node = None
         for node in nodes:
-            if node.type == 'GROUP' and node.name not in [n.name for n in selected_nodes]:
+            if node.type == 'GROUP' and "_photostack" in node.node_tree.name:
                 group_node = node
                 break
 
-        if group_node:
-            group_node.label = "Flatten Input"
+        # If no group node exists, create a new one
+        if not group_node:
+            nodegroup_name = f"{original_image.name}_photostack"
+            nodegroup = bpy.data.node_groups.new(type='ShaderNodeTree', name=nodegroup_name)
 
-        # Add the new image texture node
-        new_image_node = nodes.new('ShaderNodeTexImage')
-        new_image_node.image = combined_image
-        new_image_node.label = "Flatten result"
-        new_image_node.location = group_node.location.x + 300, group_node.location.y
+            # Prepare links for adding more layers
+            links = nodegroup.links  # Initialize the links for the nodegroup here
+
+            # Create input and output nodes in the node group
+            group_input = nodegroup.nodes.new("NodeGroupInput")
+            group_output = nodegroup.nodes.new("NodeGroupOutput")
+            group_output.location = (600, 0)
+
+            # Add an output socket to the node group interface in Blender 4.0+
+            nodegroup.interface.new_socket(name="Result", socket_type='NodeSocketColor', in_out='OUTPUT')
+
+            # Create a new group node in the material
+            group_node = nodes.new(type="ShaderNodeGroup")
+            group_node.node_tree = nodegroup
+
+            ### Add a UV Map node for the first image (original image) ###
+            uv_node = nodegroup.nodes.new(type='ShaderNodeUVMap')
+            uv_node.location = (-300, 400)  # Position for the UV node
+            uv_node.uv_map = "UVMap"  # Assuming "UVMap", but this could be dynamic
+
+            # Copy the first image node to the node group as the first layer
+            img_tex = nodegroup.nodes.new(type='ShaderNodeTexImage')
+            img_tex.location = (-100, 400)
+            img_tex.image = original_image
+
+            # Connect the UV map to the original image texture node
+            links.new(uv_node.outputs['UV'], img_tex.inputs['Vector'])
+
+            previous_node = img_tex  # Track the first image node
+
+        else:
+            # If the group node already exists, retrieve it
+            nodegroup = group_node.node_tree  # This retrieves the existing nodegroup
+            links = nodegroup.links  # Initialize the links for the existing nodegroup
+
+            # Locate the Group Output node
+            group_output_node = None
+            for node in nodegroup.nodes:
+                if node.type == 'GROUP_OUTPUT':
+                    group_output_node = node
+                    break
+
+            if not group_output_node:
+                self.report({'ERROR'}, "Group output node not found.")
+                return {'CANCELLED'}
+
+            # Find the last node connected to the Group Output node
+            if group_output_node.inputs[0].is_linked:
+                last_link = group_output_node.inputs[0].links[0]
+                previous_node = last_link.from_node  # Set the last connected node as previous_node
+            else:
+                # If there's no Mix node or connection to the Group Output, fallback to the original image node
+                previous_node = None
+                for node in nodegroup.nodes:
+                    if node.type == 'TEX_IMAGE' and node.image == original_image:
+                        previous_node = node
+                        break
+
+                if not previous_node:
+                    self.report({'ERROR'}, "No valid previous node found.")
+                    return {'CANCELLED'}
+
+        # Start adding additional blank images (RGBA 0,0,0,0)
+        uv_y_offset = 200
+        img_y_offset = 400
+        mix_x_offset = 200
+
+        # Find the Group Output node
+        group_output_node = None
+        for node in nodegroup.nodes:
+            if node.type == 'GROUP_OUTPUT':
+                group_output_node = node
+                break
+
+        if not group_output_node:
+            self.report({'ERROR'}, "Group output node not found.")
+            return {'CANCELLED'}
+
+        # Keep track of existing textures to avoid name conflicts
+        num_existing_textures = len([n for n in nodegroup.nodes if n.type == 'TEX_IMAGE'])
+
+        # Add new blank image textures and mix them
+        for i in range(num_textures):
+            # Create a new blank image for painting with a unique name
+            new_image_name = f"PaintLayer_{num_existing_textures + i + 1}"
+            new_image = bpy.data.images.new(new_image_name, width=original_image.size[0], height=original_image.size[1],
+                                            alpha=True)
+            new_image.generated_color = (0, 0, 0, 0)  # RGBA 0,0,0,0 for transparency
+
+            # Create a new UV Map node and Image Texture node for the blank image
+            uv_node = nodegroup.nodes.new(type='ShaderNodeUVMap')
+            uv_node.location = (-300, uv_y_offset)
+            uv_node.uv_map = "UVMap"  # Assuming "UVMap", but this could be dynamic
+
+            img_tex = nodegroup.nodes.new(type='ShaderNodeTexImage')
+            img_tex.location = (-100, img_y_offset)
+            img_tex.image = new_image
+
+            # Connect the UV map to the Image Texture
+            links.new(uv_node.outputs['UV'], img_tex.inputs['Vector'])
+
+            # Create a mix node to blend the new image with the previous layer
+            mix_node = nodegroup.nodes.new(type='ShaderNodeMix')
+            mix_node.location = (mix_x_offset, img_y_offset)
+            mix_node.data_type = 'RGBA'  # Mix colors with alpha
+            mix_node.inputs["Factor"].default_value = 1.0  # Can be adjusted for blending
+
+            # Connect the previous node (last mix node or first image) to the new mix node
+            if previous_node.type == 'ShaderNodeMix':
+                # For ShaderNodeMix, use the 'Result' output
+                links.new(previous_node.outputs['Result'], mix_node.inputs['A'])  # Previous mix Result goes to A
+            else:
+                # Check if the 'Color' output exists, else use 'Result' or another output
+                if 'Color' in previous_node.outputs:
+                    links.new(previous_node.outputs['Color'], mix_node.inputs['A'])  # Previous image's Color goes to A
+                elif 'Result' in previous_node.outputs:
+                    links.new(previous_node.outputs['Result'],
+                              mix_node.inputs['A'])  # Fallback to 'Result' if no 'Color'
+                elif 'RGBA' in previous_node.outputs:
+                    links.new(previous_node.outputs['RGBA'], mix_node.inputs['A'])  # Some nodes may have 'RGBA'
+                else:
+                    # If none of these outputs exist, raise an error
+                    self.report({'ERROR'}, f"No suitable output found on previous node: {previous_node.name}")
+                    return {'CANCELLED'}
+
+            # Connect new image's Color and Alpha to the new mix node
+            links.new(img_tex.outputs['Color'], mix_node.inputs['B'])  # New image's Color goes to B
+            links.new(img_tex.outputs['Alpha'], mix_node.inputs['Factor'])  # Alpha controls the mix factor
+
+            # Update previous_node to the new mix node for the next iteration
+            previous_node = mix_node
+
+            # Adjust positions for the next iteration
+            uv_y_offset -= 200
+            img_y_offset -= 200
+            mix_x_offset += 200
+
+        # Final output connection to the Group Output node
+        links.new(previous_node.outputs['Result'],
+                  group_output_node.inputs['Result'])  # Connect final mix Result to Group Output
+
+        # Connect the group output to the Material Output's surface
+        material_output_node = None
+        for node in nodes:
+            if node.type == 'OUTPUT_MATERIAL':
+                material_output_node = node
+                break
+
+        if not material_output_node:
+            material_output_node = nodes.new(type='ShaderNodeOutputMaterial')
+            material_output_node.location = (800, 0)
+
+        # Connect the group output to the material output
+        links = material.node_tree.links
+        links.new(group_node.outputs['Result'], material_output_node.inputs['Surface'])
 
         return {'FINISHED'}
+
+###### Swap Image Textures across two Image Nodes
+class TextureSwapProperties(bpy.types.PropertyGroup):
+    swap_select: bpy.props.BoolProperty(name="Select for Swap")
+
+
+class SwapSelectedTextures(bpy.types.Operator):
+    """Swaps images between two selected texture nodes"""
+    bl_idname = "image.swap_selected_textures"
+    bl_label = "Swap Selected Textures"
+
+    @classmethod
+    def poll(cls, context):
+        selected_nodes = find_selected_texture_nodes(context.active_object.active_material.node_tree)
+        return len(selected_nodes) == 2
+
+    def execute(self, context):
+        mat = context.active_object.active_material
+        selected_nodes = find_selected_texture_nodes(mat.node_tree)
+
+        if len(selected_nodes) == 2:
+            node1, node2 = selected_nodes
+            # Swap images
+            image1 = node1.image
+            node1.image = node2.image
+            node2.image = image1
+            self.report({'INFO'}, f"Swapped images '{image1.name}' and '{node2.image.name}'")
+        else:
+            self.report({'WARNING'}, "Please select exactly two texture nodes to swap.")
+
+        # Clear selections after swap
+        for node in selected_nodes:
+            node.texture_swap_props.swap_select = False
+
+        return {'FINISHED'}
+
 
 #flip gradient direction
 class D2P_OT_flip_gradient(bpy.types.Operator):
@@ -3066,6 +3248,23 @@ class D2P_OT_Shader2ViewerNode(bpy.types.Operator):
     bl_label = "Shader to Viewer"
     bl_description = "Copy the active image node from the shader to a new image node connected to the Viewer Node in the compositor"
 
+    def find_active_image_texture_node(self, node_tree):
+        """Recursively find the active ShaderNodeTexImage node, even if inside a group."""
+        active_node = node_tree.nodes.active
+
+        # If the active node is an image texture node, return it directly
+        if isinstance(active_node, bpy.types.ShaderNodeTexImage):
+            return active_node
+
+        # If the active node is a group, search inside the group node tree
+        elif isinstance(active_node, bpy.types.ShaderNodeGroup):
+            group_tree = active_node.node_tree
+            # Recursively call this method to search within the group
+            return self.find_active_image_texture_node(group_tree)
+
+        # If no image texture node is found, return None
+        return None
+
     def execute(self, context):
         obj = context.active_object
 
@@ -3079,12 +3278,11 @@ class D2P_OT_Shader2ViewerNode(bpy.types.Operator):
             self.report({'ERROR'}, "No active material with nodes found")
             return {'CANCELLED'}
 
-        # Find the active image texture node
-        shader_tree = mat.node_tree
-        active_node = shader_tree.nodes.active
+        # Use the new recursive function to find the active image texture node
+        active_node = self.find_active_image_texture_node(mat.node_tree)
 
-        if not isinstance(active_node, bpy.types.ShaderNodeTexImage):
-            self.report({'ERROR'}, "Active node is not an image texture node")
+        if active_node is None:
+            self.report({'ERROR'}, "No active image texture node found")
             return {'CANCELLED'}
 
         image = active_node.image
@@ -3117,9 +3315,13 @@ class D2P_OT_Shader2ViewerNode(bpy.types.Operator):
 
         # Connect the image node to the Viewer Node
         comp_node_tree.links.new(image_node.outputs['Image'], viewer_node.inputs['Image'])
-        
-        # Turn on Backdrop for Viewer Node
-        bpy.context.space_data.show_backdrop = True
+
+        # Turn on Backdrop for Viewer Node if possible
+        if hasattr(bpy.context.space_data, 'show_backdrop'):
+            bpy.context.space_data.show_backdrop = True
+
+        #swap editor
+        bpy.ops.d2p.editor_swap()
 
         self.report({'INFO'}, f"Image '{image.name}' copied to a new viewer node in the compositor")
         return {'FINISHED'}
@@ -3129,6 +3331,21 @@ class D2P_OT_Viewer2Image(bpy.types.Operator):
     bl_idname = "viewer.viewer2image"
     bl_label = "Save Viewer Image"
     bl_description = "Save the Viewer Node result to a unique image file and update the shader tree if necessary"
+
+    def find_active_image_node_group(self, node_tree):
+        """Recursively find if the active node is an image texture within a group."""
+        active_node = node_tree.nodes.active
+
+        if isinstance(active_node, bpy.types.ShaderNodeTexImage):
+            return active_node, None  # Found image node, return with no group context
+
+        elif isinstance(active_node, bpy.types.ShaderNodeGroup):
+            group_tree = active_node.node_tree
+            image_node, group_node = self.find_active_image_node_group(group_tree)
+            if image_node:
+                return image_node, active_node  # Return the image node and its parent group node
+
+        return None, None  # No active image texture node found
 
     def execute(self, context):
         # Ensure the context is correct
@@ -3151,37 +3368,16 @@ class D2P_OT_Viewer2Image(bpy.types.Operator):
             self.report({'ERROR'}, "No Viewer Node found in the Compositor")
             return {'CANCELLED'}
 
-        # Helper function to trace back and get the base image name and connected group node name
-        def get_image_and_group_name_from_node(node):
-            base_name = None
-            group_name = None
-            if node.type == 'IMAGE' and node.image:
-                base_name = bpy.path.clean_name(node.image.name)  # Base image name
-            if node.type == 'GROUP':
-                group_name = bpy.path.clean_name(node.name)  # Group node name
-            if node.type == 'RENDER_LAYERS':
-                base_name = "render_layer"
-            for input_socket in node.inputs:
-                if input_socket.is_linked:
-                    linked_node = input_socket.links[0].from_node
-                    linked_base_name, linked_group_name = get_image_and_group_name_from_node(linked_node)
-                    if linked_base_name:
-                        base_name = linked_base_name
-                    if linked_group_name:
-                        group_name = linked_group_name
-            return base_name, group_name
-
-        # Trace the inputs to find base image name and group node name
-        base_image_name, group_node_name = get_image_and_group_name_from_node(viewer_node)
+        # Get image and group name from Viewer Node inputs
+        base_image_name, group_node_name = self.get_image_and_group_name_from_node(viewer_node)
 
         if not base_image_name:
-            base_image_name = "viewer_image"  # Fallback if no image source is found
+            base_image_name = "viewer_image"
 
         if group_node_name:
-            # Append the Group Node name to the base image name
             image_name = f"{base_image_name}_{group_node_name}_Process"
         else:
-            image_name = base_image_name  # Fallback to just the base image name if no Group Node is found
+            image_name = base_image_name
 
         # Ensure that Viewer Node has a valid image buffer
         if not bpy.data.images.get('Viewer Node'):
@@ -3193,23 +3389,19 @@ class D2P_OT_Viewer2Image(bpy.types.Operator):
         # Explicitly set the directory to C:\tmp\
         temp_dir = "C:\\tmp\\"
 
-        # Ensure the temp directory exists
         if not os.path.exists(temp_dir):
             os.makedirs(temp_dir)
 
-        # Generate a unique filename based on the number of existing files
         existing_files = [f for f in os.listdir(temp_dir) if f.startswith(image_name) and f.endswith('.png')]
         iteration = len(existing_files) + 1
         image_filename = f"{image_name}_{iteration:03d}.png"
         temp_filepath = os.path.join(temp_dir, image_filename)
 
-        # Save the image to the unique file
         viewer_image.save_render(temp_filepath)
 
-        # Load the unique image into Blender
         image = bpy.data.images.load(temp_filepath)
 
-        # Add or update the image in the active object's shader tree
+        # Locate the active image node and determine if it’s within a group
         obj = context.active_object
         if obj is None or obj.type != 'MESH':
             self.report({'ERROR'}, "No active mesh object found")
@@ -3220,35 +3412,57 @@ class D2P_OT_Viewer2Image(bpy.types.Operator):
             mat = bpy.data.materials.new(name="Material")
             obj.data.materials.append(mat)
 
-        if mat.use_nodes is False:
+        if not mat.use_nodes:
             mat.use_nodes = True
 
-        # Get the material's node tree
         shader_tree = mat.node_tree
 
-        # Check if an Image Texture node with the corresponding name already exists
-        target_node_name = f"{image_name}_viewer_image"
-        image_node = None
+        # Check if the active image texture node is within a group
+        image_node, parent_group_node = self.find_active_image_node_group(shader_tree)
 
-        for node in shader_tree.nodes:
+        target_node_name = f"{image_name}_viewer_image"
+        new_image_node = None
+
+        # Find or create the image texture node to update in the shader tree or group
+        target_tree = parent_group_node.node_tree if parent_group_node else shader_tree
+        for node in target_tree.nodes:
             if isinstance(node, bpy.types.ShaderNodeTexImage) and node.name.startswith(target_node_name):
-                image_node = node
+                new_image_node = node
                 break
 
-        if image_node:
-            # If it exists, update the image data in the existing node
-            image_node.image = image
-            self.report({'INFO'}, f"Viewer image '{image_filename}' updated in existing shader node '{image_node.name}'")
+        if new_image_node:
+            new_image_node.image = image
+            self.report({'INFO'}, f"Viewer image '{image_filename}' updated in existing shader node '{new_image_node.name}'")
         else:
-            # If it doesn't exist, create a new Image Texture node
-            image_node = shader_tree.nodes.new(type='ShaderNodeTexImage')
-            image_node.image = image
-            image_node.name = target_node_name
-            image_node.label = target_node_name
-            image_node.location = (0, 0)
-            self.report({'INFO'}, f"Viewer image '{image_filename}' saved and added as new node in active object shader")
+            new_image_node = target_tree.nodes.new(type='ShaderNodeTexImage')
+            new_image_node.image = image
+            new_image_node.name = target_node_name
+            new_image_node.label = target_node_name
+            new_image_node.location = (0, 0)
+            self.report({'INFO'}, f"Viewer image '{image_filename}' saved and added as new node in shader tree")
+
+        bpy.ops.d2p.editor_swap()
 
         return {'FINISHED'}
+
+    def get_image_and_group_name_from_node(self, node):
+        """Trace back from a given node to get base image name and group node name."""
+        base_name, group_name = None, None
+        if node.type == 'IMAGE' and node.image:
+            base_name = bpy.path.clean_name(node.image.name)
+        if node.type == 'GROUP':
+            group_name = bpy.path.clean_name(node.name)
+        if node.type == 'RENDER_LAYERS':
+            base_name = "render_layer"
+        for input_socket in node.inputs:
+            if input_socket.is_linked:
+                linked_node = input_socket.links[0].from_node
+                linked_base, linked_group = self.get_image_and_group_name_from_node(linked_node)
+                if linked_base:
+                    base_name = linked_base
+                if linked_group:
+                    group_name = linked_group
+        return base_name, group_name
 
 
 class D2P_OT_EditorSwap(bpy.types.Operator):

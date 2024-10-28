@@ -16,7 +16,7 @@
 bl_info = {
     "name": "Draw2Paint",
     "author": "CDMJ, Spirou4D, Lapineige, Bart Crouch, batFINGER, stacker, todashuta",
-    "version": (4, 1, 1),
+    "version": (4, 1, 2),
     "blender": (4, 2, 0),
     "location": "UI > Draw2Paint",
     "description": "2D Paint in 3D View, Mask Manipulation, EZPaint Adoption",
@@ -118,7 +118,6 @@ classes = (
     IMAGE_RESIZE_OT_main,
     IMAGE_RESIZE_PT_panel,
     D2P_PT_node_editor_panel,
-    NODE_OT_flatten_images,
     D2P_OT_SetColorFamilies,
     D2P_OT_Trace2Curve,
     D2P_OT_flip_gradient,
@@ -129,7 +128,14 @@ classes = (
     UV_WireColor,
     VIEW3D_WireColor,
     D2P_OT_set_active_texture_slot,
-    D2P_OT_set_active_clone_slot
+    D2P_OT_set_active_clone_slot,
+    PhotoStackProperties,
+    PhotoStack,
+    NODE_OT_copy_photostack_to_compositor,
+    D2P_PT_PhotoStack,
+    TextureSwapProperties,
+    SwapSelectedTextures
+
 )
 
 def register():
@@ -139,12 +145,13 @@ def register():
         bpy.utils.register_class(cls)
     bpy.types.IMAGE_MT_image.append(draw_image_editor_button)
     bpy.types.NODE_MT_node.append(draw_node_editor_button)
-    bpy.types.Scene.my_tool = bpy.props.PointerProperty(type=properties.D2P_Properties)
+    bpy.types.Scene.my_mask = bpy.props.PointerProperty(type=properties.D2P_Properties)
     bpy.types.Scene.image_resize_addon_width = bpy.props.IntProperty(name="Width")
     bpy.types.Scene.image_resize_addon_height = bpy.props.IntProperty(name="Height")
     bpy.types.Scene.image_resize_addon_percentage = bpy.props.FloatProperty(name="Scale Percentage", default=100.0,
                                                                             min=0.0)
     bpy.types.Scene.texel_density_result = bpy.props.StringProperty(name="Texel Density Result", default="")
+    bpy.types.Node.texture_swap_props = bpy.props.PointerProperty(type=TextureSwapProperties)
     bpy.types.Scene.view_mode = bpy.props.EnumProperty(
         name="View Mode",
         description="Current view mode",
@@ -158,6 +165,20 @@ def register():
     if hasattr(keymaps, 'register'):
         keymaps.register()
     bpy.types.VIEW3D_PT_tools_brush_color.append(draw_func)
+
+    bpy.types.Scene.num_textures = bpy.props.IntProperty(
+        name="Number of Textures",
+        default=1,  # Set default to 1
+        min=1,
+        max=10,
+        description="Number of image textures to add",
+        update=update_texture_settings  # Ensure we update texture settings on change
+    )
+
+    bpy.types.Scene.texture_settings = bpy.props.CollectionProperty(type=PhotoStackProperties)
+
+    # Initialize the collection when the script is run
+    update_texture_settings(bpy.context.scene, bpy.context)
 
 
 
@@ -177,6 +198,10 @@ def unregister():
     del bpy.types.Scene.view_mode
     del bpy.types.Scene.texel_density_result
     bpy.types.VIEW3D_PT_tools_brush_color.remove(draw_func)
+    del bpy.types.Node.texture_swap_props
+
+    del bpy.types.Scene.num_textures
+    del bpy.types.Scene.texture_settings
 
 
 if __name__ == "__main__":

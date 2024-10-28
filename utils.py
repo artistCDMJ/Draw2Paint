@@ -47,13 +47,151 @@ def create_compositor_node_tree(image1, image2, blend_mode):
     tree.links.new(image_node2.outputs['Image'], mix_node.inputs[2])
 
     # Connect the alpha output of the second image to the factor input of the Mix node
-    tree.links.new(image_node2.outputs['Alpha'], mix_node.inputs[0])
+    #tree.links.new(image_node2.outputs['Alpha'], mix_node.inputs[0])
 
     # Add a Composite node to output the result
     composite_node = tree.nodes.new(type='CompositorNodeComposite')
     composite_node.location = 400, 0
 
     tree.links.new(mix_node.outputs['Image'], composite_node.inputs['Image'])
+
+###photostack start
+def copy_photostack_nodes_to_compositor():
+    # Ensure an object is selected
+    obj = bpy.context.active_object
+    if not obj:
+        print("No active object selected.")
+        return
+
+    # Ensure the object has an active material
+    if not obj.active_material:
+        print("The selected object has no active material.")
+        return
+
+    material = obj.active_material
+
+    # Ensure the material uses nodes
+    if not material.use_nodes:
+        print("The active material does not use nodes.")
+        return
+
+    # Access the node tree of the active material
+    node_tree = material.node_tree
+    active_node = node_tree.nodes.active  # Get the active node in the node editor
+
+    # Check if the active node is a group node
+    if not active_node or active_node.type != 'GROUP':
+        print("The active node is not a group node.")
+        return
+
+    shader_node_group = active_node.node_tree
+
+    # Enable Compositor Nodes
+    bpy.context.scene.use_nodes = True
+    compositor_nodes = bpy.context.scene.node_tree.nodes
+    compositor_links = bpy.context.scene.node_tree.links
+
+    # Create a Viewer Node if not already present
+    viewer_node = None
+    for node in compositor_nodes:
+        if node.type == 'VIEWER':
+            viewer_node = node
+            break
+
+    if not viewer_node:
+        viewer_node = compositor_nodes.new(type="CompositorNodeViewer")
+        viewer_node.location = (500, 300)
+
+    # Keep track of added image and mix nodes for connections
+    image_nodes = []
+    node_offset_x = 0
+    node_offset_y = 0
+
+    # Iterate through nodes in photoStack, copying Image Texture and Mix nodes
+    mix_nodes = [node for node in shader_node_group.nodes if node.type == 'MIX']  # Updated to 'MIX'
+    if not mix_nodes:
+        print("No Mix nodes found in the PhotoStack group.")
+        return
+
+    # Print the blend types found in shader Mix nodes
+    for i, mix_node in enumerate(mix_nodes):
+        print(f"Shader Mix Node {i} blend type: {mix_node.blend_type}")
+
+    # Copy Image Texture nodes
+    for node in shader_node_group.nodes:
+        if node.type == 'TEX_IMAGE':
+            new_node = compositor_nodes.new(type="CompositorNodeImage")
+            new_node.location = (node_offset_x, node_offset_y)
+            new_node.label = "PhotoStack Image"
+            new_node.name = node.name
+            if node.image:
+                new_node.image = node.image
+            image_nodes.append(new_node)
+            node_offset_x += 300
+
+    if len(image_nodes) >= 2:
+        # First Mix node setup
+        first_mix = compositor_nodes.new(type="CompositorNodeMixRGB")
+        first_mix.location = (node_offset_x, node_offset_y)
+        first_mix.use_alpha = True
+        first_mix.blend_type = mix_nodes[0].blend_type
+        print(f"Set first compositor mix node blend type to: {first_mix.blend_type}")
+
+        compositor_links.new(image_nodes[0].outputs[0], first_mix.inputs[1])
+        compositor_links.new(image_nodes[1].outputs[0], first_mix.inputs[2])
+        node_offset_x += 300
+
+        # Additional Mix nodes
+        previous_mix = first_mix
+        for i in range(2, len(image_nodes)):
+            mix_node = compositor_nodes.new(type="CompositorNodeMixRGB")
+            mix_node.location = (node_offset_x, node_offset_y)
+            mix_node.use_alpha = True
+            if i - 1 < len(mix_nodes):
+                blend_type = mix_nodes[i - 1].blend_type
+                mix_node.blend_type = blend_type
+                print(f"Set compositor mix node {i} blend type to: {blend_type}")
+
+            # Link previous Mix node output to the current Mix node input 1
+            compositor_links.new(previous_mix.outputs[0], mix_node.inputs[1])
+            compositor_links.new(image_nodes[i].outputs[0], mix_node.inputs[2])
+            previous_mix = mix_node
+            node_offset_x += 300
+
+    else:
+        print("Insufficient image nodes to perform mixing.")
+
+    compositor_links.new(previous_mix.outputs[0], viewer_node.inputs[0])
+    print("PhotoStack nodes copied to the Compositor with alpha blending and blend types applied.")
+
+def find_selected_texture_nodes(node_tree):
+    """Recursively find all selected image texture nodes in a node tree."""
+    selected_nodes = []
+    for node in node_tree.nodes:
+        if getattr(node, 'texture_swap_props', None) and node.texture_swap_props.swap_select:
+            selected_nodes.append(node)
+        elif node.type == 'GROUP' and node.node_tree:
+            selected_nodes.extend(find_selected_texture_nodes(node.node_tree))
+    return selected_nodes
+
+
+
+### render settings for photostack
+def update_texture_settings(self, context):
+    """Update the texture settings collection whenever the number of textures changes."""
+    scene = context.scene
+    current_num = len(scene.texture_settings)
+    requested_num = scene.num_textures
+
+    # Add entries if num_textures is greater than the current number of entries
+    if requested_num > current_num:
+        for i in range(requested_num - current_num):
+            scene.texture_settings.add()
+
+    # Remove entries if num_textures is less than the current number of entries
+    elif requested_num < current_num:
+        for i in range(current_num - requested_num):
+            scene.texture_settings.remove(len(scene.texture_settings) - 1)
 
 def render_and_extract_image(output_name, width, height):
     bpy.context.scene.render.resolution_x = width
@@ -309,7 +447,7 @@ def create_image_plane_from_image(active_image, scale_factor=0.01):
     bpy.ops.transform.resize(value=(width * scale_factor / 5, height * scale_factor / 5, 1))
     bpy.ops.object.mode_set(mode='OBJECT')
 
-    # Create material and node setup with Emission and Principled BSDF
+    # Create material and node setup with Image and Principled BSDF
     mat = bpy.data.materials.new(name=name + "Material")
     mat.use_nodes = True
 
@@ -320,39 +458,20 @@ def create_image_plane_from_image(active_image, scale_factor=0.01):
     tex_image.location = (-617.7554931640625, 626.1090087890625)
     tex_image.image = active_image
 
-    # Add Emission shader node
-    emission = mat.node_tree.nodes.new('ShaderNodeEmission')
-    emission.location = (-172.02610778808594, 348.537109375)
-
-    # Add Mix Shader node
-    mix_shader = mat.node_tree.nodes.new('ShaderNodeMixShader')
-    mix_shader.location = (250.89752197265625, 651.1596069335938)
-
-    # Connect Image texture to both shaders (BSDF and Emission)
+    # Connect Image texture to (BSDF)
     mat.node_tree.links.new(bsdf.inputs['Base Color'], tex_image.outputs['Color'])
-    mat.node_tree.links.new(emission.inputs['Color'], tex_image.outputs['Color'])
 
-    # Connect both shaders to the Mix Shader
-    mat.node_tree.links.new(mix_shader.inputs[1], bsdf.outputs['BSDF'])
-    mat.node_tree.links.new(mix_shader.inputs[2], emission.outputs['Emission'])
-
-    # Optionally add a Value node to control the mix factor
-    mix_factor = mat.node_tree.nodes.new('ShaderNodeValue')
-    mix_factor.location = (243.66448974609375, 506.4412841796875)
-    mix_factor.outputs[0].default_value = 0.5  # Default to 50% mix
-    mat.node_tree.links.new(mix_shader.inputs[0], mix_factor.outputs[0])
-
-    # Connect Mix Shader to Material Output
+    # Connect Image Node DIRECTLY to Material Output
     material_output = mat.node_tree.nodes['Material Output']
     material_output.location = (453.1165466308594, 643.1837768554688)
-    mat.node_tree.links.new(material_output.inputs['Surface'], mix_shader.outputs['Shader'])
+    mat.node_tree.links.new(material_output.inputs['Surface'], tex_image.outputs['Color'])
 
     # Apply the material to the object
     obj.data.materials.append(mat)
 
     # Rename the UV map
-    uv_layer = obj.data.uv_layers.active
-    uv_layer.name = name + "_uvmap"
+    #uv_layer = obj.data.uv_layers.active
+    #uv_layer.name = name + "_uvmap"
 
     # Update the view layer to ensure transformations are applied
     bpy.context.view_layer.update()
