@@ -2509,6 +2509,7 @@ class D2P_OT_SlotsVGroupsPopup(bpy.types.Operator):
                 col.operator("object.add_photostack", text="Generate/Extend Photostack")
 
 
+
             elif settings.mode == 'IMAGE':
                 # Image Mode Section
                 mesh = ob.data
@@ -2521,6 +2522,25 @@ class D2P_OT_SlotsVGroupsPopup(bpy.types.Operator):
                 col.menu("VIEW3D_MT_tools_projectpaint_uvlayer", text=uv_text, translate=False)
 
             col.separator()
+
+            '''if mat and mat.use_nodes:
+                col.label(text="Select Two Textures to Swap:")
+                self.draw_texture_nodes(layout, mat.node_tree)
+
+                col.operator("image.swap_selected_textures", text="Swap Selected Textures")
+
+            def draw_texture_nodes(self, layout, node_tree, prefix=""):
+                """Recursively draw texture nodes with checkboxes, showing image names."""
+                for node in node_tree.nodes:
+                    if node.type == 'TEX_IMAGE' and node.image:
+                        row = layout.row()
+                        # Display image name with checkbox
+                        image_name = node.image.name
+                        row.prop(node.texture_swap_props, "swap_select", text=prefix + image_name)
+
+                    elif node.type == 'GROUP' and node.node_tree:
+                        # Recurse into group nodes
+                        self.draw_texture_nodes(layout, node.node_tree, prefix=prefix + node.name + " > ")'''
 
         # Ensure that the button block is drawn **once**, outside the mode checks
         if bpy.context.scene.render.engine in {'CYCLES', 'BLENDER_EEVEE_NEXT'}:
