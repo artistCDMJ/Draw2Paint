@@ -2408,6 +2408,19 @@ class D2P_OT_SlotsVGroupsPopup(bpy.types.Operator):
         print("poll failed")
         return False
 
+    def draw_texture_nodes(self, layout, node_tree, prefix=""):
+        """Recursively draw texture nodes with checkboxes, showing image names."""
+        for node in node_tree.nodes:
+            if node.type == 'TEX_IMAGE' and node.image:
+                row = layout.row()
+                # Display image name with checkbox
+                image_name = node.image.name
+                row.prop(node.texture_swap_props, "swap_select", text=prefix + image_name)
+
+            elif node.type == 'GROUP' and node.node_tree:
+                # Recurse into group nodes
+                self.draw_texture_nodes(layout, node.node_tree, prefix=prefix + node.name + " > ")
+
     def draw(self, context):
         settings = context.tool_settings.image_paint
         ob = context.active_object
@@ -2503,10 +2516,19 @@ class D2P_OT_SlotsVGroupsPopup(bpy.types.Operator):
                         else:
                             col.label(text="No active UV map found", icon='ERROR')
 
-                #col.operator("paint.add_texture_paint_slot", text="Add Texture", icon='TEXTURE_DATA')
-                # Number of textures input
-                col.prop(scene, "num_textures")
-                col.operator("object.add_photostack", text="Generate/Extend Photostack")
+            # col.operator("paint.add_texture_paint_slot", text="Add Texture", icon='TEXTURE_DATA')
+            # Number of textures input
+            mat = context.active_object.active_material
+            col.prop(scene, "num_textures")
+            col.operator("object.add_photostack", text="Generate/Extend Photostack")
+            if mat and mat.use_nodes:
+                layout.label(text="Select Two Textures to Swap:")
+                self.draw_texture_nodes(layout, mat.node_tree)
+
+                layout.operator("image.swap_selected_textures", text="Swap Selected Textures")
+
+
+
 
 
 
@@ -2523,26 +2545,6 @@ class D2P_OT_SlotsVGroupsPopup(bpy.types.Operator):
 
             col.separator()
 
-            '''if mat and mat.use_nodes:
-                col.label(text="Select Two Textures to Swap:")
-                self.draw_texture_nodes(layout, mat.node_tree)
-
-                col.operator("image.swap_selected_textures", text="Swap Selected Textures")
-
-            def draw_texture_nodes(self, layout, node_tree, prefix=""):
-                """Recursively draw texture nodes with checkboxes, showing image names."""
-                for node in node_tree.nodes:
-                    if node.type == 'TEX_IMAGE' and node.image:
-                        row = layout.row()
-                        # Display image name with checkbox
-                        image_name = node.image.name
-                        row.prop(node.texture_swap_props, "swap_select", text=prefix + image_name)
-
-                    elif node.type == 'GROUP' and node.node_tree:
-                        # Recurse into group nodes
-                        self.draw_texture_nodes(layout, node.node_tree, prefix=prefix + node.name + " > ")'''
-
-        # Ensure that the button block is drawn **once**, outside the mode checks
         if bpy.context.scene.render.engine in {'CYCLES', 'BLENDER_EEVEE_NEXT'}:
             col.label(text="Save/Reload")
             col.operator("d2p.display_active_slot", text="Slot2Display")
