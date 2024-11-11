@@ -2002,13 +2002,26 @@ class D2P_OT_BrushPopup(bpy.types.Operator):
             row.scale_x = 1.5  # Increase the horizontal scale of the row
             row.scale_y = 1.5  # Increase vertical scale (makes icons appear larger vertically too)
 
-            # Tool buttons with larger icons
-            row.operator("wm.tool_set_by_id", text="", icon='BRUSH_TEXDRAW').name = "builtin_brush.Draw"
-            row.operator("wm.tool_set_by_id", text="", icon='BRUSH_SOFTEN').name = "builtin_brush.Soften"
-            row.operator("wm.tool_set_by_id", text="", icon='BRUSH_SMEAR').name = "builtin_brush.Smear"
-            row.operator("wm.tool_set_by_id", text="", icon='BRUSH_CLONE').name = "builtin_brush.Clone"
-            row.operator("wm.tool_set_by_id", text="", icon='BRUSH_TEXFILL').name = "builtin_brush.Fill"
-            row.operator("wm.tool_set_by_id", text="", icon='BRUSH_TEXMASK').name = "builtin_brush.Mask"
+            # Set the tool name on Blender version
+            if bpy.app.version > (4, 2, 0):
+                # Tool buttons with larger icons
+                row.operator("wm.tool_set_by_id", text="", icon='BRUSH_DATA').name = "builtin.brush"
+                row.operator("wm.tool_set_by_id", text="", icon='ALIASED').name = "builtin_brush.soften"
+                row.operator("wm.tool_set_by_id", text="", icon='FORCE_WIND').name = "builtin_brush.smear"
+                row.operator("wm.tool_set_by_id", text="", icon='AREA_JOIN_DOWN').name = "builtin_brush.clone"
+                row.operator("wm.tool_set_by_id", text="", icon='FORCE_TEXTURE').name = "builtin_brush.fill"
+                row.operator("wm.tool_set_by_id", text="", icon='MESH_MONKEY').name = "builtin_brush.mask"
+
+
+            else:
+                row.operator("wm.tool_set_by_id", text="", icon='BRUSH_DATA').name = "builtin_brush.Draw"
+                row.operator("wm.tool_set_by_id", text="", icon='ALIASED').name = "builtin_brush.Soften"
+                row.operator("wm.tool_set_by_id", text="", icon='FORCE_WIND').name = "builtin_brush.Smear"
+                row.operator("wm.tool_set_by_id", text="", icon='AREA_JOIN').name = "builtin_brush.Clone"
+                row.operator("wm.tool_set_by_id", text="", icon='FORCE_TEXTURE').name = "builtin_brush.Fill"
+                row.operator("wm.tool_set_by_id", text="", icon='MESH_MONKEY').name = "builtin_brush.Mask"
+
+
 
             # imagepaint tool operate  buttons: UILayout.template_ID_preview()
             col = layout.split().column()
@@ -2148,6 +2161,52 @@ class D2P_OT_BrushPopup(bpy.types.Operator):
             context.space_data.mode = 'PAINT'
 
         return context.window_manager.invoke_props_dialog(self, width=180)
+
+    def execute(self, context):
+        return {'FINISHED'}
+############## palette popup for convenience aside from brush popup
+class D2P_PT_PalettePopup(bpy.types.Operator):
+    """Popup Menu with Color Palette"""
+    bl_idname = "d2p.palette_popup"
+    bl_label = "Color Palette Popup"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    @classmethod
+    def poll(cls, context):
+        """Ensures popup is shown only in valid paint modes on a mesh object."""
+        if context.active_object:
+            A = context.active_object.type == 'MESH'
+            B = context.mode in {'PAINT_TEXTURE', 'PAINT_VERTEX', 'PAINT_WEIGHT'}
+            return A and B
+        return False
+
+    def paint_settings(self, context):
+        """Retrieve paint settings based on the paint mode."""
+        toolsettings = context.tool_settings
+
+        if context.vertex_paint_object:
+            return toolsettings.vertex_paint
+        elif context.weight_paint_object:
+            return toolsettings.weight_paint
+        elif context.image_paint_object:
+            if toolsettings.image_paint and toolsettings.image_paint.detect_data():
+                return toolsettings.image_paint
+        return None
+
+    def draw(self, context):
+        layout = self.layout
+        settings = self.paint_settings(context)
+
+        if settings:
+            layout.template_ID(settings, "palette", new="palette.new")
+            if settings.palette:
+                layout.template_palette(settings, "palette", color=True)
+        else:
+            layout.label(text="No paint settings available in this mode")
+            print("No valid paint settings found. Ensure correct mode and object setup.")
+
+    def invoke(self, context, event):
+        return context.window_manager.invoke_props_dialog(self, width=200)
 
     def execute(self, context):
         return {'FINISHED'}
@@ -2323,10 +2382,6 @@ class D2P_OT_set_active_clone_slot(bpy.types.Operator):  # hack to get image lay
 
         return {'FINISHED'}
 
-
-
-
-
 ##################### main popup operator
 class D2P_OT_SlotsVGroupsPopup(bpy.types.Operator):
     """Slots ProjectPaint popup"""
@@ -2345,8 +2400,6 @@ class D2P_OT_SlotsVGroupsPopup(bpy.types.Operator):
         default=False  # Starts as collapsed
     )
 
-    ####################################################################
-
     def check(self, context):
         return True
 
@@ -2361,6 +2414,19 @@ class D2P_OT_SlotsVGroupsPopup(bpy.types.Operator):
                 return True
         print("poll failed")
         return False
+
+    def draw_texture_nodes(self, layout, node_tree, prefix=""):
+        """Recursively draw texture nodes with checkboxes, showing image names."""
+        for node in node_tree.nodes:
+            if node.type == 'TEX_IMAGE' and node.image:
+                row = layout.row()
+                # Display image name with checkbox
+                image_name = node.image.name
+                row.prop(node.texture_swap_props, "swap_select", text=prefix + image_name)
+
+            elif node.type == 'GROUP' and node.node_tree:
+                # Recurse into group nodes
+                self.draw_texture_nodes(layout, node.node_tree, prefix=prefix + node.name + " > ")
 
     def draw(self, context):
         settings = context.tool_settings.image_paint
@@ -2417,6 +2483,19 @@ class D2P_OT_SlotsVGroupsPopup(bpy.types.Operator):
 
             row1.operator("d2p.unassign_vgroup", text="Unset", icon='REMOVE')
 
+            #
+            # col.operator("paint.add_texture_paint_slot", text="Add Texture", icon='TEXTURE_DATA')
+            # Number of textures input
+            mat = context.active_object.active_material
+            col.label(text="PhotoStack Tools")
+            col.prop(scene, "num_textures")
+            col.operator("object.add_photostack", text="Generate/Extend Photostack")
+            if mat and mat.use_nodes:
+                layout.label(text="Select Two Textures to Swap:")
+                self.draw_texture_nodes(layout, mat.node_tree)
+
+                layout.operator("image.swap_selected_textures", text="Swap Selected Textures")
+
         col = layout.column()
 
         # Paint Mode Selection
@@ -2457,12 +2536,6 @@ class D2P_OT_SlotsVGroupsPopup(bpy.types.Operator):
                         else:
                             col.label(text="No active UV map found", icon='ERROR')
 
-                #col.operator("paint.add_texture_paint_slot", text="Add Texture", icon='TEXTURE_DATA')
-                # Number of textures input
-                col.prop(scene, "num_textures")
-                col.operator("object.add_photostack", text="Generate/Extend Photostack")
-
-
             elif settings.mode == 'IMAGE':
                 # Image Mode Section
                 mesh = ob.data
@@ -2476,7 +2549,6 @@ class D2P_OT_SlotsVGroupsPopup(bpy.types.Operator):
 
             col.separator()
 
-        # Ensure that the button block is drawn **once**, outside the mode checks
         if bpy.context.scene.render.engine in {'CYCLES', 'BLENDER_EEVEE_NEXT'}:
             col.label(text="Save/Reload")
             col.operator("d2p.display_active_slot", text="Slot2Display")
@@ -3494,6 +3566,4 @@ class D2P_OT_EditorSwap(bpy.types.Operator):
             bpy.ops.node.view_all()
 
 
-        # toggle node editor for compositor and shader windows
-        bpy.ops.node.view_all()
         return {'FINISHED'}

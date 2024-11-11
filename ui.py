@@ -115,7 +115,7 @@ class D2P_PT_PhotoStack(bpy.types.Panel):
         row = col.row(align=True)
         row.scale_x = 0.50
         row.scale_y = 1.25
-
+        # applicable even without using PhotoStack, okay to draw
         if mat and mat.use_nodes:
             layout.label(text="Select Two Textures to Swap:")
             self.draw_texture_nodes(layout, mat.node_tree)

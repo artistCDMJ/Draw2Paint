@@ -9,6 +9,9 @@ kmi_defs = (
 
     # Brushes Popup [Image Paint] with: W.
     (('Image Paint', 'EMPTY'), "view3d.brush_popup", 'W', 'PRESS', False, False, False, False, None, "Brushes Popup"),
+    # Convenience Palette Popup
+    (('Image Paint', 'EMPTY'), "d2p.palette_popup", 'P', 'PRESS', False, False, False, False, None, "Palette Popup"),
+
     # 2D Editor Popup with Active Paint Slot with Shift + Alt + W
     (('Image Paint', 'EMPTY'), "paint.display_active_slot", 'W', 'PRESS', False, True, True, False, None, "2D Editor Popup"),
     # Slots Popup [Image Paint] with: Shift + W.
