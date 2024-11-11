@@ -2002,13 +2002,26 @@ class D2P_OT_BrushPopup(bpy.types.Operator):
             row.scale_x = 1.5  # Increase the horizontal scale of the row
             row.scale_y = 1.5  # Increase vertical scale (makes icons appear larger vertically too)
 
-            # Tool buttons with larger icons
-            row.operator("wm.tool_set_by_id", text="", icon='BRUSH_TEXDRAW').name = "builtin_brush.Draw"
-            row.operator("wm.tool_set_by_id", text="", icon='BRUSH_SOFTEN').name = "builtin_brush.Soften"
-            row.operator("wm.tool_set_by_id", text="", icon='BRUSH_SMEAR').name = "builtin_brush.Smear"
-            row.operator("wm.tool_set_by_id", text="", icon='BRUSH_CLONE').name = "builtin_brush.Clone"
-            row.operator("wm.tool_set_by_id", text="", icon='BRUSH_TEXFILL').name = "builtin_brush.Fill"
-            row.operator("wm.tool_set_by_id", text="", icon='BRUSH_TEXMASK').name = "builtin_brush.Mask"
+            # Set the tool name on Blender version
+            if bpy.app.version > (4, 2, 0):
+                # Tool buttons with larger icons
+                row.operator("wm.tool_set_by_id", text="", icon='BRUSH_DATA').name = "builtin.brush"
+                row.operator("wm.tool_set_by_id", text="", icon='ALIASED').name = "builtin_brush.soften"
+                row.operator("wm.tool_set_by_id", text="", icon='FORCE_WIND').name = "builtin_brush.smear"
+                row.operator("wm.tool_set_by_id", text="", icon='AREA_JOIN_DOWN').name = "builtin_brush.clone"
+                row.operator("wm.tool_set_by_id", text="", icon='FORCE_TEXTURE').name = "builtin_brush.fill"
+                row.operator("wm.tool_set_by_id", text="", icon='MESH_MONKEY').name = "builtin_brush.mask"
+
+
+            else:
+                row.operator("wm.tool_set_by_id", text="", icon='BRUSH_DATA').name = "builtin_brush.Draw"
+                row.operator("wm.tool_set_by_id", text="", icon='ALIASED').name = "builtin_brush.Soften"
+                row.operator("wm.tool_set_by_id", text="", icon='FORCE_WIND').name = "builtin_brush.Smear"
+                row.operator("wm.tool_set_by_id", text="", icon='AREA_JOIN').name = "builtin_brush.Clone"
+                row.operator("wm.tool_set_by_id", text="", icon='FORCE_TEXTURE').name = "builtin_brush.Fill"
+                row.operator("wm.tool_set_by_id", text="", icon='MESH_MONKEY').name = "builtin_brush.Mask"
+
+
 
             # imagepaint tool operate  buttons: UILayout.template_ID_preview()
             col = layout.split().column()

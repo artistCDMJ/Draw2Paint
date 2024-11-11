@@ -16,8 +16,8 @@
 bl_info = {
     "name": "Draw2Paint",
     "author": "CDMJ, Spirou4D, Lapineige, Bart Crouch, batFINGER, stacker, todashuta",
-    "version": (4, 1, 2),
-    "blender": (4, 2, 0),
+    "version": (4, 1, 3),
+    "blender": (4, 3, 0),
     "location": "UI > Draw2Paint",
     "description": "2D Paint in 3D View, Mask Manipulation, EZPaint Adoption",
     "warning": "",
@@ -131,7 +131,6 @@ classes = (
     D2P_OT_set_active_texture_slot,
     D2P_OT_set_active_clone_slot,
     PhotoStackProperties,
-    D2P_PT_PhotoStack,
     PhotoStack,
     NODE_OT_copy_photostack_to_compositor,
     TextureSwapProperties,
@@ -178,10 +177,6 @@ def register():
     )
 
     bpy.types.Scene.texture_settings = bpy.props.CollectionProperty(type=PhotoStackProperties)
-
-    # Initialize the collection when the script is run
-    update_texture_settings(bpy.context.scene, bpy.context)
-
 
 
 def unregister():
