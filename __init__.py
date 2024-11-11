@@ -131,6 +131,7 @@ classes = (
     D2P_OT_set_active_texture_slot,
     D2P_OT_set_active_clone_slot,
     PhotoStackProperties,
+    D2P_PT_PhotoStack,
     PhotoStack,
     NODE_OT_copy_photostack_to_compositor,
     TextureSwapProperties,
