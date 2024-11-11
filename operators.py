@@ -2369,10 +2369,6 @@ class D2P_OT_set_active_clone_slot(bpy.types.Operator):  # hack to get image lay
 
         return {'FINISHED'}
 
-
-
-
-
 ##################### main popup operator
 class D2P_OT_SlotsVGroupsPopup(bpy.types.Operator):
     """Slots ProjectPaint popup"""
@@ -2390,8 +2386,6 @@ class D2P_OT_SlotsVGroupsPopup(bpy.types.Operator):
         name="Show Advanced Settings",
         default=False  # Starts as collapsed
     )
-
-    ####################################################################
 
     def check(self, context):
         return True
@@ -2476,6 +2470,19 @@ class D2P_OT_SlotsVGroupsPopup(bpy.types.Operator):
 
             row1.operator("d2p.unassign_vgroup", text="Unset", icon='REMOVE')
 
+            #
+            # col.operator("paint.add_texture_paint_slot", text="Add Texture", icon='TEXTURE_DATA')
+            # Number of textures input
+            mat = context.active_object.active_material
+            col.label(text="PhotoStack Tools")
+            col.prop(scene, "num_textures")
+            col.operator("object.add_photostack", text="Generate/Extend Photostack")
+            if mat and mat.use_nodes:
+                layout.label(text="Select Two Textures to Swap:")
+                self.draw_texture_nodes(layout, mat.node_tree)
+
+                layout.operator("image.swap_selected_textures", text="Swap Selected Textures")
+
         col = layout.column()
 
         # Paint Mode Selection
@@ -2515,22 +2522,6 @@ class D2P_OT_SlotsVGroupsPopup(bpy.types.Operator):
                             col.label(text="Active UV Layer: " + ob.data.uv_layers.active.name)
                         else:
                             col.label(text="No active UV map found", icon='ERROR')
-
-            # col.operator("paint.add_texture_paint_slot", text="Add Texture", icon='TEXTURE_DATA')
-            # Number of textures input
-            mat = context.active_object.active_material
-            col.prop(scene, "num_textures")
-            col.operator("object.add_photostack", text="Generate/Extend Photostack")
-            if mat and mat.use_nodes:
-                layout.label(text="Select Two Textures to Swap:")
-                self.draw_texture_nodes(layout, mat.node_tree)
-
-                layout.operator("image.swap_selected_textures", text="Swap Selected Textures")
-
-
-
-
-
 
             elif settings.mode == 'IMAGE':
                 # Image Mode Section
