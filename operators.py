@@ -2003,7 +2003,7 @@ class D2P_OT_BrushPopup(bpy.types.Operator):
             row.scale_y = 1.5  # Increase vertical scale (makes icons appear larger vertically too)
 
             # Set the tool name on Blender version
-            if bpy.app.version > (4, 2, 0):
+            if bpy.app.version > (4, 2, 2):
                 # Tool buttons with larger icons
                 row.operator("wm.tool_set_by_id", text="", icon='BRUSH_DATA').name = "builtin.brush"
                 row.operator("wm.tool_set_by_id", text="", icon='ALIASED').name = "builtin_brush.soften"
