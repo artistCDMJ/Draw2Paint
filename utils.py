@@ -492,7 +492,7 @@ def create_matching_camera(image_plane_obj, width, height, distance=1):
     cam_obj.location = (0, 0, distance)
     cam_obj.rotation_euler = (0, 0, 0)
 
-    scene = bpy.context.scene
+    scene = bpy.context.window.scene
     scene.render.resolution_x = int(width / 0.01)  # Converting back to original resolution
     scene.render.resolution_y = int(height / 0.01)  # Converting back to original resolution
 
