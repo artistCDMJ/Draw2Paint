@@ -4,7 +4,7 @@ import colorsys
 
 import bmesh
 
-import bgl, blf, bpy, mathutils, time, copy, math, re
+import blf, bpy, mathutils, time, copy, math, re
 
 from .utils import next_power_of_2, previous_power_of_2
 
@@ -277,8 +277,190 @@ class D2P_OT_UV2Mask(bpy.types.Operator):
 
         return {'FINISHED'}
 
+import bpy
+import os
+
+
+import bpy
+import os
+
 
 class D2P_OT_Subject2Canvas(bpy.types.Operator):
+    """Generate Image Plane and Camera from Selected Object (Safe Pipeline)"""
+    bl_idname = "object.canvas_and_camera_from_selected_object"
+    bl_label = "Generate Image Plane and Camera from Selected Object"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    # -------------------------
+    # POLL
+    # -------------------------
+    @classmethod
+    def poll(cls, context):
+        obj = context.active_object
+        return obj and obj.type == 'MESH'
+
+    # -------------------------
+    # SAFE UV EXPORT (CRITICAL FIX)
+    # -------------------------
+    def export_uv_safe(self, obj, filepath):
+
+        # -------------------------
+        # FORCE OBJECT MODE FIRST
+        # -------------------------
+        bpy.ops.object.mode_set(mode='OBJECT')
+
+        bpy.context.view_layer.objects.active = obj
+        obj.select_set(True)
+
+        # -------------------------
+        # ENTER EDIT MODE (OUTSIDE OVERRIDE)
+        # -------------------------
+        bpy.ops.object.mode_set(mode='EDIT')
+
+        # IMPORTANT: force view layer update
+        bpy.context.view_layer.update()
+
+        # -------------------------
+        # NOW USE OVERRIDE FOR UV OPS ONLY
+        # -------------------------
+        override = bpy.context.copy()
+        override["active_object"] = obj
+        override["object"] = obj
+        override["edit_object"] = obj
+        override["selected_objects"] = [obj]
+        override["selected_editable_objects"] = [obj]
+
+        with bpy.context.temp_override(**override):
+            # THIS is now valid because edit mesh exists
+            bpy.ops.mesh.select_all(action='SELECT')
+
+            bpy.ops.uv.export_layout(
+                filepath=filepath,
+                export_all=True
+            )
+
+        # -------------------------
+        # RETURN TO OBJECT MODE
+        # -------------------------
+        bpy.ops.object.mode_set(mode='OBJECT')
+    # -------------------------
+    # EXECUTE
+    # -------------------------
+    def execute(self, context):
+
+        # =========================
+        # 1. CAPTURE STABLE OBJECT
+        # =========================
+        src_obj = context.active_object
+
+        if not src_obj or src_obj.type != 'MESH':
+            self.report({'ERROR'}, "Active object must be a mesh.")
+            return {'CANCELLED'}
+
+        if not src_obj.data.uv_layers:
+            self.report({'ERROR'}, "Object has no UV map.")
+            return {'CANCELLED'}
+
+        original_name = src_obj.name
+
+        # =========================
+        # 2. ENSURE OBJECT MODE ONLY
+        # =========================
+        if context.mode != 'OBJECT':
+            bpy.ops.object.mode_set(mode='OBJECT')
+
+        # =========================
+        # 3. BUILD SAFE EXPORT PATH
+        # =========================
+        os.makedirs("C:/tmp", exist_ok=True)
+        uv_filepath = os.path.join("C:/tmp", f"{original_name}_uv.png")
+
+        # =========================
+        # 4. UV EXPORT (ISOLATED)
+        # =========================
+        try:
+            self.export_uv_safe(src_obj, uv_filepath)
+        except Exception as e:
+            self.report({'ERROR'}, f"UV export failed: {e}")
+            return {'CANCELLED'}
+
+        # =========================
+        # 5. GET IMAGE SOURCE
+        # =========================
+        active_image = get_image_from_selected_object(src_obj)
+        if not active_image:
+            active_image = get_image_from_photostack_group(src_obj)
+
+        if not active_image:
+            self.report({'ERROR'}, "No image found on object.")
+            return {'CANCELLED'}
+
+        # =========================
+        # 6. CREATE IMAGE PLANE + CAMERA (NO SCENE SWITCH YET)
+        # =========================
+        image_plane_obj, width, height = create_image_plane_from_image(active_image)
+
+        if not image_plane_obj:
+            self.report({'ERROR'}, "Image plane creation failed.")
+            return {'CANCELLED'}
+
+        camera_obj = create_matching_camera(image_plane_obj, width, height)
+
+        if not camera_obj:
+            self.report({'ERROR'}, "Camera creation failed.")
+            return {'CANCELLED'}
+
+        # =========================
+        # 7. CREATE / SWITCH SCENE ONLY NOW
+        # =========================
+        new_scene = create_scene_based_on_active_image(src_obj)
+
+        if not new_scene:
+            self.report({'ERROR'}, "Scene creation failed.")
+            return {'CANCELLED'}
+
+        context.window.scene = new_scene
+
+        # IMPORTANT: re-evaluate depsgraph after scene switch
+        bpy.context.view_layer.update()
+
+        # =========================
+        # 8. LINK OBJECTS INTO NEW SCENE
+        # =========================
+        for obj in (src_obj, image_plane_obj, camera_obj):
+            if obj.name not in new_scene.objects:
+                new_scene.collection.objects.link(obj)
+
+        new_scene.view_layers[0].objects.active = src_obj
+        src_obj.select_set(True)
+
+        # =========================
+        # 9. COLLECTIONS
+        # =========================
+        move_object_to_collection(src_obj, 'subject_view')
+        move_object_to_collection(image_plane_obj, 'canvas_view')
+        move_object_to_collection(camera_obj, 'canvas_view')
+
+        # =========================
+        # 10. CAMERA BACKGROUND
+        # =========================
+        try:
+            set_camera_background_image(camera_obj, uv_filepath)
+        except Exception as e:
+            self.report({'ERROR'}, f"Camera setup failed: {e}")
+            return {'CANCELLED'}
+
+        # =========================
+        # 11. VIEW SWITCH (LAST STEP)
+        # =========================
+        try:
+            switch_to_camera_view(camera_obj)
+        except Exception as e:
+            self.report({'WARNING'}, f"Camera view failed: {e}")
+
+        return {'FINISHED'}
+
+'''class D2P_OT_Subject2Canvas(bpy.types.Operator):
     """New Canvas and Camera from Selected Subject"""
     bl_description = "New Canvas and Camera from Selected Subject"
     bl_idname = "object.canvas_and_camera_from_selected_object"
@@ -357,7 +539,7 @@ class D2P_OT_Subject2Canvas(bpy.types.Operator):
         # Toggle canvas_view collection visibility
         bpy.ops.object.toggle_collection_visibility()
 
-        return {'FINISHED'}
+        return {'FINISHED'}'''
 
 
 class D2P_OT_Image2CanvasPlus(bpy.types.Operator):
@@ -1769,7 +1951,7 @@ class D2P_OT_BrushPopup(bpy.types.Operator):
     """Brush popup"""
     bl_idname = "view3d.brush_popup"
     bl_label = "Brush Settings"
-    COMPAT_ENGINES = {'BLENDER_EEVEE_NEXT', 'CYCLES'}
+    COMPAT_ENGINES = {'BLENDER_EEVEE', 'CYCLES'}
     bl_options = {'REGISTER', 'UNDO'}
 
     @classmethod
@@ -2215,7 +2397,7 @@ class D2P_OT_TexturePopup(bpy.types.Operator):
     """Texture popup"""
     bl_idname = "view3d.texture_popup"
     bl_label = "Texture & Mask"
-    COMPAT_ENGINES = {'EEVEE', 'CYCLES'}
+    COMPAT_ENGINES = {'BLENDER_EEVEE', 'CYCLES'}
     bl_options = {'REGISTER', 'UNDO'}
 
     toggleMenu: bpy.props.BoolProperty(default=True)  # toogle texture or Mask menu
@@ -2549,7 +2731,7 @@ class D2P_OT_SlotsVGroupsPopup(bpy.types.Operator):
 
             col.separator()
 
-        if bpy.context.scene.render.engine in {'CYCLES', 'BLENDER_EEVEE_NEXT'}:
+        if bpy.context.scene.render.engine in {'CYCLES', 'BLENDER_EEVEE'}:
             col.label(text="Save/Reload")
             col.operator("d2p.display_active_slot", text="Slot2Display")
             row = col.row(align=True)
