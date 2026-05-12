@@ -31,7 +31,7 @@ import bpy
 import bmesh
 import colorsys
 
-import bgl, blf, bpy, mathutils, time, copy, math, re
+import blf, bpy, mathutils, time, copy, math, re
 
 from bpy.props import *
 from bpy.utils import *
