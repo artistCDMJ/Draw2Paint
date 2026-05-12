@@ -277,12 +277,6 @@ class D2P_OT_UV2Mask(bpy.types.Operator):
 
         return {'FINISHED'}
 
-import bpy
-import os
-
-
-import bpy
-import os
 
 
 class D2P_OT_Subject2Canvas(bpy.types.Operator):
@@ -299,30 +293,23 @@ class D2P_OT_Subject2Canvas(bpy.types.Operator):
         obj = context.active_object
         return obj and obj.type == 'MESH'
 
+    @classmethod
+    def poll(cls, context):
+        return 'subject_view' not in bpy.data.collections or 'canvas_view' not in bpy.data.collections
+
     # -------------------------
-    # SAFE UV EXPORT (CRITICAL FIX)
+    # SAFE UV EXPORT
     # -------------------------
     def export_uv_safe(self, obj, filepath):
 
-        # -------------------------
-        # FORCE OBJECT MODE FIRST
-        # -------------------------
         bpy.ops.object.mode_set(mode='OBJECT')
 
         bpy.context.view_layer.objects.active = obj
         obj.select_set(True)
 
-        # -------------------------
-        # ENTER EDIT MODE (OUTSIDE OVERRIDE)
-        # -------------------------
         bpy.ops.object.mode_set(mode='EDIT')
-
-        # IMPORTANT: force view layer update
         bpy.context.view_layer.update()
 
-        # -------------------------
-        # NOW USE OVERRIDE FOR UV OPS ONLY
-        # -------------------------
         override = bpy.context.copy()
         override["active_object"] = obj
         override["object"] = obj
@@ -331,25 +318,21 @@ class D2P_OT_Subject2Canvas(bpy.types.Operator):
         override["selected_editable_objects"] = [obj]
 
         with bpy.context.temp_override(**override):
-            # THIS is now valid because edit mesh exists
             bpy.ops.mesh.select_all(action='SELECT')
-
             bpy.ops.uv.export_layout(
                 filepath=filepath,
                 export_all=True
             )
 
-        # -------------------------
-        # RETURN TO OBJECT MODE
-        # -------------------------
         bpy.ops.object.mode_set(mode='OBJECT')
+
     # -------------------------
     # EXECUTE
     # -------------------------
     def execute(self, context):
 
         # =========================
-        # 1. CAPTURE STABLE OBJECT
+        # 1. SOURCE OBJECT
         # =========================
         src_obj = context.active_object
 
@@ -363,21 +346,16 @@ class D2P_OT_Subject2Canvas(bpy.types.Operator):
 
         original_name = src_obj.name
 
-        # =========================
-        # 2. ENSURE OBJECT MODE ONLY
-        # =========================
+        # Ensure object mode
         if context.mode != 'OBJECT':
             bpy.ops.object.mode_set(mode='OBJECT')
 
         # =========================
-        # 3. BUILD SAFE EXPORT PATH
+        # 2. UV EXPORT
         # =========================
         os.makedirs("C:/tmp", exist_ok=True)
         uv_filepath = os.path.join("C:/tmp", f"{original_name}_uv.png")
 
-        # =========================
-        # 4. UV EXPORT (ISOLATED)
-        # =========================
         try:
             self.export_uv_safe(src_obj, uv_filepath)
         except Exception as e:
@@ -385,7 +363,7 @@ class D2P_OT_Subject2Canvas(bpy.types.Operator):
             return {'CANCELLED'}
 
         # =========================
-        # 5. GET IMAGE SOURCE
+        # 3. GET IMAGE
         # =========================
         active_image = get_image_from_selected_object(src_obj)
         if not active_image:
@@ -396,7 +374,7 @@ class D2P_OT_Subject2Canvas(bpy.types.Operator):
             return {'CANCELLED'}
 
         # =========================
-        # 6. CREATE IMAGE PLANE + CAMERA (NO SCENE SWITCH YET)
+        # 4. CREATE IMAGE PLANE (GET DIMENSIONS FIRST)
         # =========================
         image_plane_obj, width, height = create_image_plane_from_image(active_image)
 
@@ -404,14 +382,8 @@ class D2P_OT_Subject2Canvas(bpy.types.Operator):
             self.report({'ERROR'}, "Image plane creation failed.")
             return {'CANCELLED'}
 
-        camera_obj = create_matching_camera(image_plane_obj, width, height)
-
-        if not camera_obj:
-            self.report({'ERROR'}, "Camera creation failed.")
-            return {'CANCELLED'}
-
         # =========================
-        # 7. CREATE / SWITCH SCENE ONLY NOW
+        # 5. CREATE SCENE EARLY (CRITICAL FIX)
         # =========================
         new_scene = create_scene_based_on_active_image(src_obj)
 
@@ -420,9 +392,23 @@ class D2P_OT_Subject2Canvas(bpy.types.Operator):
             return {'CANCELLED'}
 
         context.window.scene = new_scene
-
-        # IMPORTANT: re-evaluate depsgraph after scene switch
         bpy.context.view_layer.update()
+
+        # =========================
+        # 6. SET SCENE RESOLUTION (IMPORTANT)
+        # =========================
+        new_scene.render.resolution_x = int(width)
+        new_scene.render.resolution_y = int(height)
+        new_scene.render.resolution_percentage = 100
+
+        # =========================
+        # 7. CREATE CAMERA (NOW CORRECT CONTEXT)
+        # =========================
+        camera_obj = create_matching_camera(image_plane_obj, width, height)
+
+        if not camera_obj:
+            self.report({'ERROR'}, "Camera creation failed.")
+            return {'CANCELLED'}
 
         # =========================
         # 8. LINK OBJECTS INTO NEW SCENE
@@ -435,7 +421,7 @@ class D2P_OT_Subject2Canvas(bpy.types.Operator):
         src_obj.select_set(True)
 
         # =========================
-        # 9. COLLECTIONS
+        # 9. COLLECTION SETUP
         # =========================
         move_object_to_collection(src_obj, 'subject_view')
         move_object_to_collection(image_plane_obj, 'canvas_view')
@@ -451,7 +437,7 @@ class D2P_OT_Subject2Canvas(bpy.types.Operator):
             return {'CANCELLED'}
 
         # =========================
-        # 11. VIEW SWITCH (LAST STEP)
+        # 11. VIEW SWITCH
         # =========================
         try:
             switch_to_camera_view(camera_obj)
