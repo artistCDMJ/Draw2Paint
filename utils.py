@@ -554,7 +554,7 @@ def move_object_to_collection(obj, collection_name):
 
 
 ### new function to move to new scene from name of active image in image editor or selected object active image node
-def create_scene_based_on_active_image(selected_object=None):
+'''def create_scene_based_on_active_image(selected_object=None):
     active_image = None
 
     # If a selected object is provided, try to get its texture image
@@ -592,7 +592,7 @@ def create_scene_based_on_active_image(selected_object=None):
 
         # Set the render engine based on Blender version
         if bpy.app.version >= (4, 2, 0):
-            new_scene.render.engine = 'BLENDER_EEVEE_NEXT'
+            new_scene.render.engine = 'BLENDER_EEVEE'
         else:
             new_scene.render.engine = 'BLENDER_EEVEE'
 
@@ -604,8 +604,131 @@ def create_scene_based_on_active_image(selected_object=None):
 
         print(f"New scene created: {image_name}")
     else:
-        print("No active image found to create a new scene.")
+        print("No active image found to create a new scene.")'''
+def create_scene_based_on_active_image(selected_object=None):
 
+    original_scene = bpy.context.scene
+    original_mode = None
+
+    active_image = None
+
+    # Store current mode safely
+    if selected_object:
+        original_mode = selected_object.mode
+
+    # Force OBJECT mode before scene operations
+    try:
+        if selected_object and selected_object.mode != 'OBJECT':
+            bpy.ops.object.mode_set(mode='OBJECT')
+    except:
+        pass
+
+    # ----------------------------------------
+    # Find image
+    # ----------------------------------------
+
+    if selected_object:
+        active_image = get_image_from_selected_object(selected_object)
+
+    if not active_image and selected_object:
+        active_image = get_image_from_photostack_group(selected_object)
+
+    if not active_image:
+        try:
+            active_image = get_active_image_from_image_editor()
+        except Exception as e:
+            print(e)
+
+    if not active_image:
+        print("No active image found to create a new scene.")
+        return None
+
+    # ----------------------------------------
+    # Validate image
+    # ----------------------------------------
+
+    if active_image.source == 'GENERATED':
+        print("Generated image detected.")
+
+    image_name = active_image.name
+
+    # Prevent duplicate scenes
+    existing_scene = bpy.data.scenes.get(image_name)
+    if existing_scene:
+        print(f"Scene already exists: {image_name}")
+        return existing_scene
+
+    # ----------------------------------------
+    # Create scene
+    # ----------------------------------------
+
+    try:
+        new_scene = bpy.data.scenes.new(name=image_name)
+
+        # Copy world safely
+        new_scene.world = original_scene.world
+
+        # Eevee
+        new_scene.render.engine = 'BLENDER_EEVEE'
+
+        # Transparency
+        new_scene.render.film_transparent = True
+
+        # Unlock selection
+        new_scene.tool_settings.lock_object_mode = False
+
+        # Link object
+        if selected_object:
+
+            # Avoid duplicate linking
+            if selected_object.name not in new_scene.collection.objects:
+                new_scene.collection.objects.link(selected_object)
+
+        # Switch scene LAST
+        bpy.context.window.scene = new_scene
+
+        # Restore object mode carefully
+        if selected_object:
+
+            bpy.context.view_layer.objects.active = selected_object
+
+            try:
+                if original_mode != 'OBJECT':
+                    bpy.ops.object.mode_set(mode=original_mode)
+            except:
+                pass
+
+        print(f"New scene created: {image_name}")
+
+        return new_scene
+
+    except Exception as e:
+        print(f"Scene creation failed: {e}")
+        return None
+
+    # ---------------------------------------------------
+    # Scene settings
+    # ---------------------------------------------------
+
+    new_scene.render.film_transparent = True
+    new_scene.tool_settings.lock_object_mode = False
+    new_scene.render.engine = 'BLENDER_EEVEE'
+
+    try:
+        paint_view_color_management_settings()
+    except Exception as e:
+        print(f"Color management failed: {e}")
+
+    # ---------------------------------------------------
+    # World
+    # ---------------------------------------------------
+
+    if bpy.data.worlds.get('World'):
+        new_scene.world = bpy.data.worlds['World']
+
+    print(f"New scene created: {new_scene.name}")
+
+    return new_scene
 
 def export_uv_layout(obj, filepath):
     # Ensure the object is active and selected
