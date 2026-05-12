@@ -1,6 +1,6 @@
 import bpy
 
-import bgl, blf, mathutils, os, time, copy, math, re
+import blf, mathutils, os, time, copy, math, re
 
 ########PBRA Adopted Lapineiges (Snow Bunnies)
 
